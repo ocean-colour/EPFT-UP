@@ -1,0 +1,26 @@
+# Runtime dependencies for epft_up.
+#
+# Keep this list in sync with install_requires in setup.py.
+
+# Core scientific stack
+numpy
+scipy
+pandas
+pyarrow
+matplotlib
+seaborn
+scikit-learn
+tqdm
+IPython
+pytest
+
+# Oceanography / gridded data I/O
+xarray
+h5netcdf
+h5py
+netcdf4
+cftime
+
+# Sibling packages (not on PyPI) — uncomment as they are needed.
+# Ocean-colour utilities shared with IOPtics:
+# git+https://github.com/ocean-colour/ocpy
