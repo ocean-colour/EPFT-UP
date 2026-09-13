@@ -159,3 +159,70 @@ What I learned about this repository:
   allow pattern rather than re-adding per-query ones.
 
 No git commands that change repository state were run.
+
+### 2026-09-12 (Basic Python repository start up)
+
+Executed prompt #4: generated the basic files a Python GitHub repository needs,
+after surveying the sibling repositories in `Oceanography/python`.
+
+What was done — files created:
+
+- `epft_up/` — the Python package (snake_case of the repo name, matching the house
+  convention: `ioptics`, `pab`, `cugn_climatology`, `victor_class`). Contains
+  `__init__.py` declaring `__version__ = '0.0.dev0'`, and `epft_up/tests/` with an
+  `__init__.py` and a `test_version.py` import smoke test.
+- `requirements.txt` — core scientific stack (numpy, scipy, pandas, pyarrow,
+  matplotlib, seaborn, scikit-learn, tqdm, IPython, pytest) plus gridded-data I/O
+  (xarray, h5netcdf, h5py, netcdf4, cftime), with a commented-out
+  `git+https://github.com/ocean-colour/ocpy` line for the sibling package when needed.
+- `setup.py` — copied structurally from IOPtics/cugn-climatology: the
+  `setup_keywords` dict idiom, `python_requires='>=3.12'`, `find_packages()`,
+  README as `long_description`, the conditional `bin/` scripts block, author/license
+  fields, and `url` pointing at the actual remote (`ocean-colour/EPFT-UP`).
+- `pytest.ini` — `testpaths = epft_up/tests`, matching cugn-climatology and
+  victor-class.
+- `.github/workflows/ci.yml` — light advisory CI (pytest on py3.12 and py3.14, with
+  an import smoke check), modelled on IOPtics' workflow.
+- `README.md` — expanded from the original two lines to the house form: description,
+  Installation, Layout, Related work, License.
+
+Verified: `setup.py` parses, `ci.yml` is valid YAML, and
+`conda run -n ocean14 python -m pytest -q` passes (1 test).
+
+Suggestion requested by the task — which sibling `settings.json` to copy:
+
+- **Keep the IOPtics-derived policy already installed by prompt #3.** A programmatic
+  comparison of every sibling's allow-list against it shows that our pruned file is a
+  strict superset of `cugn-climatology`'s, and that all of IOPtics', victor-class' and
+  OETHER's remaining entries are path-specific cruft with nothing generic in them.
+  There is no sibling whose policy is better as a base.
+- The **only** generic entries any sibling has that we lack are in PAB and
+  retrieve-or-bust: `WebFetch(domain:github.com)`,
+  `WebFetch(domain:raw.githubusercontent.com)`,
+  `WebFetch(domain:api.github.com)`, and retrieve-or-bust's `Bash(git ls-remote *)`.
+  Worth adding **if** we start pulling sibling packages from GitHub — which
+  `requirements.txt` already anticipates with the commented `ocpy` line. I did not add
+  them; that is your call.
+- All seven siblings have an identical `deny` block (`sudo`, `rm -rf /`, `rm -rf ~`,
+  `git push`/`commit`/`reset`/`rebase`) and an identical `ask` block (`rm:*`). That is
+  the invariant part of the policy and ours matches it exactly.
+
+What I learned about this repository:
+
+- The house layout is `requirements.txt` + `setup.py` — **not** `pyproject.toml`. None
+  of the seven siblings uses one. `setup.py` is near-identical across them, differing
+  only in name/description/url/install_requires; it is effectively a template.
+- The GitHub remote is `https://github.com/ocean-colour/EPFT-UP.git`, i.e. the same
+  org as IOPtics (`ocean-colour`) rather than `Sea-Meets-the-Stars` (cugn-climatology).
+  The LICENSE is BSD 3-Clause, copyright 2026 ocean-colour.
+- `.github/workflows/` exists in 5 of 7 siblings (absent only in victor-class and
+  OETHER), so CI is the house default and was included here.
+- I added `epft_up/tests/test_version.py` deliberately: `pytest` exits with code 5
+  ("no tests collected") on an empty suite, which would make the new CI workflow fail
+  on its first run. The smoke test keeps it green until real tests exist.
+- The `.gitignore` (218 lines) and `LICENSE` were already present and were left alone.
+- `docs/`, `reports/`, `papers/`, `data/`, `notebooks/`, and `context/` appear across
+  the siblings but not uniformly; none were created here, since they should appear when
+  there is something to put in them.
+
+No git commands that change repository state were run.
