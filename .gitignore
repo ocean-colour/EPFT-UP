@@ -1,3 +1,6 @@
+# Context files (papers are fetched, not versioned; URLs in the docs)
+papers/*.pdf
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
