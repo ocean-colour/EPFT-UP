@@ -6,6 +6,8 @@ First, move the work that I've done in the IOPtics repo into this one.
 Second, improve upon the original algorithm by using additional data from across the globe.
 Third, publish it all to RTD with a DOI and all
 
+Actually, I've decided to defer the 2nd Goal for now.
+
 ## Context
 
 The `moana` branch of `IOPtics` contains all of the work I have done on this to date.  See the prompt docs, reports, new code etc.
@@ -26,7 +28,316 @@ Use Fable if you can. Log your work.
 4. I have answered your questions in Q&A/Move.  Please read them and proceed to execute the move and regeneration.  
 Use Fable if you can. Log your work.
 
+### Website and RTD
+
+1. I wish to: (i) Improve the main README.md and (ii) build out an RTD website.  I will do the work necessary on RTD itself.  Before we do so, ask discuss with me the work needed.  Ask a set of questions in the Q&A/RTD section.  Use Fable if you can. Log your work.
+
+2. I have answered your questions in Q&A/RTD.  Please read them and ask another round.  Use Fable if you can. Log your work.
+
+3. I have answered your questions in Q&A/RTD.  Please read them and proceed to execute the plan.  Use Fable if you can. Log your work.
+
 ## Q&A
+
+### RTD
+
+*(Questions from prompt "Website and RTD"/1, 2026-09-13, run as Fable. Same
+convention as Q&A/Move: each carries my recommended answer; overwrite or
+correct in place. R1–R2 are the README, R3–R8 the site, R9 housekeeping.)*
+
+**R1. README — who is it for, and what leads?**
+Today's README (my Move/4 edit) is a repo map: install, a MOANA paragraph,
+layout, license. IOPtics' README leads with a one-line pitch, a "What it
+does" list, install, status, authors. For a public repo whose first visitors
+will be ocean-colour scientists arriving from a paper, a talk or the RTD
+site, the README should answer "what is this and is it any good?" before
+"where are the files?".
+*Recommended shape:* badges (CI · RTD · license · DOI once minted) → one-
+paragraph pitch → **"What it does"** (three bullets: the MOANA baseline with
+its headline numbers — basis recovered at |cos| 0.999/0.998, Lange Table 1
+reproduced to within the CTD-only handicap, first held-out hyperspectral
+skill numbers — then uncertainty/provenance and global training as the
+roadmap) → a **5-line quickstart** (`from epft_up.moana import run_moana`
+on a spectrum) → install + `$OS_COLOR` note → documentation link → status →
+citing (points at `CITATION.cff`, R8) → authors → license. One figure
+(`moana_heldout_skill.png`) inline, as IOPtics does not do but GitHub
+renders well. Layout section dropped to the docs site. Authors line as in
+IOPtics: "J. Xavier Prochaska (UC Santa Cruz) and Claude"?
+>A. The README should be for the ocean optics community, i.e. semi-experts.  
+I like your ideas overall. But MOANA is only the starting point, and not 
+anything original (yet).  So, be sure to indicate that the future will bring
+a series of empirical models for PFT analysis.
+
+**R2. How much of the roadmap goes public?**
+The three Goals at the top of this doc (baseline → X-MOANA on global data →
+RTD + DOI) and the report's §13 open items are candid about what is not done
+(underway FCM blocked at PML, SeaBASS credentials pending).
+*Recommended:* a short "Status and roadmap" section in the README that names
+the three goals and links the report's §13 for detail, without the PML
+correspondence itself (R4). Say if you would rather the README stay silent
+on X-MOANA until there is code.
+>A. No, don't bother.  Do link to the MOANA Report but no need to provide details.
+
+**R3. Tooling — copy the IOPtics pattern, plus MyST for the Markdown.**
+IOPtics' site (live at ioptics.readthedocs.io, Sphinx + **furo** + autodoc/
+napoleon, `.readthedocs.yaml` installing the package with `pip install .`,
+`docs/requirements.txt` = sphinx + furo) is a working template and I would
+copy it near-verbatim. The one thing IOPtics does *not* do is publish its
+Markdown design docs — its site is all `.rst`. EPFT-UP's substance is
+Markdown: the 1,223-line report, the design doc, `moana_blocked.md`,
+`moana_rederivation.md`. I checked what those files use: tables, six images
+(`figures/moana_*.png`, relative), blockquotes, Unicode footnote marks — **no
+HTML, no math**. MyST (`myst_parser` 5.1.0, already in `ocean14`) renders
+all of that natively.
+*Recommended:* Sphinx + furo + `myst_parser` (+ `sphinx_copybutton`,
+`sphinx_design`, both installed), so the Markdown is published **as-is**, no
+conversion and no second copy to keep in sync. Theme: furo (matches IOPtics)
+unless you want the classic RTD look.
+>A.  I like your Recommendation.
+
+**R4. What goes on the site — and what stays repo-only.**
+*Recommended toctree:*
+1. **Overview** (`index`) — the pitch + the held-out-skill figure;
+2. **Installation & data** — install, `$OS_COLOR` layout (AMT/, PACE/,
+   EPFT-UP/ for products), Earthdata `~/.netrc`;
+3. **MOANA baseline** — the report, in full;
+4. **Design** — the design doc;
+5. **Reproduction record** — `moana_rederivation.md` (the acceptance run:
+   every report number re-derived, figures byte-identical);
+6. **Open items** — `moana_blocked.md`;
+7. **API reference** — autodoc of the five `epft_up.moana` modules;
+8. **Provenance** — where the code came from (IOPtics `moana` @ `3aa3b6e`),
+   the vendored-LUT README with its sha256s, how to cite.
+*Excluded, deliberately:* `requests/PML_follow_up.md` (live correspondence
+naming five colleagues and an unresolved ask — repo yes, website no) and
+`claude_prompts/` (the working record, including the 2,595-line history).
+Both stay in git and can be linked from the site as GitHub URLs. Confirm, or
+move items across the line.
+>A.  This is too MOANA focused.  Again, MOANA is just one of many models we
+will be developing.  Do include it, but have it be a sub-page.  Also, the
+community will not have access to $OS_COLOR.  If you think it is important
+that I provide the data (it probably is), then I will need to place it in Dryad
+or something similar.
+
+**R5. Where the docs source lives, and how the Markdown reaches it.**
+The report's figures are regenerated into `reports/figures/` by
+`moana_report_figs.py`, and the acceptance script writes
+`reports/moana_rederivation.md` — those files should stay where the scripts
+put them, single-sourced.
+*Recommended:* Sphinx root at `docs/source/` (as IOPtics); each Markdown
+document gets a two-line **shim page** there using MyST's
+`` ```{include} ../../reports/MOANA_Claude_Report.md `` `` with
+`:relative-images:` / `:relative-docs:` so the `figures/` paths resolve
+without copying. The shim is also where a site-only banner can go — e.g. the
+design doc's header still says "Status: design; no code exists yet. Prompt
+12 implements this." (true when written, frozen per Q15): a one-line
+admonition above the include ("historical design document, written before
+implementation; see the report's §12 for what was built") fixes the reader's
+expectation without touching the document. Alternative: symlinks under
+`docs/source/` (git-tracked, work on RTD's Linux builders, break for some
+Windows checkouts). Include-shims or symlinks?
+>A.  I like your Recommendation.
+
+**R6. API reference scope and the RTD build environment.**
+`.readthedocs.yaml` installs the package (`pip install .`), so autodoc
+imports the real modules; EPFT-UP's runtime deps are light (numpy, scipy,
+pandas, h5py, xarray, netcdf4, earthaccess — all pip-installable), so unlike
+IOPtics there is nothing unresolvable to mock. The docstrings are NumPy-style
+throughout (napoleon handles them; note the `name : type — description`
+dash idiom renders as the type string, fine).
+*Recommended:* one page per module (`io`, `algorithm`, `pipeline`, `train`,
+`validation`) with `automodule :members:`, private `_helpers` excluded;
+`autodoc_mock_imports = ['earthaccess']` only (network-touching, not needed
+to import); `viewcode` + `intersphinx` to numpy/scipy/pandas/xarray as in
+IOPtics. `fail_on_warning: false` to start, tightened later.
+>A. I like your Recommendation.
+
+**R7. The RTD project itself — your side, but two facts you need first.**
+(a) `epft-up.readthedocs.io` returns 404 today, so the slug is free.
+(b) **`main` is still the initial commit** — `main cd07fd1 [behind 4]`; all
+the work is on `moana` (and `start-up`). RTD builds the repository's
+default branch (`main` on GitHub) unless told otherwise, so enabling it
+today would publish an empty site.
+*Recommended:* merge `moana` → `main` (fast-forward; nothing on `main` to
+conflict) before importing the project on RTD, and keep `main` as the doc
+source with `latest` tracking it; add a `stable` version when the first
+release is tagged (R8). Enable pull-request previews (RTD's "Build pull
+requests" toggle) so doc changes are checked before merge. Or tell me you
+want RTD pointed at `moana` and I will write the config for that.
+>A.  That all sounds good.
+
+**R8. The DOI (Goal 3) — Zenodo, and what it needs from the repo.**
+The standard route is Zenodo's GitHub integration: a **concept DOI** for the
+software plus a DOI per tagged release, minted automatically on each GitHub
+release. From the repo side it needs (a) a `CITATION.cff` (GitHub renders a
+"Cite this repository" button from it; Zenodo reads it for metadata) and
+optionally `.zenodo.json`; (b) a first release/tag (v0.1.0?). Neither exists
+yet. The report itself could get a separate Zenodo DOI as a document, but it
+is still living (§13 work queue, rev. 4).
+*Recommended:* `CITATION.cff` now (authors, ORCIDs, license, repo URL,
+abstract), software concept DOI at the first release — which I would time
+for when the RTD site is up so the DOI badge lands on a populated README —
+and a report DOI only when the report is declared frozen. I need: author
+list and order, ORCIDs, and whether Claude is listed (IOPtics' README
+credits "and Claude"; CFF has no good slot for a non-human author — a
+`preferred-citation` note or the README line is the usual compromise).
+>A.  Let's follow your Recommendation.  Authors = Prochaska and Claude.
+My ORCID is 0000-0002-7738-6875.  Generate an abstract
+
+**R9. Housekeeping I will do unless you object** (no answer needed): a
+`docs` job in CI running `sphinx-build -b html` (advisory, like RTD's
+`fail_on_warning: false`) so the site cannot silently break; `make html`
+verified locally before handing over; a `linkcheck` pass on the migrated
+docs; README badges (CI, RTD, license; DOI placeholder until R8); RTD's
+`sphinx_rtd_theme`/`furo` pinned in `docs/requirements.txt`. **Not** in
+scope unless you say so: dark-mode figure variants (report §13 item 10 —
+furo has a dark mode and the figures have a fixed light `SURFACE`
+background, so they will sit on a light card; acceptable for now), and any
+edit to the frozen docs' content.
+>A.  Sounds good
+
+---
+
+*(Round 2, from prompt "Website and RTD"/2, 2026-09-14, run as Fable. Same
+convention. Your R1/R4 answers reframe the whole thing — EPFT-UP is a
+*family* of empirical PFT models and MOANA is member #1 — and R4 opened the
+data-access question, which is where most of this round goes. S5 is the
+abstract you asked for; S6 is a verified quickstart.)*
+
+**S1. The reframed site — does this structure read as "a framework, MOANA
+inside it"?**
+*Recommended toctree:*
+1. **Overview** — EPFT-UP as a framework for empirical PFT models with
+   uncertainty and provenance; MOANA named as the first model and the
+   reproduction baseline, with a link to the report — no roadmap (R2).
+2. **Getting started** — install; `Data access` (S2/S3); Earthdata login.
+3. **Models** — an index page with one entry today, **MOANA**, as a
+   sub-tree: *Report* · *Design* · *Reproduction record* · *Open items*
+   (the four Markdown documents via include-shims, R5). Future models
+   become sibling sub-trees.
+4. **Data** — the datasets page: every input, its source DOI/URL, licence,
+   size, and how to obtain it (S2).
+5. **API reference** — `epft_up.moana` module pages (R6), organised so
+   `epft_up.<next model>` slots in beside it.
+6. **Provenance & citing** — code provenance, vendored-LUT sha256s,
+   `CITATION.cff`, DOI badge.
+The MOANA report keeps its own (first-person) title inside its page; the
+shim/sidebar entry reads "MOANA report".
+>A.  Yes, that looks great.
+
+**S2. Data access for the community — what can actually be redistributed.**
+I inventoried `$OS_COLOR` by source, size and licence:
+
+| input | used by | size | source & licence | redistributable? |
+|---|---|---|---|---|
+| AMT23/24/25/28 flow cytometry (BODC) | targets (i), (ii) | 0.1–0.3 MB each | BODC DOIs; **NERC Open Data Licence** (attribution: "Contains data supplied by Natural Environment Research Council") | yes, with attribution — but a DOI already exists, so *cite, don't re-deposit* |
+| Brewin et al. 2023 in-situ Rrs (BODC) | target (ii) | 0.8 MB | BODC DOI 10.5285/f3198e10-…; same licence | same |
+| Jordan et al. 2025 underway SST netCDF | target (i) SST | 545 MB | Zenodo 10.5281/zenodo.12527954, **CC-BY-4.0** | yes — but re-downloadable by DOI, so cite |
+| PACE L3M AOP + L4M MOANA granules | target (iii-a), 5 of 6 figures | 175 MB/day | NASA OB.DAAC via `earthaccess`, public (Earthdata login) | re-downloadable; code already does it |
+| **AMT24 HyperSAS Level-2 (PML)** | **target (i) — the training radiometry** | **15 GB** (4.8 GB `.sav` actually read + 10 GB unused CSVs) | Brewin+ **private communication**, 2026-08; unpublished; no licence | **no — not without PML's permission** |
+| vendored MOANA LUTs | everything | 25 KB | NASA OCSSW, in the repo | already shipped |
+
+So the community can reproduce targets (ii) and (iii-a) and five figures
+from public sources today; **only target (i) is gated**, by the one dataset
+that is not ours to publish.
+*Recommended, three parts:* (a) **don't deposit anything that has a DOI** —
+instead ship `scripts/fetch_data.py` that pulls the BODC/Zenodo/PACE inputs
+into the data root with checksums, which is better provenance than a copy;
+(b) for the PML radiometry, **ask Brewin/Tilstone for permission** to
+deposit either the 4.8 GB `.sav` subset or — far more useful and far smaller
+— our **derived, screened 1-minute Rrs stream + the n = 30 matchup table**
+(a few MB; still a derivative of their data, so still their call). This ask
+belongs on `requests/PML_follow_up.md` as a new item; I can draft it.
+(c) Repository: **Zenodo** rather than Dryad — Zenodo takes 50 GB/record for
+free, mints a DOI that Zenodo↔GitHub already integrates with (R8), and does
+not charge; Dryad is curated, data-only, has a fee unless the institution is
+a member (UC is, via CDL), and is the better fit if you want a *curated* data
+paper later. Say which, or tell me to skip deposition entirely and document
+target (i) as "reproducible with the PML delivery, available on request".
+>A.  I like your Recommendation, and I will ask PML.  I am confident they will give permission.
+
+**S3. The data root — `$OS_COLOR` is ours, not the community's.**
+The code resolves the root in six places (`io._os_color`,
+`validation._pace_dir`, two conftest probes, two scripts), all through
+`$OS_COLOR`, with the fixed sub-layout `AMT/AMT<nn>/`, `PACE/`, `EPFT-UP/`.
+*Recommended:* keep the variable name `$OS_COLOR` (renaming touches the
+frozen MOANA code for no functional gain) and **document it** on the Data
+page as "set `$OS_COLOR` to any directory; `fetch_data.py` (S2a) creates the
+layout under it". If you would rather the public-facing name be
+`$EPFT_UP_DATA`, I would add it as an *alternative* read in `_os_color()`
+(two lines, one test) with `$OS_COLOR` still honoured.
+>A. Ok, use your Recommendation.
+
+**S4. `CITATION.cff` — the fields I will fill.**
+`title`: "EPFT-UP: Empirical Phytoplankton Functional Types with Uncertainty
+and Provenance"; `authors`: Prochaska, J. Xavier (UC Santa Cruz, ORCID
+0000-0002-7738-6875) and — since CFF requires a person or an *entity* —
+`entity: name: "Claude (Anthropic)"`; `license: BSD-3-Clause`;
+`repository-code`; `abstract` (S5); `version` and `date-released` set at
+the first tag. Open: **version number for the first release** — I would
+tag `v0.1.0` and bump `__version__` from `0.0.dev0` accordingly when the RTD
+site is up, per R8's timing. Also whether to add `.zenodo.json` (lets
+Zenodo carry keywords/communities the CFF cannot) — recommended, small.
+>A. Yes, use `v0.1.0`
+
+**S5. Abstract — draft for `CITATION.cff` / Zenodo / the Overview page
+(~170 words). Edit freely.**
+> EPFT-UP is an open Python framework for building, retraining and
+> validating *empirical* phytoplankton functional type (PFT) algorithms —
+> models that map hyperspectral remote-sensing reflectance (and ancillary
+> fields such as sea-surface temperature) to the abundance or composition of
+> phytoplankton groups — with per-retrieval uncertainty and end-to-end
+> provenance as first-class outputs. Every product carries the data, code
+> version and processing decisions that produced it, and every reported
+> number is regenerated by a script in the repository. The first model in
+> the family is a from-scratch reimplementation of NASA's PACE MOANA
+> algorithm for *Prochlorococcus*, *Synechococcus* and picoeukaryotes: it
+> recovers NASA's operational PCA basis from the AMT24 training cruise,
+> reproduces the published skill within the limits of the archived data,
+> reports the first held-out skill numbers for hyperspectral in-situ
+> reflectance (AMT23/25/28), and documents where the shipping product
+> departs from its publication. EPFT-UP is intended as a shared baseline
+> against which the ocean-colour community can develop and compare the
+> next generation of empirical PFT models trained on data from across the
+> global ocean.
+>A.  that's great, thanks
+
+**S6. README quickstart — verified, one real PACE pixel.**
+R1 asked for a five-line quickstart. A synthetic spectrum gives meaningless
+abundances, so I wrote it against a real pixel (`scripts/quickstart_moana.py`,
+in the repo and run this session): fetch the 2025-07-01 daily PACE Rrs
+granule with `earthaccess` (cached after the first call), select the
+**cloud-free pixel nearest** 30°N 60°W in the Sargasso Sea (a daily
+composite is ~89 % cloud/fill — the point itself was empty and my first
+version returned NaN with `FLAG_TOO_FEW_BANDS`, which is the QC doing its
+job), call `run_moana` with an SST, print the result. Output this session:
+`pixel 31.55°N 60.05°W · pro 150219 · syn 3337 · apeuk 893 cells/mL ·
+flags 0`. It needs an Earthdata login (free) and nothing from `$OS_COLOR`
+beyond a cache directory.
+*Recommended:* this is the README example, with that output shown and the
+sentence "Prochlorococcus needs SST; here a nominal 27 °C — the pipeline
+pulls it from GHRSST in real use". Alternative: a data-free example on the
+vendored LUTs only (loadings, coefficients, the standardise → project →
+evaluate steps), which shows the mechanics but no science.
+>A.  Use your recommendation
+
+**S7. Where the "series of models" language goes without becoming a
+roadmap.** R1 wants the README to say the future brings a series of
+empirical PFT models; R2 says no roadmap details.
+*Recommended wording, README and Overview alike:* "MOANA is the first of a
+planned series of empirical PFT models in EPFT-UP; each will be trained,
+validated and documented with the same uncertainty and provenance
+machinery." One sentence, no names, no dates, no §13. The Models index page
+carries the same sentence and nothing more.
+>A.  Your recommendation is good
+
+**S8. Housekeeping I will do unless you object** (no answer needed, extends
+R9): the datasets page's attribution statements exactly as the licences
+require (NERC's fixed sentence; CC-BY citation for Jordan; NASA OB.DAAC
+acknowledgement); `scripts/quickstart_moana.py` kept in sync with the README
+by a Tier-2 test that imports and runs it when the granule is cached; the
+Overview figure stays `moana_heldout_skill.png` (R1) but is captioned as
+"the MOANA baseline's held-out skill" so the framework, not the model, is the
+subject of the page.
 
 ### Move
 
@@ -682,3 +993,115 @@ from now on (it writes dated JSON to `$OS_COLOR/EPFT-UP/moana/`).
 **Not done, by design:** target (iii-b) (no SeaBASS counts on disk); the
 IOPtics side of the Move (branch deletion / tag — yours, Q17); RTD (Q12);
 X-MOANA (Q8).
+
+### 2026-09-13 (Website and RTD/1 — scoped the README rewrite and the RTD site; nine questions R1–R9 in Q&A/RTD)
+
+Executed prompt "Website and RTD"/1 as **Fable 5.1**. Discussion only: nine
+questions with recommended answers are in Q&A/RTD above. **No files other
+than this one were changed; no git state was changed.** The Move commits
+(`c1eaf8e`, `c2ac705`) are yours.
+
+**What I checked, so the questions rest on facts rather than assumptions:**
+
+- **IOPtics' RTD setup is a working template.** `ioptics.readthedocs.io`
+  is live (HTTP 200, `/en/latest/`), built from `.readthedocs.yaml`
+  (ubuntu-24.04, py3.12, `pip install .` + `docs/requirements.txt`),
+  `docs/source/conf.py` (Sphinx + furo, autodoc/autosummary/napoleon/
+  viewcode/intersphinx/mathjax, heavy imports mocked) and an `.rst`-only
+  tree (`index`, `installation`, `datasets`, `models`, `reports/`, `api/`).
+  Its Markdown design docs are **not** on the site — there is no MyST.
+- **EPFT-UP's substance is Markdown**, and it is MyST-clean: the report
+  (44 headings, 98 table rows, 6 images at `figures/moana_*.png`, 35
+  Unicode footnote marks), design doc, `moana_blocked.md`,
+  `moana_rederivation.md` — **zero HTML tags, zero `$` math** across all of
+  them. `myst_parser` 5.1.0, `furo`, `sphinx_rtd_theme`, `pydata_sphinx_theme`,
+  `sphinx_copybutton`, `sphinx_design` and Sphinx 9.1.0 are already in
+  `ocean14`; `nbsphinx`, `numpydoc`, `sphinx_autodoc_typehints` are not (and
+  are not needed).
+- **No dangling cross-repo links.** After the Move's Q13 rewrites, the four
+  migrated docs contain no relative links or paths outside this repo; the
+  only `ioptics/` mention left is `conftest.py`'s own provenance line.
+- **GitHub:** `ocean-colour/EPFT-UP` is public, BSD-3, default branch
+  `main`, homepage empty. **`main` is still the initial commit**
+  (`cd07fd1`, behind `moana` by 4) — RTD would build an empty site if
+  enabled today (R7). `epft-up.readthedocs.io` is 404, so the slug is free.
+- **No citation metadata exists** — no `CITATION.cff`, `.zenodo.json` or
+  `codemeta.json`; the README has no badges (R8/R9).
+- Docstrings are NumPy-style with the `name : type — description` idiom
+  throughout `epft_up/moana/`, which napoleon renders (R6).
+
+**What I learned about the repository.** The two halves of this prompt pull
+in different directions and the questions are drawn along that seam: the
+site wants the report and design doc published *unchanged* (they are the
+frozen baseline record, Q15) while the README wants a fresh, outward-facing
+voice — so the plan keeps the Markdown single-sourced under `reports/` and
+`docs/design/` (where the scripts write it) and reaches it from `docs/source/`
+through MyST include-shims, with any reader-facing caveats (e.g. the design
+doc's pre-implementation "Status" line) living in the shim, not the document.
+The other seam is public vs. repo-only: `requests/PML_follow_up.md` names
+colleagues in a live data ask and `claude_prompts/` is the working record;
+both belong in git, neither on the website (R4).
+
+No git commands that change repository state were run.
+
+### 2026-09-14 (Website and RTD/2 — answers folded in; the site reframed around a model *family*; data-access inventory; round-2 questions S1–S8, abstract drafted, quickstart written and run)
+
+Executed prompt "Website and RTD"/2 as **Fable 5.1**. Read the R1–R9
+answers, asked a second round (S1–S8 in Q&A/RTD). Two files added:
+`scripts/quickstart_moana.py` (S6 — the proposed README example, executed
+against the cached PACE granule) and this log. **No other files changed; no
+git state changed.**
+
+**What the answers settle.** README for semi-expert ocean-colour readers,
+leading with results and a quickstart, but framing MOANA as the *starting
+point* of a series of empirical PFT models (R1); no roadmap, link the report
+(R2); Sphinx + furo + MyST, include-shims, autodoc per module, `main` as the
+doc source after a fast-forward merge, Zenodo DOI at first release with
+`CITATION.cff` now (R3, R5–R9); authors Prochaska + Claude, ORCID
+0000-0002-7738-6875, abstract requested (R8). **R4 redirected the site**: not
+MOANA-centric — MOANA is a sub-page under Models — and raised that the
+community has no `$OS_COLOR`, with Dryad offered if the data matter.
+
+**What I measured for the data question (S2), rather than assumed:**
+
+- `$OS_COLOR` by source: BODC flow cytometry 0.1–0.3 MB per cruise; Brewin
+  2023 Rrs 0.8 MB; Jordan 2025 netCDF 545 MB; PACE granule pair 175 MB;
+  **AMT24 HyperSAS Level-2 15 GB, of which the `.sav` files the code reads
+  are 4.8 GB and the never-read CSVs 10 GB**; the derived products written so
+  far, 32 KB.
+- Licences: the BODC deposits carry the NERC Open Data Licence (mandatory
+  attribution sentence extracted from the licence document on disk); the
+  Jordan record is CC-BY-4.0 (checked via the Zenodo API, record 12527954,
+  eight AMT netCDFs); PACE is public via Earthdata; the PML Level-2 delivery
+  is a private communication (report §12.1 and its references) with no
+  licence — the single non-redistributable input, and it gates only target
+  (i).
+- The data root is resolved through `$OS_COLOR` at six code sites, all via
+  one helper in `io.py` plus `validation._pace_dir`, the conftest probes and
+  two scripts — so an alternative public-facing variable is a two-line
+  change if wanted (S3).
+
+**The quickstart runs — after one correction worth recording.**
+`scripts/quickstart_moana.py`: `fetch_pace_pair` (cache hit, no download) →
+`run_moana` with a nominal 27 °C SST → three abundances and a zero flag
+word. The first version selected the pixel *at* 30°N 60°W and returned NaN
+with flag 4 (`FLAG_TOO_FEW_BANDS`): the 2025-07-01 daily 0.1° composite has
+complete spectra in only 11 % of pixels (712,412 of 6.48 M), and a 2°×2°
+box around that point has none. The script now takes the nearest cloud-free
+pixel (31.55°N 60.05°W → Pro 150,219, Syn 3,337, picoeuk 893 cells mL⁻¹,
+flags 0). It is the executable form of the README example so the README
+cannot drift from working code (S8 proposes a Tier-2 test around it).
+
+**What I learned about the repository.** R4's correction is the important
+one: the Move left the repo *shaped* like a MOANA repo (one model, one
+report), and I had carried that shape into the site plan. The fix is
+structural, not cosmetic — a `Models/` sub-tree and `epft_up.<model>`
+namespaces that make the second model a sibling, not an appendix. On data,
+the useful finding is how little is actually gated: everything except the
+PML radiometry is public with a DOI, so the honest community story is
+"targets (ii) and (iii-a) and five of six figures reproduce from public
+sources today; target (i) needs the PML delivery" — and the smallest thing
+worth asking PML to release is not their 15 GB but our few-MB screened
+stream and matchup table.
+
+No git commands that change repository state were run.
