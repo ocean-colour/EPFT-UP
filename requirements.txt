@@ -21,6 +21,10 @@ h5py
 netcdf4
 cftime
 
+# NASA Earthdata access (MOANA track: PACE OCI granules). Needs Earthdata
+# credentials in ~/.netrc; code paths that use it are skip-guarded.
+earthaccess
+
 # Sibling packages (not on PyPI) — uncomment as they are needed.
 # Ocean-colour utilities shared with IOPtics:
 # git+https://github.com/ocean-colour/ocpy

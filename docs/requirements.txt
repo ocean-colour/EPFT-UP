@@ -1,0 +1,12 @@
+# Documentation build requirements for Read the Docs.
+# Install with: pip install -r docs/requirements.txt
+#
+# The EPFT-UP package itself (and its runtime deps) is installed separately by
+# Read the Docs via `.readthedocs.yaml` (pip install .), so this file only
+# needs the Sphinx toolchain. `earthaccess` (network-only) is mocked in conf.py.
+
+sphinx>=7.0
+furo>=2024.1               # light/dark HTML theme (see conf.py)
+myst-parser>=3.0           # the reports and design docs are Markdown, published as-is
+sphinx-copybutton>=0.5
+sphinx-design>=0.6
