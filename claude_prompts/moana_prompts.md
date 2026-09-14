@@ -1105,3 +1105,76 @@ worth asking PML to release is not their 15 GB but our few-MB screened
 stream and matchup table.
 
 No git commands that change repository state were run.
+
+### 2026-09-14 (Website and RTD/3 — plan executed: README rewritten, Sphinx/RTD site built (16 pages, local build green), CITATION.cff + .zenodo.json, fetch_data.py, quickstart test, CI docs job; version → 0.1.0)
+
+Executed prompt "Website and RTD"/3 as **Fable 5.1**, applying R1–R9 and
+S1–S8 as answered. **No git state was changed** — the tree is uncommitted
+and yours (`git status` lists 13 entries). The RTD project itself, the
+`moana` → `main` fast-forward and the `v0.1.0` tag/release are your side (R7,
+R8); everything the repo needs for them is in place.
+
+**What landed (13 files new, 4 edited):**
+
+| file | what |
+|---|---|
+| `README.md` | rewritten (R1/R2/S6/S7): badge row (CI · RTD · licence; DOI placeholder comment) → pitch → "What it does" with the headline numbers → the S7 sentence → held-out-skill figure → verified quickstart with its output → install + `$OS_COLOR`/`fetch_data.py` → docs link → citing → authors → licence. The layout section moved to the site. |
+| `.readthedocs.yaml`, `docs/requirements.txt`, `docs/Makefile`, `docs/make.bat` | copied from IOPtics @ `develop` and renamed; `myst-parser`, `sphinx-copybutton`, `sphinx-design` added to the toolchain (R3) |
+| `docs/source/conf.py` | IOPtics' conf + MyST (`colon_fence`, `deflist`, `attrs_inline`, `heading_anchors = 3`), furo with the ocean palette and GitHub source links, `autodoc_mock_imports = ['earthaccess']` only (R6), `suppress_warnings` for the GitHub-written Markdown's heading levels |
+| `docs/source/_static/custom.css` | IOPtics' ocean-colour accents, renamed |
+| `docs/source/index.md` | Overview: the S5 abstract as prose, the S7 sentence, the held-out-skill figure captioned as "the MOANA baseline's" (S8), three toctrees (Getting started / Models / Reference) — the S1 structure |
+| `docs/source/getting_started/installation.md` | install, Earthdata `~/.netrc`, `$OS_COLOR`, the quickstart with output, tests |
+| `docs/source/data.md` | the S2 inventory as a table (source DOI, licence, size, how to obtain), the three attribution statements verbatim (S8), the `$OS_COLOR` layout tree, `fetch_data.py` usage; the PML radiometry marked "available on request; permission to deposit a derived subset being sought" |
+| `docs/source/models/index.md`, `models/moana/index.md` | the Models index (S7 sentence, one entry) and the MOANA landing page with its four sub-pages |
+| `models/moana/{report,design,reproduction,open_items}.md` | MyST include-shims (R5) onto `reports/MOANA_Claude_Report.md`, `docs/design/moana_design.md`, `reports/moana_rederivation.md`, `reports/moana_blocked.md` with `:relative-images:`; the design shim carries the "historical design document" note and the reproduction shim a one-paragraph explanation — the documents themselves untouched (Q15) |
+| `docs/source/api/index.rst`, `api/moana/{io,pipeline,algorithm,train,validation}.rst` | one autodoc page per module (R6) |
+| `docs/source/provenance.md` | code provenance (IOPtics `moana` @ `3aa3b6e`), the vendored-LUT README included with `:heading-offset: 2`, how to cite, pointer to the data attributions |
+| `CITATION.cff`, `.zenodo.json` | S4/S5: title, v0.1.0, 2026-09-14, BSD-3-Clause, Prochaska (UCSC, ORCID 0000-0002-7738-6875) + `Claude (Anthropic)` as a CFF entity, keywords, the S5 abstract (HTML-wrapped for Zenodo) |
+| `epft_up/__init__.py`, `setup.py` | `0.0.dev0` → **`0.1.0`** (S4) |
+| `scripts/fetch_data.py` | S2a: downloads the Jordan netCDF (Zenodo API link) and the PACE pair (via `fetch_pace_pair`), verifies six public files against SHA-256s measured from the copies behind every report number, prints BODC DOIs + expected filenames for anything missing (BODC is browser-only); `--verify`, `--no-pace`, `--root` |
+| `epft_up/tests/test_quickstart.py` | S8: Tier-2 test that imports `scripts/quickstart_moana.py`, swaps `fetch_pace_pair` for the cached paths (no network), runs it, and asserts flags 0, positive abundances and the README's pixel (31.55°N 60.05°W) |
+| `.github/workflows/ci.yml` | R9: a `docs` job that builds the site exactly as RTD does (`sphinx-build -b html`, advisory) |
+
+**Verified:**
+
+- `sphinx-build -b html` → **build succeeded, 16 pages**, all six report
+  figures copied into `_images/`, the design-page admonition present, the
+  LUT README's headings offset under Provenance, the Overview figure
+  resolved from `../../reports/figures/` — so the include-shim approach
+  (R5) works without copying or symlinking anything. **29 warnings, all
+  from docstrings** in the frozen `epft_up/moana/` code: the
+  `name : type — description` idiom with wrapped continuation lines
+  trips docutils ("unexpected indentation"), and `|cosine|` / `|Δlog₁₀|`
+  parse as RST substitution references. The text still renders (checked
+  `compare_loadings`: the `|cosine|` appears in the page), so this is
+  cosmetic. I did **not** edit the docstrings — Q10 froze the code — but a
+  docstring-only touch-up (blank lines, escaping the pipes) would clear all
+  29 and is worth a decision; RTD's `fail_on_warning: false` means the site
+  builds regardless.
+- `pytest -q` → **38 passed in 9.0 s, 0 skipped** (37 + the new quickstart
+  test, which ran against the cached granule).
+- `fetch_data.py --verify` → 6 verified, 0 mismatches, 0 missing.
+- `linkcheck` → 10 working, 8 redirected, **3 broken — all
+  `github.com/…/blob/main/…` links** (`CITATION.cff`, the history file, the
+  quickstart script), broken only because `main` is still the initial
+  commit; they resolve when `moana` is fast-forwarded to `main` (R7). The RTD
+  badge will likewise read "unknown" until the project exists.
+- `CITATION.cff`, `.zenodo.json`, `.readthedocs.yaml`, `ci.yml` parse.
+
+**Not done, by design:** the RTD project import and `main` merge (yours,
+R7); the `v0.1.0` tag → Zenodo DOI → README badge (yours, R8 — the badge
+slot is a comment in the README); the PML permission ask (yours, S2 — say
+the word and I will draft it into `requests/PML_follow_up.md`); the
+docstring warnings above.
+
+**What I learned about the repository.** MyST include-shims turn out to be
+the whole trick: five two-line files publish 1,900 lines of frozen Markdown
+with their figures, and the site-only framing (the "historical design
+document" note) lives in the shim, so the record and the presentation are
+separable by construction. The docstring warnings are the one place the
+frozen-code decision has a cost on the site, and it is a small one. The
+data page ended up being the most useful new document — it is the first
+place the project states, in one table, exactly what a stranger can and
+cannot reproduce from public archives.
+
+No git commands that change repository state were run.

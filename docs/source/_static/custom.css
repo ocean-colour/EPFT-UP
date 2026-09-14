@@ -1,0 +1,61 @@
+/* EPFT-UP — ocean-colour theme accents (copied from IOPtics) on top of Furo (light + dark). */
+
+:root {
+  --iop-deep:   #023e5c;   /* deep ocean */
+  --iop-blue:   #0b6fa4;   /* mid ocean  */
+  --iop-teal:   #159b8a;   /* shelf teal */
+  --iop-green:  #1f9e5a;   /* productive green */
+  --iop-foam:   #e8f5f2;   /* seafoam    */
+}
+
+/* Light mode: ocean-blue brand, teal accents. */
+body {
+  --color-brand-primary: var(--iop-blue);
+  --color-brand-content: var(--iop-blue);
+  --color-admonition-title-background--note: rgba(21, 155, 138, 0.12);
+  --color-admonition-title--note: var(--iop-teal);
+}
+/* Dark mode: lift the palette so it reads on a dark background. */
+body[data-theme="dark"] {
+  --color-brand-primary: #6fc3e8;
+  --color-brand-content: #6fc3e8;
+}
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) {
+    --color-brand-primary: #6fc3e8;
+    --color-brand-content: #6fc3e8;
+  }
+}
+
+/* Ocean gradient behind the project name in the sidebar. */
+.sidebar-brand {
+  background: linear-gradient(135deg, var(--iop-deep), var(--iop-blue) 55%,
+                              var(--iop-teal));
+  color: #ffffff !important;
+  border-radius: 8px;
+  padding: 0.9rem 0.8rem;
+  margin-bottom: 0.6rem;
+}
+.sidebar-brand .sidebar-brand-text { color: #ffffff !important; }
+
+/* Section headings get an ocean underline; H1 a gradient accent bar. */
+article h1 {
+  border-bottom: 3px solid transparent;
+  border-image: linear-gradient(90deg, var(--iop-blue), var(--iop-teal),
+                                var(--iop-green)) 1;
+  padding-bottom: 0.25rem;
+}
+article h2 { color: var(--iop-deep); }
+body[data-theme="dark"] article h2 { color: #9ad4ea; }
+
+/* Tables: subtle seafoam header, zebra rows — for the report tables. */
+article table.docutils thead { background: var(--iop-foam); }
+article table.docutils thead th { color: var(--iop-deep); }
+body[data-theme="dark"] article table.docutils thead { background: #10343f; }
+article table.docutils tbody tr:nth-child(odd) { background: rgba(11,111,164,0.04); }
+
+/* Figures centered with a hairline frame. */
+article .figure img, article figure img {
+  border: 1px solid rgba(11, 111, 164, 0.25);
+  border-radius: 6px;
+}
