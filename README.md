@@ -1,5 +1,8 @@
 # EPFT-UP
 
+[![DOI](https://zenodo.org/badge/1368007081.svg)](https://doi.org/10.5281/zenodo.22797970)
+
+
 [![CI](https://github.com/ocean-colour/EPFT-UP/actions/workflows/ci.yml/badge.svg)](https://github.com/ocean-colour/EPFT-UP/actions/workflows/ci.yml)
 [![Documentation](https://readthedocs.org/projects/epft-up/badge/?version=latest)](https://epft-up.readthedocs.io/en/latest/)
 [![License: BSD-3](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
