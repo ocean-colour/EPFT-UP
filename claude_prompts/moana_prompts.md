@@ -36,6 +36,201 @@ Use Fable if you can. Log your work.
 
 3. I have answered your questions in Q&A/RTD.  Please read them and proceed to execute the plan.  Use Fable if you can. Log your work.
 
+### Dove+2026
+
+1. I have downloaded the Dove+2026 paper that uses MOANA into `papers/dove2026.pdf`.  Please read it and then comment on how compomised (if at all) the results are given what we have learned about the MOANA algorithm.  Write your findings in the Report/Dove+2026 section.  
+Use Fable if you can. Log your work.
+
+## Report
+
+### Dove+2026
+
+*Dove, L. A. & Freilich, M. A. (2026), "Biophysical dynamics of mesoscale
+eddies: coincident observations from SWOT and PACE", Oceanography 39(1),
+14–21. Read 2026-09-22 (`papers/dove2026.pdf`, 10 pp). Assessment against
+`reports/MOANA_Claude_Report.md` (rev. 4); numbers below that are ours come
+from `reports/scripts/dove2026_check.py`, written for this prompt.*
+
+#### What the paper does with MOANA
+
+Dove & Freilich combine SWOT altimetry (the provisional 0.1° MIOST L4
+product, Rossby number `Ro = ζ/f` from geostrophic velocities) with PACE OCI
+products over **63–75°W, 30–40°N, April–November 2024** — the Gulf Stream
+and the subtropical gyre south of it, with waters north of the Stream masked
+(ADT < 0.3 m). PACE fields are the OB.DAAC L3/L4 browser products; MOANA
+gives *Prochlorococcus*, *Synechococcus* and picoeukaryotes in cells mL⁻¹.
+Processing: ±2-day windows → 5-day composites; days with > 50 % cloud in the
+region dropped; the composites are **linearly averaged onto the 0.1°
+altimetry grid**; pixels are then binned by Ro (Figs 2c, 3) or split into
+"cyclonic" (Ro > 0.4) vs "background" (|Ro| < 0.1) and tracked in time
+(Fig. 4), with standard errors of the mean across pixels.
+
+The MOANA-dependent claims:
+
+1. **Picoeukaryotes and *Synechococcus* are enhanced in cyclonic eddies** in
+   spring/early summer, up to 2.5× background (Fig. 4d), with their peaks
+   co-timed; concentrations rise monotonically with Ro (Fig. 3c–f), and the
+   strongest signals sit at the Ro extremes only SWOT resolves.
+2. **Both decline from spring to fall**, converging on cyclonic/background
+   ratios of ~1.25 by August–November.
+3. ***Prochlorococcus* shows little differential enhancement** (ratio
+   1.0–1.2), is elevated in *both* cyclonic and anticyclonic features
+   (Fig. 3a), and "remains somewhat constant" through the season (Fig. 4a).
+   They interpret this as *Prochlorococcus* being weakly responsive to eddy
+   nutrient enrichment, with a nod to unresolved ecotypes.
+
+They add one sentence of caveat: algorithms "may be subject to geographic
+biases in their training data as well as additional biases introduced by
+reliance on sea surface temperature or salinity." That sentence is correct;
+what follows puts sizes on it.
+
+#### Verdict, taxon by taxon
+
+| claim | rests on | status | why |
+|---|---|---|---|
+| picoeukaryote enhancement in cyclones (2.5×), Ro-monotonic, seasonal decline | picoeuk product | **robust** | the one taxon that transfers (held-out MAE 1.47, R² 0.78, §12.3); no SST term; its coefficient assignment is undisputed, so the §7.1 mapping error does not touch it (bit-identical under both mappings); no clipping in their domain |
+| *Synechococcus* enhancement, co-timed with picoeuk, seasonal decline | Syn product | **qualitatively supported; absolute values ~20 % low** | the operational mapping makes Syn a *uniform* 0.80× the as-published value (§7.1) — cancels in the ratios and time series they show, but every cells mL⁻¹ in Figs 3–4 is low by that factor; Syn's held-out transfer is the fragile one (pooled R² −3.0, collapses on AMT28, §12.3), so the *magnitude* of the 2.5× is less certain than for picoeuk |
+| *Prochlorococcus*: ratio 1.0–1.2, elevated in anticyclones too, seasonally constant | Pro product | **not supported by the product** | three independent effects, each the size of the signal claimed, detailed below |
+
+The paper's headline — eddies as transient niches that restructure the
+picophytoplankton community, seen from space alongside the physics — stands
+on picoeukaryotes and *Synechococcus* and is **not compromised in
+substance**. The *Prochlorococcus* paragraphs are.
+
+#### Why the *Prochlorococcus* conclusions do not hold
+
+**(a) The SST term is anti-correlated with their eddy classes, at the size of
+the effect they report.** MOANA's Pro model is
+`Pro = p₀ + 770448·log₁₀(SST) + Σ pᵢUᵢ` (§4.2, §9.10). Computed from the
+vendored coefficient: **dPro/dSST = 13,400 cells mL⁻¹ per °C at 25 °C**. A
+cyclonic Gulf Stream cold-core eddy runs 1–2 °C below its surroundings, so
+the SST term alone *removes* **14,000–28,000 cells mL⁻¹ (5–9 % of a
+3 × 10⁵ retrieval) inside cyclones** and *adds* a similar amount in warm-core
+anticyclones — before any optical information enters. Their finding that
+Pro is elevated in anticyclones as well as cyclones, and that the cyclonic
+ratio is only 1.0–1.2, is exactly the pattern the SST crutch produces on its
+own; the optical enhancement in cyclones could be larger than they report,
+or absent — the product cannot say. Seasonally the effect is larger still:
+regional SST rises from ~21 °C in April to ~28 °C in August, and
+`770448·log₁₀(28/21)` = **+96,000 cells mL⁻¹** — a third to a half of the
+entire 200–400 × 10³ range of their Fig. 4a — supplied purely by the
+temperature record. "Somewhat constant" Pro through the season therefore
+means either that the optical component *fell* by ~10⁵ cells mL⁻¹ or that the
+retrieval is climatology-dominated; Fig. 4a cannot be read as biology until
+the SST term is subtracted. This is the §9.6 circularity — anyone studying
+*Prochlorococcus*–temperature coupling reads back an assumption — with a
+magnitude attached, and their region (cold-core vs warm-core eddies) is the
+worst case for it.
+
+**(b) The operational coefficient mapping perturbs Pro by ~21 % with a
+spatially varying sign.** The shipping product places Pro's last coefficient
+on U7 instead of the published U17 (§7.1, settled empirically §12.4). Under
+the as-published mapping Pro differs by a **median 54 × 10³ cells mL⁻¹ (21 %
+of NASA's value)** and the difference **changes sign regionally** — it is a
+distortion of spatial gradients, not a scale factor. Inside a 12° × 10° box
+the sign is probably uniform (negative through the subtropical gyre), but the
+term is `p₇·U₇ − p₁₇·U₁₇`, a function of each pixel's spectrum, so it varies
+across eddy cores, edges and background at the ~20 % level — comparable to,
+and independent of, the 0–20 % cyclonic enhancement claimed.
+
+**(c) The Pro retrieval has not been shown to track real *Prochlorococcus*
+anywhere off the training cruise.** On Lange's own held-out cruises, with
+*in-situ hyperspectral* reflectance (no atmospheric correction to blame), the
+published model returns 1–4 × 10⁵ cells mL⁻¹ almost regardless of the counted
+abundance — pooled bias +119 %, R² −0.14, the "flat" panel of
+`figures/moana_heldout_skill.png` (§12.3); applied to our own AMT24 matchups
+it is +96 % biased (§12.2). Dove & Freilich's Pro values span 2–4 × 10⁵
+(Fig. 3a): the whole dynamic range they interpret lies inside the band the
+model emits when it is not tracking anything. Their 1.0–1.2 ratio is
+therefore a statement about the product's response to eddies, not
+demonstrably about the organism's.
+
+Any one of (a)–(c) would make the Pro paragraphs unsafe; together they mean
+the product's *Prochlorococcus* field in this region is substantially
+SST-plus-offset, and the eddy interpretation offered for it should be
+withdrawn or restated as "the MOANA product shows…".
+
+#### What we checked in their box, and what turned out *not* to be a problem
+
+Using the 2025-07-01 daily 0.1° L4M granule we hold (different year, same
+coefficients — unchanged since OCSSW T2023.31), inside 63–75°W, 30–40°N:
+
+| | *Pro* | *Syn* | *peuk* |
+|---|---|---|---|
+| pixels in box | 12,000 | | |
+| fill / cloud | 5,676 (47 %) | | |
+| **land sentinel 254** | **64** | 64 | 64 |
+| real retrievals | 6,260 | 6,260 | 6,260 |
+| clipped to 0 | **1** | 1 | 0 |
+| median (p10–p90), cells mL⁻¹ | 217 k (164–413 k) | 4.2 k (2.6–8.2 k) | 953 (753–2,556) |
+
+- **Clipping (§7.3) is not their problem.** The 18 % of zero-clipped Pro
+  pixels live poleward of 40° and in cold, picoeuk-rich water; their box
+  stops at 40°N and masks the Stream's north side. One zero in 6,260. The
+  same goes for the `int32` truncation (§7.3): irrelevant at 10³–10⁵ cells
+  mL⁻¹. This is the strongest thing to say in the paper's favour: they are
+  working in MOANA's home regime — the warm, oligotrophic Atlantic, Chl
+  0.1–0.4 mg m⁻³, the training basin.
+- **The land-254 sentinel (App. A.1) is a small, real exposure.** 64 pixels
+  per day at `254 cells mL⁻¹` for all three taxa — Bermuda (32.3°N, 64.8°W,
+  inside their box and south of the Stream) and the Carolina coast in the
+  north-west corner — pass a `valid_min ≤ x ≤ valid_max` screen and enter a
+  linear mean as absurdly low values. Regionally it is ~1 % of the Pro mean
+  and < 1 % of peuk (64 × (254 − 953)/6,260 ≈ −7 cells mL⁻¹) — negligible —
+  but in a sparsely populated Ro bin a handful of 254s is an outlier tail.
+  Worth a one-line check on their side; not a threat to the conclusions.
+- **Their absolute levels match the product.** Pro 200–400 k, peuk ~1–2 k in
+  summer background agree with our medians; their summer *Synechococcus*
+  (~10 k) is above our 4.2 k median for the July granule — plausibly year-
+  to-year (2024 vs 2025) or version (provisional vs V3.2) — not diagnostic.
+
+#### Two further caveats they should carry
+
+- **Scale and compositing (§9.9, §12.4).** Syn and peuk are `10^x` models:
+  the retrieval of a mean spectrum is not the mean of retrievals. NASA already
+  composites L2 retrievals to L3/L4 (which is why bit-reproduction from L3M
+  Rrs is impossible, §12.4); Dove & Freilich then average 5 days and then
+  average again onto 0.1° altimetry pixels. The Jensen bias this introduces
+  grows with sub-pixel variance, which is largest at eddy edges and high
+  |Ro| — precisely the bins (Ro ±0.7–0.9, SWOT-only) where they report the
+  tightest coupling and the largest concentrations. Direction: inflates the
+  patchier class relative to the quieter one, i.e. cyclonic edges relative
+  to background. Unquantified here; it argues for treating the *magnitude*
+  of the 2.5× as an upper-ish estimate while leaving the sign intact.
+- **"Validated in the Atlantic sector" is an overstatement.** The satellite
+  product has never been compared with in-situ cell counts (§10 item 4, §13
+  item 2 — the validation NASA itself says has not been done). What exists is
+  Lange et al.'s in-situ-radiometry training and MODIS-based held-out test,
+  and now our §12.3 in-situ hyperspectral held-out — which is where the Pro
+  transfer failure comes from.
+- (General, not MOANA-specific:) standard errors of the mean across
+  spatially autocorrelated 0.1° pixels understate the uncertainty of every
+  "statistically significant" difference in Fig. 4; the ratios are the
+  robust quantities.
+
+#### Bottom line
+
+The SWOT–PACE demonstration and the picoeukaryote / *Synechococcus* eddy
+results survive what we know about MOANA: relative, same-region, same-version
+comparisons of the taxa whose retrieval works, in the algorithm's home
+regime, with the systematic Syn bias cancelling in ratios. The
+***Prochlorococcus* results do not survive**: the SST term moves Pro by
+5–9 % per eddy and ~10⁵ cells mL⁻¹ per season in the direction that mimics
+their findings, the shipping coefficient mapping adds a ~21 % spectrally
+varying perturbation, and the model has not been shown to track Pro off its
+training cruise. The paper is a clean, real-world instance of §9.6/§9.10 —
+the product's temperature crutch being read back as ecology — published
+within two years of launch, and the best single argument yet for EPFT-UP's
+Rrs-only Pro variant and per-retrieval uncertainty (§9.3, §9.6).
+
+**What we could do about it (an afternoon each, data in hand):** run
+`run_moana` on the L3M AOP Rrs over their box under both mappings and with
+the SST term zeroed, to give them (i) the Pro field with the climatology
+removed, (ii) the mapping-induced spread, and (iii) picoeuk/Syn as computed
+from Rrs directly with no compositing beyond L3M. Candidate Open item for the
+report's §13; also worth a courteous note to the authors, since their own
+caveat sentence shows they anticipated the problem without a way to size it.
+
 ## Q&A
 
 ### RTD
@@ -1176,5 +1371,59 @@ frozen-code decision has a cost on the site, and it is a small one. The
 data page ended up being the most useful new document — it is the first
 place the project states, in one table, exactly what a stranger can and
 cannot reproduce from public archives.
+
+No git commands that change repository state were run.
+
+### 2026-09-22 (Dove+2026/1 — read Dove & Freilich (2026); assessed their MOANA-based results against the report; picoeuk/Syn findings robust, Prochlorococcus findings not supported)
+
+Executed prompt Dove+2026/1 as **Fable 5.1**. Read `papers/dove2026.pdf`
+(Oceanography 39(1), 14–21; text via `pdftotext`, figures by rendering pp.
+3–8), re-read report §7.1 (mapping and its cost), §7.3–7.5, §8, §9.6,
+§9.9–9.11 and §12.2–12.4, and wrote the assessment into Report/Dove+2026.
+One script added, `reports/scripts/dove2026_check.py`; **no other files
+changed, no git state changed.**
+
+**What the paper is.** SWOT (0.1° MIOST, Rossby number) × PACE over
+63–75°W, 30–40°N, April–November 2024; MOANA's three taxa 5-day-composited,
+linearly averaged onto the altimetry grid, binned by Ro and split cyclonic
+(Ro > 0.4) vs background (|Ro| < 0.1). Claims: picoeuk and Syn enhanced up
+to 2.5× in cyclones in spring, declining to ~1.25× by autumn; Pro weakly
+enhanced (1.0–1.2×), elevated in anticyclones too, seasonally flat.
+
+**The assessment, in one line per taxon.** Picoeukaryotes: robust — the taxon
+that transfers (§12.3), no SST term, coefficient assignment undisputed so
+the §7.1 mapping error is bit-identical for it, no clipping in their domain.
+*Synechococcus*: qualitatively supported; every absolute value is a uniform
+0.80× (operational mapping), which cancels in their ratios; the taxon's
+fragile transfer makes the 2.5× magnitude less certain. *Prochlorococcus*:
+not supported — (a) the SST term is anti-correlated with their eddy classes
+at the size of the claimed signal, (b) the mapping perturbation is ~21 % with
+spatially varying sign, (c) the model's Pro is flat on every held-out test.
+The paper's headline stands on the first two taxa and is not compromised in
+substance; its Pro paragraphs should be withdrawn or restated as properties
+of the product.
+
+**Calculations (script, not chat):** `dove2026_check.py` (1) counts the
+2025-07-01 L4M granule inside their box — 12,000 pixels, 5,676 fill,
+**64 land-254 sentinels** (Bermuda + the Carolina coast), 6,260 real,
+**1 clipped Pro zero**; medians Pro 217 k, Syn 4.2 k, peuk 953 cells mL⁻¹ —
+and (2) evaluates the SST term from the vendored coefficient:
+dPro/dSST = 13,400 cells mL⁻¹ °C⁻¹ at 25 °C; a −1/−2 °C cold core removes
+14–28 k (5–9 % of 3 × 10⁵); the April→August 21→28 °C warming adds
+**+96 k cells mL⁻¹**, a third to a half of their Fig. 4a Pro range.
+
+**What I learned.** Two things I did not expect. First, the paper works in
+MOANA's best regime — the 18 % clipping (§7.3) is a > 40°N phenomenon and
+they stop at 40°N, so the product defects I would have led with are absent
+from their box; the damage is entirely the *model* problems (SST crutch,
+mapping, Pro non-transfer), not the *product-hygiene* ones. Second, the
+eddy setting is the worst case for the SST term specifically: cyclonic =
+cold-core, anticyclonic = warm-core, so the climatology term produces their
+Pro pattern (weak cyclonic enhancement, anticyclonic elevation, seasonal
+constancy) with no biology at all. §9.6's "circularity for exactly the
+science the product invites" now has a published example, two years after
+launch. For EPFT-UP this is the clearest motivation yet for the Rrs-only Pro
+variant and per-retrieval uncertainty — and a concrete Open item: rerun their
+box from L3M Rrs under both mappings with the SST term zeroed.
 
 No git commands that change repository state were run.
