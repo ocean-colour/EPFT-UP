@@ -25,6 +25,8 @@ setup_keywords['install_requires'] = [
     'scikit-learn', 'tqdm', 'IPython', 'pytest',
     # Oceanography / gridded data I/O
     'xarray', 'h5netcdf', 'h5py', 'netcdf4', 'cftime',
+    # Map projections (SDP figures)
+    'cartopy',
     # NASA Earthdata access (MOANA track; skip-guarded)
     'earthaccess']
 # Sibling packages (e.g. ocpy) are not on PyPI; install them from

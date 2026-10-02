@@ -21,6 +21,9 @@ h5py
 netcdf4
 cftime
 
+# Plotting: map projections (SDP track, scripts/sdp/ingest_kramer2022.py)
+cartopy
+
 # NASA Earthdata access (MOANA track: PACE OCI granules). Needs Earthdata
 # credentials in ~/.netrc; code paths that use it are skip-guarded.
 earthaccess

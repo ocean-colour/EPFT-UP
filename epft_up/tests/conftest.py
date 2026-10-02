@@ -139,6 +139,19 @@ needs_amt24 = pytest.mark.skipif(
     not _amt24_available(),
     reason='requires the AMT24 tree under $OS_COLOR (MOANA track)')
 
+def _kramer2022_available():
+    """True if the Kramer 2022 PANGAEA export is under ``$OS_COLOR`` (SDP track)."""
+    root = os.getenv('OS_COLOR')
+    if root is None:
+        return False
+    return os.path.isfile(os.path.join(root, 'PANGAEA', 'Kramer2022',
+                                       'PANGAEA_937536.tab'))
+
+
+needs_kramer2022 = pytest.mark.skipif(
+    not _kramer2022_available(),
+    reason='requires $OS_COLOR/PANGAEA/Kramer2022/PANGAEA_937536.tab (SDP track)')
+
 #: Earthdata-credentialled tests (MOANA validation target (iii)).
 needs_netrc = pytest.mark.skipif(
     not os.path.isfile(os.path.expanduser('~/.netrc')),
