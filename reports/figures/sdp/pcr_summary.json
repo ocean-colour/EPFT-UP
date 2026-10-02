@@ -1,0 +1,1035 @@
+{
+ "script": "scripts/sdp/reproduce_pcr.py",
+ "epft_up_version": "0.1.0",
+ "input": {
+  "source": "PANGAEA doi:10.1594/PANGAEA.937536 (Kramer et al. 2021), CC-BY-4.0",
+  "file": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/PANGAEA_937536.tab",
+  "sha256": "63da2981596ef8c3d856e0ae12eab4cb715a9ec535e92d83458a7a7f5f910f3b",
+  "sha256_pinned": "63da2981596ef8c3d856e0ae12eab4cb715a9ec535e92d83458a7a7f5f910f3b",
+  "sha256_verified": true,
+  "n_samples": 145,
+  "wave_range_nm": [
+   400.0,
+   700.0
+  ],
+  "ref_repos": {
+   "Rrs_pigments": {
+    "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/ref/Rrs_pigments",
+    "sha": "b3e366225d16c4fe85c7406cd3d57e554b8cb57f",
+    "pinned_sha": "b3e366225d16c4fe85c7406cd3d57e554b8cb57f",
+    "matches_pin": true
+   },
+   "rrs-SDP-pigments": {
+    "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/ref/rrs-SDP-pigments",
+    "sha": "fb17c2f580dea9488b6ba11c690fe8c959e0a0fe",
+    "pinned_sha": "fb17c2f580dea9488b6ba11c690fe8c959e0a0fe",
+    "matches_pin": true
+   }
+  },
+  "loader": "epft_up.sdp.data.load_kramer2022",
+  "epft_up_version": "0.1.0",
+  "loaded_utc": "2026-10-02T21:41:03+00:00"
+ },
+ "gsm_product": {
+  "file": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/products/gsm_dRrs_insitu.npz",
+  "sha256": "a155b6ce40957f7276f01dc79d96ec901a13d8c5838e4eafa69cfbce4ce52e9b"
+ },
+ "predictors": {
+  "type": "diff(dRrs, 2), 1 nm",
+  "n_features": 299,
+  "wave_range": [
+   401.0,
+   699.0
+  ]
+ },
+ "lod_proxy": {
+  "Tchla": 0.001,
+  "HexFuco": 0.003,
+  "ButFuco": 0.002,
+  "Allo": 0.001,
+  "Fuco": 0.002,
+  "Perid": 0.004,
+  "Zea": 0.001,
+  "DVchla": 0.002,
+  "MVchlb": 0.003,
+  "Chlc12": 0.001,
+  "Chlc3": 0.001,
+  "Neo": 0.002,
+  "Viola": 0.001
+ },
+ "seed": 1,
+ "excluded_for_144": 69,
+ "run_utc": "2026-10-02T21:41:03+00:00",
+ "settings": {
+  "n_perm": 100,
+  "max_pcs": 30,
+  "k": 5,
+  "constraint": "pigment",
+  "train_frac": 0.75,
+  "seed": 1,
+  "valid_scaling": "own",
+  "selection_metric": "MAE"
+ },
+ "table2": {
+  "n145": {
+   "Tchla": {
+    "R2": 0.7342477549,
+    "R2_sd": 0.1263473118,
+    "R2_paper": 0.72,
+    "R2_sd_paper": 0.15,
+    "MADn": 0.5066239472,
+    "MADn_sd": 0.1482758068,
+    "MADn_paper": 0.498,
+    "MADn_sd_paper": 0.127,
+    "MADn_obs": 0.5160277658,
+    "n_pcs_median": 22.0,
+    "dR2_in_sd": 0.0949850326
+   },
+   "HexFuco": {
+    "R2": 0.4768028557,
+    "R2_sd": 0.1341587096,
+    "R2_paper": 0.54,
+    "R2_sd_paper": 0.16,
+    "MADn": 0.7272508004,
+    "MADn_sd": 0.2555201846,
+    "MADn_paper": 0.692,
+    "MADn_sd_paper": 0.201,
+    "MADn_obs": 0.7540589141,
+    "n_pcs_median": 13.0,
+    "dR2_in_sd": -0.3949821521
+   },
+   "ButFuco": {
+    "R2": 0.5138878378,
+    "R2_sd": 0.1475958201,
+    "R2_paper": 0.62,
+    "R2_sd_paper": 0.16,
+    "MADn": 0.6439796439,
+    "MADn_sd": 0.1961256667,
+    "MADn_paper": 0.588,
+    "MADn_sd_paper": 0.185,
+    "MADn_obs": 0.659563634,
+    "n_pcs_median": 13.0,
+    "dR2_in_sd": -0.6632010135
+   },
+   "Allo": {
+    "R2": 0.3825641245,
+    "R2_sd": 0.1492877331,
+    "R2_paper": 0.4,
+    "R2_sd_paper": 0.19,
+    "MADn": 1.2754905352,
+    "MADn_sd": 0.7440983766,
+    "MADn_paper": 1.221,
+    "MADn_sd_paper": 0.4,
+    "MADn_obs": 1.7444159773,
+    "n_pcs_median": 12.0,
+    "dR2_in_sd": -0.0917677657
+   },
+   "Fuco": {
+    "R2": 0.6273905387,
+    "R2_sd": 0.1271289523,
+    "R2_paper": 0.65,
+    "R2_sd_paper": 0.15,
+    "MADn": 0.8465443061,
+    "MADn_sd": 0.3005362001,
+    "MADn_paper": 0.844,
+    "MADn_sd_paper": 0.274,
+    "MADn_obs": 1.0253775901,
+    "n_pcs_median": 18.0,
+    "dR2_in_sd": -0.1507297421
+   },
+   "Perid": {
+    "R2": 0.5471242434,
+    "R2_sd": 0.1196301663,
+    "R2_paper": 0.49,
+    "R2_sd_paper": 0.13,
+    "MADn": 0.7418571666,
+    "MADn_sd": 0.1530427421,
+    "MADn_paper": 0.783,
+    "MADn_sd_paper": 0.166,
+    "MADn_obs": 0.7948407648,
+    "n_pcs_median": 18.0,
+    "dR2_in_sd": 0.439417257
+   },
+   "Zea": {
+    "R2": 0.3741972055,
+    "R2_sd": 0.1109953676,
+    "R2_paper": 0.37,
+    "R2_sd_paper": 0.1,
+    "MADn": 0.4970013495,
+    "MADn_sd": 0.1031603307,
+    "MADn_paper": 0.472,
+    "MADn_sd_paper": 0.071,
+    "MADn_obs": 0.4946500602,
+    "n_pcs_median": 21.0,
+    "dR2_in_sd": 0.0419720545
+   },
+   "DVchla": {
+    "R2": 0.4862432183,
+    "R2_sd": 0.1320793166,
+    "R2_paper": 0.55,
+    "R2_sd_paper": 0.12,
+    "MADn": 0.6425146339,
+    "MADn_sd": 0.1110523268,
+    "MADn_paper": 0.594,
+    "MADn_sd_paper": 0.103,
+    "MADn_obs": 0.6600034416,
+    "n_pcs_median": 25.0,
+    "dR2_in_sd": -0.5313065138
+   },
+   "MVchlb": {
+    "R2": 0.4054435455,
+    "R2_sd": 0.1640422242,
+    "R2_paper": 0.42,
+    "R2_sd_paper": 0.19,
+    "MADn": 0.9824378406,
+    "MADn_sd": 0.4220909952,
+    "MADn_paper": 0.975,
+    "MADn_sd_paper": 0.295,
+    "MADn_obs": 1.0772802328,
+    "n_pcs_median": 14.0,
+    "dR2_in_sd": -0.0766129182
+   },
+   "Chlc12": {
+    "R2": 0.6698398501,
+    "R2_sd": 0.1250920175,
+    "R2_paper": 0.7,
+    "R2_sd_paper": 0.13,
+    "MADn": 0.7135941185,
+    "MADn_sd": 0.2654852998,
+    "MADn_paper": 0.703,
+    "MADn_sd_paper": 0.235,
+    "MADn_obs": 0.7871874704,
+    "n_pcs_median": 20.0,
+    "dR2_in_sd": -0.2320011534
+   },
+   "Chlc3": {
+    "R2": 0.6245848579,
+    "R2_sd": 0.1241614974,
+    "R2_paper": 0.68,
+    "R2_sd_paper": 0.13,
+    "MADn": 0.6991085124,
+    "MADn_sd": 0.2673408887,
+    "MADn_paper": 0.639,
+    "MADn_sd_paper": 0.212,
+    "MADn_obs": 0.7498318652,
+    "n_pcs_median": 17.0,
+    "dR2_in_sd": -0.4262703239
+   },
+   "Neo": {
+    "R2": 0.3982421115,
+    "R2_sd": 0.1630448653,
+    "R2_paper": 0.42,
+    "R2_sd_paper": 0.21,
+    "MADn": 1.1146267782,
+    "MADn_sd": 0.4950486326,
+    "MADn_paper": 1.127,
+    "MADn_sd_paper": 0.354,
+    "MADn_obs": 1.2975365482,
+    "n_pcs_median": 15.0,
+    "dR2_in_sd": -0.1036089927
+   },
+   "Viola": {
+    "R2": 0.3529160469,
+    "R2_sd": 0.1654283627,
+    "R2_paper": 0.38,
+    "R2_sd_paper": 0.18,
+    "MADn": 1.1388722751,
+    "MADn_sd": 0.6142586716,
+    "MADn_paper": 1.101,
+    "MADn_sd_paper": 0.37,
+    "MADn_obs": 1.2825003674,
+    "n_pcs_median": 13.0,
+    "dR2_in_sd": -0.1504664062
+   }
+  },
+  "n144": {
+   "Tchla": {
+    "R2": 0.7271573673,
+    "R2_sd": 0.129779478,
+    "R2_paper": 0.72,
+    "R2_sd_paper": 0.15,
+    "MADn": 0.5051385017,
+    "MADn_sd": 0.1338796181,
+    "MADn_paper": 0.498,
+    "MADn_sd_paper": 0.127,
+    "MADn_obs": 0.5119973544,
+    "n_pcs_median": 20.0,
+    "dR2_in_sd": 0.0477157823
+   },
+   "HexFuco": {
+    "R2": 0.5040443647,
+    "R2_sd": 0.1400728775,
+    "R2_paper": 0.54,
+    "R2_sd_paper": 0.16,
+    "MADn": 0.7261002756,
+    "MADn_sd": 0.2701773509,
+    "MADn_paper": 0.692,
+    "MADn_sd_paper": 0.201,
+    "MADn_obs": 0.7254060634,
+    "n_pcs_median": 13.5,
+    "dR2_in_sd": -0.2247227207
+   },
+   "ButFuco": {
+    "R2": 0.5340708221,
+    "R2_sd": 0.1705911712,
+    "R2_paper": 0.62,
+    "R2_sd_paper": 0.16,
+    "MADn": 0.6256214657,
+    "MADn_sd": 0.211393205,
+    "MADn_paper": 0.588,
+    "MADn_sd_paper": 0.185,
+    "MADn_obs": 0.6322500042,
+    "n_pcs_median": 13.0,
+    "dR2_in_sd": -0.5370573619
+   },
+   "Allo": {
+    "R2": 0.3890642988,
+    "R2_sd": 0.1584773571,
+    "R2_paper": 0.4,
+    "R2_sd_paper": 0.19,
+    "MADn": 1.2660228993,
+    "MADn_sd": 0.6776022248,
+    "MADn_paper": 1.221,
+    "MADn_sd_paper": 0.4,
+    "MADn_obs": 1.5906576235,
+    "n_pcs_median": 12.0,
+    "dR2_in_sd": -0.0575563222
+   },
+   "Fuco": {
+    "R2": 0.6245308326,
+    "R2_sd": 0.1280217848,
+    "R2_paper": 0.65,
+    "R2_sd_paper": 0.15,
+    "MADn": 0.8030247784,
+    "MADn_sd": 0.2363002396,
+    "MADn_paper": 0.844,
+    "MADn_sd_paper": 0.274,
+    "MADn_obs": 0.9918531433,
+    "n_pcs_median": 18.0,
+    "dR2_in_sd": -0.1697944492
+   },
+   "Perid": {
+    "R2": 0.5540113554,
+    "R2_sd": 0.1090210283,
+    "R2_paper": 0.49,
+    "R2_sd_paper": 0.13,
+    "MADn": 0.7212324546,
+    "MADn_sd": 0.1317206626,
+    "MADn_paper": 0.783,
+    "MADn_sd_paper": 0.166,
+    "MADn_obs": 0.7808454934,
+    "n_pcs_median": 19.0,
+    "dR2_in_sd": 0.4923950413
+   },
+   "Zea": {
+    "R2": 0.3593738655,
+    "R2_sd": 0.1116680215,
+    "R2_paper": 0.37,
+    "R2_sd_paper": 0.1,
+    "MADn": 0.5054197578,
+    "MADn_sd": 0.0959560058,
+    "MADn_paper": 0.472,
+    "MADn_sd_paper": 0.071,
+    "MADn_obs": 0.5039687038,
+    "n_pcs_median": 20.0,
+    "dR2_in_sd": -0.1062613454
+   },
+   "DVchla": {
+    "R2": 0.4618027543,
+    "R2_sd": 0.1394275035,
+    "R2_paper": 0.55,
+    "R2_sd_paper": 0.12,
+    "MADn": 0.6467695316,
+    "MADn_sd": 0.1145889987,
+    "MADn_paper": 0.594,
+    "MADn_sd_paper": 0.103,
+    "MADn_obs": 0.6731049497,
+    "n_pcs_median": 25.0,
+    "dR2_in_sd": -0.7349770474
+   },
+   "MVchlb": {
+    "R2": 0.4174247871,
+    "R2_sd": 0.176426638,
+    "R2_paper": 0.42,
+    "R2_sd_paper": 0.19,
+    "MADn": 1.0062569503,
+    "MADn_sd": 0.4735560219,
+    "MADn_paper": 0.975,
+    "MADn_sd_paper": 0.295,
+    "MADn_obs": 1.0241269693,
+    "n_pcs_median": 14.0,
+    "dR2_in_sd": -0.013553752
+   },
+   "Chlc12": {
+    "R2": 0.6624705247,
+    "R2_sd": 0.1142753962,
+    "R2_paper": 0.7,
+    "R2_sd_paper": 0.13,
+    "MADn": 0.700471693,
+    "MADn_sd": 0.2360846342,
+    "MADn_paper": 0.703,
+    "MADn_sd_paper": 0.235,
+    "MADn_obs": 0.7719876031,
+    "n_pcs_median": 18.0,
+    "dR2_in_sd": -0.2886882717
+   },
+   "Chlc3": {
+    "R2": 0.6412082794,
+    "R2_sd": 0.1216822299,
+    "R2_paper": 0.68,
+    "R2_sd_paper": 0.13,
+    "MADn": 0.6763413885,
+    "MADn_sd": 0.2534654781,
+    "MADn_paper": 0.639,
+    "MADn_sd_paper": 0.212,
+    "MADn_obs": 0.7168822157,
+    "n_pcs_median": 16.0,
+    "dR2_in_sd": -0.2983978511
+   },
+   "Neo": {
+    "R2": 0.4158027396,
+    "R2_sd": 0.1763599884,
+    "R2_paper": 0.42,
+    "R2_sd_paper": 0.21,
+    "MADn": 1.1397886598,
+    "MADn_sd": 0.5557834057,
+    "MADn_paper": 1.127,
+    "MADn_sd_paper": 0.354,
+    "MADn_obs": 1.2263391035,
+    "n_pcs_median": 15.0,
+    "dR2_in_sd": -0.0199869542
+   },
+   "Viola": {
+    "R2": 0.3693508547,
+    "R2_sd": 0.1652779936,
+    "R2_paper": 0.38,
+    "R2_sd_paper": 0.18,
+    "MADn": 1.1752901415,
+    "MADn_sd": 0.6831323446,
+    "MADn_paper": 1.101,
+    "MADn_sd_paper": 0.37,
+    "MADn_obs": 1.196722352,
+    "n_pcs_median": 13.0,
+    "dR2_in_sd": -0.0591619186
+   }
+  }
+ },
+ "fig6": {
+  "Tchla": {
+   "log10": {
+    "slope": 0.8764929609021517,
+    "intercept": -0.021728817086223293,
+    "R2": 0.7085420946511355,
+    "n": 127
+   },
+   "linear_all": {
+    "slope": 0.6709211755047539,
+    "intercept": 0.10875558677518005,
+    "R2": 0.8093330232912342,
+    "n": 144
+   },
+   "paper_log10": {
+    "slope": 0.94,
+    "intercept": -0.004,
+    "R2": 0.73
+   },
+   "n_zero_measured": 0,
+   "n_zero_modelled": 17
+  },
+  "Fuco": {
+   "log10": {
+    "slope": 0.6467728580731337,
+    "intercept": -0.19686308767961586,
+    "R2": 0.7129635107911877,
+    "n": 89
+   },
+   "linear_all": {
+    "slope": 0.5645180351926639,
+    "intercept": 0.03369807671374101,
+    "R2": 0.789704206591575,
+    "n": 144
+   },
+   "paper_log10": {
+    "slope": 0.8,
+    "intercept": -0.08,
+    "R2": 0.6
+   },
+   "n_zero_measured": 23,
+   "n_zero_modelled": 47
+  },
+  "Perid": {
+   "log10": {
+    "slope": 0.5546521914750061,
+    "intercept": -0.8321097710437555,
+    "R2": 0.5999399541375919,
+    "n": 56
+   },
+   "linear_all": {
+    "slope": 0.552297420119145,
+    "intercept": 0.002778637271113288,
+    "R2": 0.6510417815295009,
+    "n": 144
+   },
+   "paper_log10": {
+    "slope": 0.78,
+    "intercept": -0.46,
+    "R2": 0.51
+   },
+   "n_zero_measured": 78,
+   "n_zero_modelled": 71
+  },
+  "HexFuco": {
+   "log10": {
+    "slope": 0.6897572425416528,
+    "intercept": -0.26855803246475574,
+    "R2": 0.6428348303111768,
+    "n": 125
+   },
+   "linear_all": {
+    "slope": 0.41813159985043485,
+    "intercept": 0.043495729321981896,
+    "R2": 0.6436508742303808,
+    "n": 144
+   },
+   "paper_log10": {
+    "slope": 0.76,
+    "intercept": -0.2,
+    "R2": 0.64
+   },
+   "n_zero_measured": 1,
+   "n_zero_modelled": 19
+  },
+  "MVchlb": {
+   "log10": {
+    "slope": 0.624337605946431,
+    "intercept": -0.3904532343105699,
+    "R2": 0.6297801965469899,
+    "n": 78
+   },
+   "linear_all": {
+    "slope": 0.25415475129987214,
+    "intercept": 0.02823713613535246,
+    "R2": 0.34474975098300403,
+    "n": 144
+   },
+   "paper_log10": {
+    "slope": 0.74,
+    "intercept": -0.26,
+    "R2": 0.51
+   },
+   "n_zero_measured": 48,
+   "n_zero_modelled": 39
+  },
+  "Zea": {
+   "log10": {
+    "slope": 0.5134433098161888,
+    "intercept": -0.6250883106984251,
+    "R2": 0.4984895613875237,
+    "n": 144
+   },
+   "linear_all": {
+    "slope": 0.391823759972723,
+    "intercept": 0.0306186950938481,
+    "R2": 0.46670242841609555,
+    "n": 144
+   },
+   "paper_log10": {
+    "slope": 0.53,
+    "intercept": -0.59,
+    "R2": 0.55
+   },
+   "n_zero_measured": 0,
+   "n_zero_modelled": 0
+  }
+ },
+ "fig3": {
+  "measured_groups": [
+   [
+    "HexFuco",
+    "ButFuco"
+   ],
+   [
+    "Allo",
+    "MVchlb",
+    "Neo",
+    "Viola"
+   ],
+   [
+    "Fuco",
+    "Chlc12",
+    "Chlc3"
+   ],
+   [
+    "Perid"
+   ],
+   [
+    "Zea",
+    "DVchla"
+   ]
+  ],
+  "modelled_groups": [
+   [
+    "HexFuco",
+    "Perid",
+    "Zea",
+    "DVchla"
+   ],
+   [
+    "ButFuco"
+   ],
+   [
+    "Allo",
+    "MVchlb",
+    "Neo",
+    "Viola"
+   ],
+   [
+    "Fuco",
+    "Chlc12",
+    "Chlc3"
+   ]
+  ],
+  "n_measured": 144,
+  "n_modelled_with_Tchla_gt0": 127
+ },
+ "port_coefficients": {
+  "source": {
+   "a": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/ref/rrs-SDP-pigments/src/sdp/resources/sdp_coefs/original_a_coefs.xlsx",
+   "c": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/ref/rrs-SDP-pigments/src/sdp/resources/sdp_coefs/original_c_coefs.xlsx",
+   "sha256_a": "21f4d023ffe1642850c6e8ad14f1f9c8b7d104162c1322ded884c1dd167bc91b",
+   "sha256_c": "5f9279a23a3359946752a18be2e7a76db9c1abf9ae7e4d2b86d596d49e0c1162"
+  },
+  "per_pigment": {
+   "Tchla": {
+    "R2_full_recon_port_coefs": 0.7859592198171443,
+    "R2_full_recon_ours_n145": 0.8184659903724083,
+    "corr_median_coef_spectra": 0.8948106933750632,
+    "median_intercept_port": 0.5077173864739155,
+    "median_intercept_ours": 0.5735740725855403
+   },
+   "HexFuco": {
+    "R2_full_recon_port_coefs": 0.6437840446845162,
+    "R2_full_recon_ours_n145": 0.6297974689667734,
+    "corr_median_coef_spectra": 0.8648591907301154,
+    "median_intercept_port": 0.1083965043330945,
+    "median_intercept_ours": 0.12109888992242246
+   },
+   "ButFuco": {
+    "R2_full_recon_port_coefs": 0.6972331769603956,
+    "R2_full_recon_ours_n145": 0.6581658799398868,
+    "corr_median_coef_spectra": 0.8492304710428227,
+    "median_intercept_port": 0.027998954005152447,
+    "median_intercept_ours": 0.0292786430505493
+   },
+   "Allo": {
+    "R2_full_recon_port_coefs": 0.45448688564338047,
+    "R2_full_recon_ours_n145": 0.49214504111542345,
+    "corr_median_coef_spectra": 0.8821105301612444,
+    "median_intercept_port": 0.02356899901224005,
+    "median_intercept_ours": 0.025680329014915966
+   },
+   "Fuco": {
+    "R2_full_recon_port_coefs": 0.7884491345493798,
+    "R2_full_recon_ours_n145": 0.8035498693400346,
+    "corr_median_coef_spectra": 0.8851079315891713,
+    "median_intercept_port": 0.0589699675884925,
+    "median_intercept_ours": 0.0788785051370377
+   },
+   "Perid": {
+    "R2_full_recon_port_coefs": 0.6006697378636813,
+    "R2_full_recon_ours_n145": 0.6251521225880247,
+    "corr_median_coef_spectra": 0.778641875874334,
+    "median_intercept_port": 0.007914120410658334,
+    "median_intercept_ours": 0.007883989588129036
+   },
+   "Zea": {
+    "R2_full_recon_port_coefs": 0.4748857629518973,
+    "R2_full_recon_ours_n145": 0.47233945544250516,
+    "corr_median_coef_spectra": 0.48196752366489803,
+    "median_intercept_port": 0.09274956736150915,
+    "median_intercept_ours": 0.09464474951593983
+   },
+   "DVchla": {
+    "R2_full_recon_port_coefs": 0.6739299813728974,
+    "R2_full_recon_ours_n145": 0.6474062599411465,
+    "corr_median_coef_spectra": 0.5082558335016751,
+    "median_intercept_port": 0.040138730469776646,
+    "median_intercept_ours": 0.044856496024240196
+   },
+   "MVchlb": {
+    "R2_full_recon_port_coefs": 0.3162850473634727,
+    "R2_full_recon_ours_n145": 0.3383648639548142,
+    "corr_median_coef_spectra": 0.8724437052590976,
+    "median_intercept_port": 0.09064998959637005,
+    "median_intercept_ours": 0.0966559015651906
+   },
+   "Chlc12": {
+    "R2_full_recon_port_coefs": 0.8063874043338906,
+    "R2_full_recon_ours_n145": 0.8009456534297859,
+    "corr_median_coef_spectra": 0.8969123371949622,
+    "median_intercept_port": 0.05775106737403225,
+    "median_intercept_ours": 0.06793102976538828
+   },
+   "Chlc3": {
+    "R2_full_recon_port_coefs": 0.7674780598393635,
+    "R2_full_recon_ours_n145": 0.731340717001883,
+    "corr_median_coef_spectra": 0.8880339417747767,
+    "median_intercept_port": 0.03693383500243255,
+    "median_intercept_ours": 0.04365058007202281
+   },
+   "Neo": {
+    "R2_full_recon_port_coefs": 0.38015638987325834,
+    "R2_full_recon_ours_n145": 0.42545471305755056,
+    "corr_median_coef_spectra": 0.8794588274540747,
+    "median_intercept_port": 0.011366981236709,
+    "median_intercept_ours": 0.012114192888523107
+   },
+   "Viola": {
+    "R2_full_recon_port_coefs": 0.25063161110699994,
+    "R2_full_recon_ours_n145": 0.29855668387847883,
+    "corr_median_coef_spectra": 0.8690887029336406,
+    "median_intercept_port": 0.0186870270322756,
+    "median_intercept_ours": 0.020802590234159347
+   }
+  }
+ },
+ "variants": {
+  "Rrs_d1_d2_1nm": {
+   "n_features": 599,
+   "R2": {
+    "Tchla": [
+     0.7601002031234614,
+     0.14280952301506095
+    ],
+    "HexFuco": [
+     0.5913210748144773,
+     0.18295367010257044
+    ],
+    "ButFuco": [
+     0.611594459936275,
+     0.19955361770209762
+    ],
+    "Allo": [
+     0.4333633449694841,
+     0.19996860697586952
+    ],
+    "Fuco": [
+     0.7234179155016256,
+     0.13264094048326341
+    ],
+    "Perid": [
+     0.5370729978217903,
+     0.1274803456749863
+    ],
+    "Zea": [
+     0.35703918295004455,
+     0.12214271163394534
+    ],
+    "DVchla": [
+     0.5357803067946622,
+     0.1299814205621549
+    ],
+    "MVchlb": [
+     0.4248528322242109,
+     0.18638890308119294
+    ],
+    "Chlc12": [
+     0.7469152470328762,
+     0.12405275795608797
+    ],
+    "Chlc3": [
+     0.7089784343163312,
+     0.14071150504278201
+    ],
+    "Neo": [
+     0.432808250101266,
+     0.2054018246496038
+    ],
+    "Viola": [
+     0.38471826779889184,
+     0.18182505466175466
+    ]
+   },
+   "MADn": {
+    "Tchla": [
+     0.45100578588970225,
+     0.11093867353969301
+    ],
+    "HexFuco": [
+     0.6485325083871532,
+     0.19845377534664674
+    ],
+    "ButFuco": [
+     0.5662345434916152,
+     0.15870821471530558
+    ],
+    "Allo": [
+     1.1771333787027403,
+     0.6290860171338608
+    ],
+    "Fuco": [
+     0.6473105694510142,
+     0.145371766497971
+    ],
+    "Perid": [
+     0.7169784659481026,
+     0.12566591136483685
+    ],
+    "Zea": [
+     0.4871521560120222,
+     0.09819571647643711
+    ],
+    "DVchla": [
+     0.5672669656758744,
+     0.10720979552368652
+    ],
+    "MVchlb": [
+     0.9691606925662599,
+     0.4664919268634743
+    ],
+    "Chlc12": [
+     0.5839854137387714,
+     0.14232896284728672
+    ],
+    "Chlc3": [
+     0.5876399793044318,
+     0.16884004992397278
+    ],
+    "Neo": [
+     1.0676745577979418,
+     0.5667131760068629
+    ],
+    "Viola": [
+     1.1506268589244821,
+     0.681854334517238
+    ]
+   }
+  },
+  "dRrs_d2_5nm": {
+   "n_features": 59,
+   "R2": {
+    "Tchla": [
+     0.7206530772027488,
+     0.16853477911665213
+    ],
+    "HexFuco": [
+     0.6187137403061501,
+     0.1828475760496635
+    ],
+    "ButFuco": [
+     0.6386641932273368,
+     0.19886028736388808
+    ],
+    "Allo": [
+     0.42539378965945657,
+     0.20761965577677338
+    ],
+    "Fuco": [
+     0.6693161000199891,
+     0.15611705953920385
+    ],
+    "Perid": [
+     0.5199002009852871,
+     0.12299095283526607
+    ],
+    "Zea": [
+     0.4246738168692385,
+     0.11893127905210756
+    ],
+    "DVchla": [
+     0.5347610881402582,
+     0.1237880596415339
+    ],
+    "MVchlb": [
+     0.4680136857486946,
+     0.21074296831210168
+    ],
+    "Chlc12": [
+     0.6868953434895245,
+     0.14955648001517718
+    ],
+    "Chlc3": [
+     0.7010338828587688,
+     0.15095159288357188
+    ],
+    "Neo": [
+     0.48366556338886263,
+     0.22039802154564628
+    ],
+    "Viola": [
+     0.4450659856710445,
+     0.20409006677976638
+    ]
+   },
+   "MADn": {
+    "Tchla": [
+     0.4767340377722118,
+     0.11272326001776331
+    ],
+    "HexFuco": [
+     0.6575088895248509,
+     0.19268185979137978
+    ],
+    "ButFuco": [
+     0.5693497300396207,
+     0.1517492110035809
+    ],
+    "Allo": [
+     1.2090801645960518,
+     0.6367583841165807
+    ],
+    "Fuco": [
+     0.7340677964797128,
+     0.17441821626730789
+    ],
+    "Perid": [
+     0.7199655498040074,
+     0.14348751957403513
+    ],
+    "Zea": [
+     0.45893187007679875,
+     0.08192509861763318
+    ],
+    "DVchla": [
+     0.5606785200763343,
+     0.10118384245210749
+    ],
+    "MVchlb": [
+     0.954481326922675,
+     0.45910491551881516
+    ],
+    "Chlc12": [
+     0.6552198370045278,
+     0.19006107460573723
+    ],
+    "Chlc3": [
+     0.6057168259567279,
+     0.16628270889434024
+    ],
+    "Neo": [
+     1.0233947141256658,
+     0.5192164594113649
+    ],
+    "Viola": [
+     1.1085523686521384,
+     0.6426538243225585
+    ]
+   }
+  },
+  "dRrs_d2_10nm": {
+   "n_features": 29,
+   "R2": {
+    "Tchla": [
+     0.7129520472538818,
+     0.19605523595460736
+    ],
+    "HexFuco": [
+     0.617077693225875,
+     0.19905401369464149
+    ],
+    "ButFuco": [
+     0.6305126133448851,
+     0.2053495959054907
+    ],
+    "Allo": [
+     0.47142094963850956,
+     0.24486036037190528
+    ],
+    "Fuco": [
+     0.7104996657861156,
+     0.1741838251967798
+    ],
+    "Perid": [
+     0.4539678561562468,
+     0.13405438365764405
+    ],
+    "Zea": [
+     0.4172082168869182,
+     0.12755474658032728
+    ],
+    "DVchla": [
+     0.5444927892373402,
+     0.12614922392557393
+    ],
+    "MVchlb": [
+     0.4995936282091516,
+     0.2237886196200831
+    ],
+    "Chlc12": [
+     0.7054418144498292,
+     0.1836489857072416
+    ],
+    "Chlc3": [
+     0.7019728421391584,
+     0.1649522647162543
+    ],
+    "Neo": [
+     0.5473834810739417,
+     0.2304091412458766
+    ],
+    "Viola": [
+     0.49964589520386193,
+     0.21435404203232247
+    ]
+   },
+   "MADn": {
+    "Tchla": [
+     0.46420687119169396,
+     0.11982949793154471
+    ],
+    "HexFuco": [
+     0.6312597917756644,
+     0.1659713524861534
+    ],
+    "ButFuco": [
+     0.5492031883661664,
+     0.1357145340388778
+    ],
+    "Allo": [
+     1.1271031754380365,
+     0.5760548058252366
+    ],
+    "Fuco": [
+     0.6401679835464563,
+     0.13398187604598094
+    ],
+    "Perid": [
+     0.7555015152629144,
+     0.15153563994497785
+    ],
+    "Zea": [
+     0.4489846345097338,
+     0.0742095503934375
+    ],
+    "DVchla": [
+     0.5624688992233345,
+     0.1034307166200397
+    ],
+    "MVchlb": [
+     0.9275308503480906,
+     0.4315862509244927
+    ],
+    "Chlc12": [
+     0.6035104766678061,
+     0.14978023783538041
+    ],
+    "Chlc3": [
+     0.5797952393278285,
+     0.150642633404115
+    ],
+    "Neo": [
+     0.9572402751428614,
+     0.45786273230204866
+    ],
+    "Viola": [
+     1.0620542501692278,
+     0.6138534624019892
+    ]
+   }
+  }
+ },
+ "product": {
+  "file": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/products/pcr_rrsD2_1nm.npz",
+  "sha256": "1557e07d329d4116766842e12ce4aa92cf29738ab77812fc9ad009921bad1cd0"
+ }
+}

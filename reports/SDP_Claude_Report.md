@@ -1,7 +1,7 @@
 # The 2nd-derivative (SDP) approach to phytoplankton pigments from hyperspectral Rrs
 
 **Author:** Claude (Opus 5.5), for J. Xavier Prochaska
-**Status:** in progress. §3 (Data) and §4.1 (δRrs) are written; the other sections are outlines
+**Status:** in progress. §3 (Data) and §4 (reproduction) are written; the other sections are outlines
 that later Execution prompts in `claude_prompts/2nd_derivative_prompts.md` fill
 in.
 **Scope:** a reproduction and critique of Kramer, Siegel, Maritorena & Catlett
@@ -243,7 +243,170 @@ on δRrs.
 
 **Open for §4.2:** keep the degenerate SABOR spectrum (faithful to our run)
 or drop it (probably faithful to the paper's). Both will be reported.
-### 4.2 The PCR pigment model — *Execution #3*
+### 4.2 The PCR pigment model
+
+**Implementation.** `epft_up/sdp/models.py::train_pcr_kramer` re-implements
+`rrsModelTrain.m` from its source, with Kramer's settings from
+`Kramer_Rrs_pigments.m`:
+
+- Predictors are `diff(δRrs, 2)`: plain second differences on the 1 nm
+  grid, 299 bands at 401–699 nm.
+- 100 permutations of a random 75/25 split.
+- Inside each permutation, a 5-fold CV chooses the number of PCs
+  (≤ 30, by validation MAE).
+- Fold coefficients are averaged and back-transformed to A_m(λ) and C_m.
+- Outputs are clipped at ≥ 0.
+
+Two quirks of the original are kept deliberately:
+- Each inner validation fold is z-scored with **its own** mean and SD.
+- The fold coefficients are averaged in standardized units before the
+  conversion to raw units.
+
+Within a fold the PC scores are orthogonal and centred, so the OLS
+coefficients of the first l PCs do not depend on l. All 30 candidate models
+therefore come from one fit; a unit test checks this against explicit
+refits. The script is `scripts/sdp/reproduce_pcr.py`; the numbers are in
+`reports/figures/sdp/pcr_summary.json` and `kramer_table2.csv`, and the
+model ensembles are in `$OS_COLOR/PANGAEA/Kramer2022/products/pcr_rrsD2_1nm.npz`.
+MATLAB's random splits cannot be reproduced across languages, so agreement
+is statistical (seed 1).
+
+**What Table 2's "normalized MAD" is.** It is the validation MAE divided by
+the mean *modelled* value of the validation set: Tchla 0.507 here vs 0.498
+in the paper. Dividing by the mean observed value instead gives 0.516 for
+Tchla and 1.03 for Fuco (paper 0.84), so that is not it.
+
+**Table 2 is reproduced.** Every pigment's mean R² is within one quoted SD
+of the paper's. The table uses all 145 spectra; the 144-spectrum run
+(without the degenerate SABOR GSM fit of §4.1) differs by ≤ 0.03 in R².
+
+| Pigment | R² here | R² paper | Δ / SD_paper | MADn here | MADn paper | median #PCs |
+|---|---|---|---|---|---|---|
+| Tchla | 0.73 ± 0.13 | 0.72 ± 0.15 | +0.1 | 0.51 ± 0.15 | 0.50 ± 0.13 | 22 |
+| Chlc12 | 0.67 ± 0.13 | 0.70 ± 0.13 | −0.2 | 0.71 | 0.70 | 20 |
+| Chlc3 | 0.62 ± 0.12 | 0.68 ± 0.13 | −0.4 | 0.70 | 0.64 | 17 |
+| Fuco | 0.63 ± 0.13 | 0.65 ± 0.15 | −0.2 | 0.85 | 0.84 | 18 |
+| ButFuco | 0.51 ± 0.15 | 0.62 ± 0.16 | −0.7 | 0.64 | 0.59 | 13 |
+| DVchla | 0.49 ± 0.13 | 0.55 ± 0.12 | −0.5 | 0.64 | 0.59 | 25 |
+| HexFuco | 0.48 ± 0.13 | 0.54 ± 0.16 | −0.4 | 0.73 | 0.69 | 13 |
+| Perid | 0.55 ± 0.12 | 0.49 ± 0.13 | +0.4 | 0.74 | 0.78 | 18 |
+| MVchlb | 0.41 ± 0.16 | 0.42 ± 0.19 | −0.1 | 0.98 | 0.98 | 14 |
+| Neo | 0.40 ± 0.16 | 0.42 ± 0.21 | −0.1 | 1.11 | 1.13 | 15 |
+| Allo | 0.38 ± 0.15 | 0.40 ± 0.19 | −0.1 | 1.28 | 1.22 | 12 |
+| Viola | 0.35 ± 0.17 | 0.38 ± 0.18 | −0.2 | 1.14 | 1.10 | 13 |
+| Zea | 0.37 ± 0.11 | 0.37 ± 0.10 | 0.0 | 0.50 | 0.47 | 21 |
+
+The ±σ is the spread over the 100 validation splits. The Monte-Carlo error
+of each mean is ≈ σ/10 ≈ 0.015. Our R² is slightly lower on average (mean
+Δ ≈ −0.2 SD), most for ButFuco and DVchla, but nowhere outside the quoted
+spread.
+
+**Kramer's own trained coefficients reproduce on our δRrs''.** The Python
+port ships `original_a_coefs.xlsx` / `original_c_coefs.xlsx`: 100 trained
+models per pigment on the same 401–699 nm grid. Applied to *our* δRrs'',
+with no retraining, they give full-reconstruction R² within ±0.05 of our own
+models for every pigment (Tchla 0.79 vs 0.82, Fuco 0.79 vs 0.80, Chlc12 0.81
+vs 0.80). The median coefficient spectra correlate at r = 0.85–0.90 for 10
+of 13 pigments, and 0.78 for Perid. Zea and DVchla correlate at only ≈0.5,
+yet still predict as well: these pigments' coefficients are poorly
+constrained, so many weight spectra fit equally well. Median intercepts
+agree to within ≈0.01–0.06 mg m⁻³. This is an independent confirmation that
+our δRrs and PCR are Kramer's, not just statistically similar.
+
+![PCR coefficient spectra](figures/sdp/pcr_coefficients.png)
+
+*Median and interquartile range of our 100 A(λ) for Tchla, Fuco and HexFuco,
+compared with the median of Kramer's original coefficients. Note that the
+largest weights sit at 520–700 nm, where δRrs'' is smallest. That is a
+consequence of z-scoring each band before the PCA (taken up in §5).*
+
+**Fig. 6 (median of the 100 models applied to every spectrum).** The
+paper's panels are in **log₁₀** space, so samples that are zero on either
+axis drop out. Modelled values below the detection limit are set to zero,
+as in the paper. The deposit has no method LODs, so I use a proxy:
+- for pigments with below-LOD zeros, the smallest non-zero deposited value
+  (0.001–0.004 mg m⁻³);
+- for Tchla, Zea and Chlc12, which are never below LOD here, the 0.001
+  reporting resolution.
+
+| Pigment | here (N=144): slope, intercept, R² (N in plot) | paper: slope, intercept, R² |
+|---|---|---|
+| Tchla | 0.88, −0.02, 0.71 (127) | 0.94, −0.004, 0.73 |
+| Fuco | 0.65, −0.20, 0.71 (89) | 0.80, −0.08, 0.60 |
+| Perid | 0.55, −0.83, 0.60 (56) | 0.78, −0.46, 0.51 |
+| HexFuco | 0.69, −0.27, 0.64 (125) | 0.76, −0.20, 0.64 |
+| MVchlb | 0.62, −0.39, 0.63 (78) | 0.74, −0.26, 0.51 |
+| Zea | 0.51, −0.63, 0.50 (144) | 0.53, −0.59, 0.55 |
+
+R² agrees, but **our slopes are lower by 0.02–0.23.** This is not our
+training: Kramer's original coefficients on our δRrs'' give the same low
+slopes (Tchla 0.84, Fuco 0.61, HexFuco 0.72). Nor is it the regression
+convention: ordinary y-on-x, reduced major axis and inverted x-on-y each
+fail to match all six panels. One visible difference is that 17 low-Tchla
+samples have a modelled Tchla ≤ 0 (the linear model goes negative) and drop
+out of the log plot. The paper's panel A seems to keep more low points. With
+no quoted uncertainty for Fig. 6, I record this as an **open discrepancy**.
+It does not affect Table 2, which agrees.
+
+![Fig. 6 reproduction](figures/sdp/kramer_fig6_pigments.png)
+
+**Fig. 3 (clustering of the 12 accessory-pigment:Tchla ratios; Ward linkage
+on 1 − R).** The *measured* dendrogram (cut at 0.65) recovers exactly the
+paper's five groups:
+- haptophytes {HexFuco, ButFuco};
+- green algae {Allo, MVchlb, Neo, Viola};
+- diatoms {Fuco, Chlc12, Chlc3};
+- dinoflagellates {Perid};
+- cyanobacteria {Zea, DVchla}.
+
+The *modelled* dendrogram (cut at 0.80) is fragile:
+- The green-algal and diatom groups survive.
+- With the detection-limit handling above, {HexFuco, Perid, Zea, DVchla}
+  merge and ButFuco stands alone.
+- With a coarser proxy (Tchla LOD = 0.019, i.e. 17 more zeroed Tchla
+  values), five groups appeared, with Chlc3 moving to Perid.
+
+Modelled ratios exist only where modelled Tchla > 0 (127 of 144 samples), and
+clipped zeros dominate the low-concentration ratios. The paper's statement
+that "the same five groups emerge" from the modelled pigments therefore
+holds only loosely, and it depends on how zeros are handled.
+
+![Fig. 3 reproduction](figures/sdp/kramer_fig3_dendrograms.png)
+
+**Supplementary variants** (mean R² over 100 splits, N = 144):
+
+| Pigment | δRrs'' 1 nm (paper) | Rrs' + Rrs'' 1 nm | δRrs'' 5 nm | δRrs'' 10 nm |
+|---|---|---|---|---|
+| Tchla | 0.73 | 0.76 | 0.72 | 0.71 |
+| Fuco | 0.63 | 0.72 | 0.67 | 0.71 |
+| HexFuco | 0.50 | 0.59 | 0.62 | 0.62 |
+| ButFuco | 0.53 | 0.61 | 0.64 | 0.63 |
+| Chlc12 | 0.66 | 0.75 | 0.69 | 0.71 |
+| Chlc3 | 0.64 | 0.71 | 0.70 | 0.70 |
+| DVchla | 0.46 | 0.54 | 0.54 | 0.54 |
+| Perid | 0.55 | 0.54 | 0.52 | 0.45 |
+| Zea | 0.36 | 0.36 | 0.43 | 0.42 |
+| MVchlb | 0.42 | 0.43 | 0.47 | 0.50 |
+| Neo | 0.42 | 0.43 | 0.48 | 0.55 |
+| Allo | 0.39 | 0.43 | 0.47 | 0.47 |
+| Viola | 0.37 | 0.39 | 0.45 | 0.50 |
+
+Two results:
+- **Rrs' + Rrs'' of the *measured* reflectance (no GSM residual) does as
+  well as or better than δRrs''** for 11 of 13 pigments. That is consistent
+  with the paper's "comparable results", and it is the first hint that the
+  residual step adds little; §6.3 tests this properly.
+- **Coarser sampling does not hurt here.** Here, "5 nm" and "10 nm" mean
+  every 5th or 10th band of the already-smoothed δRrs, then `diff(·, 2)`.
+  At 5 nm, skill is flat or higher, in line with the paper. At 10 nm,
+  skill is *not* "notably worse" as the paper reports: only Perid drops,
+  0.55 → 0.45. The paper does not say how it degraded the resolution (the
+  supplement tables S2–S3 are not available to us), so this may be a recipe
+  difference. With 29 rather than 299 predictors, the PCR has far fewer
+  noisy dimensions to fit, which helps the weaker pigments. Either way, the
+  claim that hyperspectral 1 nm resolution is needed is not supported by
+  this dataset under this recipe. §5 treats the effective degrees of
+  freedom.
 
 ## 5. Maths and statistics — *Execution #6*
 

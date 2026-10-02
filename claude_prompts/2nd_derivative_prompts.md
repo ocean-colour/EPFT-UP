@@ -737,3 +737,64 @@ Findings:
 
 Open for #3: run the PCR both with and without the degenerate SABOR
 spectrum.
+
+### 2026-10-02 (Execution #3: reproduce the PCR model, Table 2, Figs. 3 & 6)
+
+New code:
+- `epft_up/sdp/models.py`:
+  - `train_pcr_kramer()` is a re-implementation of `rrsModelTrain.m`
+    (100 × 75/25 splits; inner 5-fold CV picks ≤ 30 PCs by MAE; outputs
+    ≥ 0; the original's quirks are kept, namely own-statistics scaling of
+    the inner validation folds and fold-averaging in standardized units).
+  - An exact one-fit shortcut computes all nested PC models.
+  - `predict_ensemble()` returns the median of the ensemble with clipping
+    and an LOD.
+- `epft_up/sdp/spectral.py`: `difference()` (MATLAB `diff` semantics,
+  orders 1 and 2, subsampling `step`) and `derivative_features()`.
+- `scripts/sdp/reproduce_pcr.py`: 13 pigments × {145, 144}; Table 2; Figs.
+  6 and 3; a cross-check with the port's trained coefficients; supplementary
+  variants. Products go to `$OS_COLOR/.../products/pcr_rrsD2_1nm.npz`.
+- `epft_up/tests/test_sdp_models.py`: 7 tier-1 tests (including the
+  nested-PC shortcut vs explicit OLS) and 1 tier-2 test (the Tchla row of
+  Table 2). Full suite: 63 passed.
+- Report §4.2 written.
+
+Settings confirmed from `Kramer_Rrs_pigments.m`: max_pcs = 30, MAE
+selection, k = 5, 100 permutations, predictors `diff(Rrs residual, 2, 2)`
+(plain second difference, 299 bands at 401–699 nm). The 1st derivative is a
+*forward* `diff`, not Catlett's centred Eq. 1.
+
+Findings:
+- **Table 2 reproduced:** all 13 pigments' mean R² lie within one quoted SD
+  (mean Δ ≈ −0.2 SD; worst ButFuco −0.7 SD and DVchla −0.5 SD). Table 2's
+  "normalized MAD" is MAE / mean *modelled* value (Tchla 0.507 vs 0.498).
+  Results are the same with and without the degenerate SABOR spectrum
+  (|ΔR²| ≤ 0.03).
+- **Kramer's original trained coefficients** (port `original_*_coefs.xlsx`)
+  applied to our δRrs'' reproduce our full-reconstruction R² to ±0.05 for
+  every pigment. The median A(λ) correlate at r = 0.85–0.90 (Zea and
+  DVchla ≈ 0.5, poorly constrained). Strong confirmation that our δRrs and
+  PCR are Kramer's.
+- **Fig. 6 is in log₁₀ space**, not linear (my first version was linear,
+  which was wrong). R² matches; slopes are 0.02–0.23 lower than the paper's
+  (Tchla 0.88 vs 0.94; Perid 0.55 vs 0.78). Kramer's own coefficients give
+  the same low slopes, and no regression convention matches all panels.
+  This is an **open discrepancy**, with no uncertainty quoted in the paper
+  and Table 2 unaffected, so I did not stop. 17 low-Tchla samples have
+  modelled Tchla ≤ 0.
+- **LOD proxy:** the smallest non-zero deposited value for pigments with
+  zeros; 0.001 (reporting resolution) for Tchla, Zea and Chlc12. The first
+  version used Tchla's sample minimum (0.019), which wrongly zeroed
+  modelled values. That has been corrected.
+- **Fig. 3:** the measured-ratio dendrogram gives exactly the paper's five
+  groups. The modelled-ratio dendrogram is fragile and depends on zero
+  handling (4 groups now, 5 with the coarser LOD).
+- **Variants:** measured Rrs' + Rrs'' ≥ δRrs'' for 11 of 13 pigments. 5 nm
+  sampling is flat or better. 10 nm is **not** worse except for Perid,
+  contradicting the paper's "notably worse at 10 nm". The paper's
+  degradation recipe is unknown (I used subsampling of the smoothed δRrs).
+- The z-scoring puts the largest PCR weights at 520–700 nm, where δRrs'' is
+  smallest. This is for #6.
+- The port's `run_sdp` re-smooths new spectra with a **trailing**
+  `rolling(5, min_periods=1)` window (a 2 nm shift). Relevant for PACE
+  application.

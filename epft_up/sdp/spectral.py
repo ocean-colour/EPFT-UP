@@ -9,8 +9,11 @@ does **not** call :func:`moving_mean` on it. The functions are here to apply
 the paper's recipe to new spectra (e.g. the EXPORTS-NA hold-out) and to
 quantify what a second, accidental smoothing would do.
 
-Finite differences and the alternative transforms are added in Execution #3
-and #5.
+Finite differences (:func:`difference`, :func:`derivative_features`) follow
+Kramer's ``Kramer_Rrs_pigments.m``: plain MATLAB ``diff`` along wavelength,
+i.e. ``diff(y, 2)`` = y[i+1] - 2 y[i] + y[i-1] (Catlett & Siegel 2018 Eq. 2
+times Δλ²; Δλ = 1 nm) and a *forward* first difference ``diff(y, 1)``. The
+alternative transforms are added in Execution #5.
 """
 
 from __future__ import annotations
@@ -103,3 +106,62 @@ def kramer_preprocess(wave, Rrs, wave_out=None, width=5, n_trim=4):
     for i, r in enumerate(sm_t):
         out[i, ok] = np.interp(wave_out[ok], g_t, r)
     return out
+
+
+def difference(wave, y, order=2, step=1, scale=False):
+    """MATLAB-style ``diff`` along wavelength, optionally on a coarser grid.
+
+    Parameters
+    ----------
+    wave : ndarray, shape (n,)
+        Uniform wavelength grid [nm].
+    y : ndarray, shape (..., n)
+    order : {1, 2}, optional
+        ``1``: forward difference ``y[i+1] - y[i]`` (placed at the midpoint);
+        ``2``: ``y[i+1] - 2 y[i] + y[i-1]`` (placed at ``wave[i]``).
+    step : int, optional
+        Subsample every ``step``-th band first (5 or 10 for the paper's
+        5 and 10 nm variants).
+    scale : bool, optional
+        Divide by Δλ**order (derivative units). Kramer does not; it does not
+        matter for z-scored predictors.
+
+    Returns
+    -------
+    wave_d : ndarray
+    d : ndarray, shape (..., n_d)
+    """
+    wave = np.asarray(wave, dtype=float)[::step]
+    y = np.asarray(y, dtype=float)[..., ::step]
+    dl = wave[1] - wave[0]
+    if order == 1:
+        d = np.diff(y, n=1, axis=-1)
+        w = 0.5 * (wave[1:] + wave[:-1])
+    elif order == 2:
+        d = np.diff(y, n=2, axis=-1)
+        w = wave[1:-1]
+    else:
+        raise ValueError('order must be 1 or 2')
+    if scale:
+        d = d / dl**order
+    return w, d
+
+
+def derivative_features(wave, y, orders=(2,), step=1):
+    """Concatenate difference spectra of the given orders as predictors.
+
+    ``orders=(2,)`` is Kramer's δRrs'' input; ``orders=(1, 2)`` is the
+    "Rrs' + Rrs''" supplementary variant (Catlett & Siegel 2018 style).
+
+    Returns
+    -------
+    labels : list of str
+        ``'d<order>_<wavelength>'`` for each feature column.
+    X : ndarray, shape (n_samples, n_features)
+    """
+    labels, blocks = [], []
+    for o in orders:
+        w, d = difference(wave, y, order=o, step=step)
+        labels += [f'd{o}_{x:g}' for x in w]
+        blocks.append(np.atleast_2d(d))
+    return labels, np.hstack(blocks)
