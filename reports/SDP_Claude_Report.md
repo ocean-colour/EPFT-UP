@@ -1,7 +1,7 @@
 # The 2nd-derivative (SDP) approach to phytoplankton pigments from hyperspectral Rrs
 
 **Author:** Claude (Opus 5.5), for J. Xavier Prochaska
-**Status:** in progress. §3 (Data) is written; the other sections are outlines
+**Status:** in progress. §3 (Data) and §4.1 (δRrs) are written; the other sections are outlines
 that later Execution prompts in `claude_prompts/2nd_derivative_prompts.md` fill
 in.
 **Scope:** a reproduction and critique of Kramer, Siegel, Maritorena & Catlett
@@ -138,7 +138,111 @@ Two implications:
 
 ## 4. Reproduction of Kramer et al. (2022)
 
-### 4.1 The residual δRrs (GSM-like model) — *Execution #2*
+### 4.1 The residual δRrs (GSM-like model)
+
+**Implementation.** `epft_up/sdp/gsm.py` is written from Kramer 2022 §2.3
+(Eqs. 1–6) and the primary sources it cites, not ported:
+
+- Gordon et al. (1988): rrs = 0.0949u + 0.0794u², with u = b_b/(a+b_b).
+- The Lee et al. (2002) conversion between Rrs and rrs.
+- Pure-seawater scattering from Zhang et al. (2009) at each sample's in-situ
+  T and S, with b_bw = b_sw/2.
+- a_ph = A(λ)·Tchla^B(λ), from the reference A,B table.
+- a_dg = a_dg(443)·exp(−S_dg(λ−443)), with S_dg from Carder et al. (1999).
+- b_bp = b_bp(443)·(443/λ)^η, with η from Lee et al. (2002).
+- Three free parameters, fitted by unweighted least squares in rrs.
+
+The deposited spectra are used as-is, with **no further smoothing** (§3.4).
+The script is `scripts/sdp/reproduce_gsm.py`, and the numbers are in
+`reports/figures/sdp/gsm_summary.json`. The δRrs product for §4.2 is saved
+with its provenance at
+`$OS_COLOR/PANGAEA/Kramer2022/products/gsm_dRrs_insitu.npz`.
+
+**Where the paper, the MATLAB original and the Python port differ:**
+
+| Item | Paper text | `Rrs_pigments` (MATLAB) | Python port | Used here |
+|---|---|---|---|---|
+| S_dg (Eq. 5) | S = −0.01447 + 0.00033·Rrs490/Rrs555 inside exp(S(λ−443)) | exp(−(0.01447 + 0.00033 r)(λ−443)) | as MATLAB | MATLAB = Carder (1999). The printed sign is a typo; used literally, GSM-Tchla R² collapses to 0.07 |
+| η band ratio | "rrs(490)/rrs(555)" | rrs(440)/rrs(555) (Lee 2002) | **Rrs**(440)/Rrs(555) | rrs(440)/rrs(555); the 490 variant gives R² 0.62 |
+| a_w | Mason et al. (2016) | `aw_mcf16_350_700_1nm` | same file | same file (identical to `asw_all.mat`) |
+| b_bw T/S | WOA13 ¼° climatology | user-supplied | user-supplied | in-situ (deposit); WOA23 as a check |
+| Optimizer | "non-linear fit" | `fminsearch` from (0.15, 0.01, 0.0029), TolX = TolFun = 1e-9, ≤2000 iterations, unbounded; NaN unless exitflag = 1 | `scipy.fmin`, tolerances 1e-6, no convergence check | scipy Nelder–Mead with MATLAB's settings and initial simplex; trials with Tchla ≤ 0 get infinite cost |
+| Smoothing | 5 nm moving mean, trim 4 nm | none | none | none: already applied in the deposit (§3.4) |
+
+**Fig. 4 is reproduced** (log₁₀ statistics, OLS of log modelled on log
+HPLC):
+
+| | paper | here, N=145 | here, without one fit (N=144) |
+|---|---|---|---|
+| OC4v6 | y = 0.87x − 0.14, R² = 0.75 | y = 0.873x − 0.138, R² = 0.746 | — |
+| GSM-like | y = 0.96x − 0.093, R² = 0.86 | y = 0.942x − 0.126, R² = 0.717 | **y = 0.961x − 0.091, R² = 0.864** |
+
+The OC4 match shows that the data, the band sampling and the log-space
+statistics are the paper's. The GSM difference is **one spectrum**: SABOR,
+2014-07-31 (index 69), HPLC Tchla 0.252. Its fit is degenerate: Tchla →
+3.8×10⁻⁴ while a_dg(443) = 0.12 m⁻¹ absorbs the blue. With it removed, the
+statistics are the paper's to the quoted digits. The paper's Fig. 4B has no
+point anywhere near log₁₀(GSM) ≈ −3.4, so in Kramer's run this sample either
+failed to converge (and was set to NaN by `gsm_invert.m`) or converged
+elsewhere. We can't run MATLAB here, but the mechanism is plausible:
+
+- 22 of this fit's 366 Nelder–Mead trial points have Tchla ≤ 0, where
+  `Tchla^B` is complex in MATLAB.
+- MATLAB's simplex sorting and comparisons on complex costs differ from our
+  infinite-cost guard and from the port's NaNs.
+
+The paper's other visible outlier is (log₁₀ HPLC, log₁₀ GSM) ≈ (−1.2, −2.3),
+which is our Tara Med sample with HPLC 0.068 and GSM 0.005. It is reproduced.
+
+![Fig. 4 reproduction](figures/sdp/kramer_fig4_chl.png)
+
+*Kramer Fig. 4: (A) OC4v6, (B) the GSM-like fit. The circled point is the
+degenerate SABOR fit discussed above.*
+
+Two further features matter for downstream use:
+- Five ANT (Polarstern) spectra are fitted with **b_bp(443) < 0**. The MATLAB
+  fit is unbounded, so we keep this faithfully. A positivity-bounded fit
+  moves those five to b_bp ≈ 0 and Tchla 0.4–3, and lowers the Fig. 4 R²
+  to 0.66. It changes no other spectrum: δRrs differs by 6×10⁻⁸ relative
+  RMS elsewhere.
+- Per-campaign log₁₀(GSM/HPLC) biases range from −0.16 (Tara Med, NAAMES)
+  to +0.04 (RemSensPOC), with SABOR the noisiest (SD 0.9, driven by
+  index 69).
+
+**Fig. 2B–C is reproduced** qualitatively. The modelled spectra track the
+measured ones. The residuals have the paper's range, about ±3×10⁻⁴ sr⁻¹
+with a larger excursion near 400 nm. They also show its features: the
+black EXPORTS dip near 430 nm, the structure at 450–520 nm, and the ANT
+bump near 680 nm, which is chlorophyll fluorescence the model lacks.
+
+![Fig. 2B–C reproduction](figures/sdp/kramer_fig2bc_model_residual.png)
+
+**Cross-checks and sensitivities of δRrs.** All are relative RMS over every
+sample and band, against an RMS δRrs of ≈7×10⁻⁵ sr⁻¹:
+
+| Change | Effect on δRrs | Comment |
+|---|---|---|
+| Python port, with the port's η convention | 4×10⁻⁵ (max 4.5×10⁻⁸ sr⁻¹) | agreement to below the deposit's rounding (2.9×10⁻⁷); b_sw identical to 8×10⁻¹⁶ |
+| η from Rrs (port) vs rrs (MATLAB) | 8×10⁻⁴ (max 7×10⁻⁷) | negligible |
+| WOA23 monthly vs in-situ T/S (Q&A #22) | 1.2×10⁻³ (max 1.2×10⁻⁶) | negligible. In-situ − WOA: T = +0.7 ± 1.4 °C, S = 0.0 ± 0.4. Tchla changes ≤0.4% except the degenerate SABOR fit (15%) |
+| Bounded optimizer | 0.58 | entirely the five negative-b_bp ANT spectra |
+| A second 5 nm moving mean | 0.04 (max 3×10⁻⁵) | 10–100× the T/S or η effects. Re-smoothing would be a real error, and it grows under differentiation (§4.2) |
+
+![δRrs sensitivity](figures/sdp/gsm_sensitivity.png)
+
+*Per-wavelength RMS of each perturbation compared with the RMS of δRrs. The
+WOA, η and port differences sit at or below the deposit's rounding level.*
+
+The WOA comparison uses WOA23, since WOA13 is no longer served: the ¼°
+monthly objectively analysed surface fields at each sample's month and
+nearest ocean cell (`scripts/sdp/fetch_woa_ts.py`; values in
+`$OS_COLOR/PANGAEA/Kramer2022/woa23_surface_ts.csv`). The largest T
+difference, +8.8 °C, is a RemSensPOC sample at 55°N, 49°W in August (in-situ
+19.0 °C vs WOA 10.2 °C). That in-situ value looks suspect but has no effect
+on δRrs.
+
+**Open for §4.2:** keep the degenerate SABOR spectrum (faithful to our run)
+or drop it (probably faithful to the paper's). Both will be reported.
 ### 4.2 The PCR pigment model — *Execution #3*
 
 ## 5. Maths and statistics — *Execution #6*

@@ -1,0 +1,231 @@
+{
+ "script": "scripts/sdp/reproduce_gsm.py",
+ "epft_up_version": "0.1.0",
+ "input": {
+  "source": "PANGAEA doi:10.1594/PANGAEA.937536 (Kramer et al. 2021), CC-BY-4.0",
+  "file": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/PANGAEA_937536.tab",
+  "sha256": "63da2981596ef8c3d856e0ae12eab4cb715a9ec535e92d83458a7a7f5f910f3b",
+  "sha256_pinned": "63da2981596ef8c3d856e0ae12eab4cb715a9ec535e92d83458a7a7f5f910f3b",
+  "sha256_verified": true,
+  "n_samples": 145,
+  "wave_range_nm": [
+   400.0,
+   700.0
+  ],
+  "ref_repos": {
+   "Rrs_pigments": {
+    "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/ref/Rrs_pigments",
+    "sha": "b3e366225d16c4fe85c7406cd3d57e554b8cb57f",
+    "pinned_sha": "b3e366225d16c4fe85c7406cd3d57e554b8cb57f",
+    "matches_pin": true
+   },
+   "rrs-SDP-pigments": {
+    "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/ref/rrs-SDP-pigments",
+    "sha": "fb17c2f580dea9488b6ba11c690fe8c959e0a0fe",
+    "pinned_sha": "fb17c2f580dea9488b6ba11c690fe8c959e0a0fe",
+    "matches_pin": true
+   }
+  },
+  "loader": "epft_up.sdp.data.load_kramer2022",
+  "epft_up_version": "0.1.0",
+  "loaded_utc": "2026-10-02T19:50:05+00:00"
+ },
+ "tables": {
+  "A_B": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/ref/Rrs_pigments/aph_A_B_Coeffs_Sasha_RSE_paper.txt",
+  "aw": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/ref/Rrs_pigments/aw_mcf16_350_700_1nm.txt",
+  "sha256_A_B": "a6b0492df26f0cde9163f342f747853b448ae5967744f964716a2d42d6d3c64e",
+  "sha256_aw": "d3e8519d6485f905c3cc74afe6fc43ee67709310197010928062e2d5408f35ad",
+  "repo_sha": "b3e366225d16c4fe85c7406cd3d57e554b8cb57f"
+ },
+ "run_utc": "2026-10-02T19:50:05+00:00",
+ "fit": {
+  "settings": {
+   "method": "kramer",
+   "x0": [
+    0.15,
+    0.01,
+    0.0029
+   ],
+   "tol": 1e-09,
+   "maxiter": 2000,
+   "eta_from": "rrs",
+   "tables": {
+    "A_B": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/ref/Rrs_pigments/aph_A_B_Coeffs_Sasha_RSE_paper.txt",
+    "aw": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/ref/Rrs_pigments/aw_mcf16_350_700_1nm.txt",
+    "sha256_A_B": "a6b0492df26f0cde9163f342f747853b448ae5967744f964716a2d42d6d3c64e",
+    "sha256_aw": "d3e8519d6485f905c3cc74afe6fc43ee67709310197010928062e2d5408f35ad",
+    "repo_sha": "b3e366225d16c4fe85c7406cd3d57e554b8cb57f"
+   }
+  },
+  "n_converged": 145,
+  "n_iter_quantiles": [
+   145.0,
+   197.79999999999998,
+   276.0
+  ],
+  "n_negative": {
+   "Tchla": 0,
+   "adg443": 0,
+   "bbp443": 5
+  },
+  "negative_bbp_campaigns": {
+   "ANT": 5
+  }
+ },
+ "fig4": {
+  "paper": {
+   "OC4": {
+    "R2": 0.75,
+    "slope": 0.87
+   },
+   "GSM": {
+    "R2": 0.86,
+    "slope": 0.96
+   }
+  },
+  "OC4v6": {
+   "n": 145,
+   "R2": 0.7457076169723993,
+   "slope": 0.8733235825416136,
+   "intercept": -0.13843730299621534,
+   "median_ratio": 0.9760467079976461,
+   "rms_log10": 0.26544217150655264
+  },
+  "GSM_all": {
+   "n": 145,
+   "R2": 0.7168643594899516,
+   "slope": 0.941595312480923,
+   "intercept": -0.12620090991442848,
+   "median_ratio": 0.9155055462571933,
+   "rms_log10": 0.308018796726475
+  },
+  "GSM_without_worst": {
+   "n": 144,
+   "R2": 0.8640028656156693,
+   "slope": 0.9607429033093879,
+   "intercept": -0.09091138011629389,
+   "median_ratio": 0.9171461263556799,
+   "rms_log10": 0.20113427713585133
+  },
+  "worst": {
+   "index": 69,
+   "campaign": "SABOR",
+   "time": "2014-07-31 17:35:00+00:00",
+   "hplc": 0.252,
+   "params": {
+    "Tchla": 0.00038469755080252006,
+    "adg443": 0.11987577593532882,
+    "bbp443": 0.002418908923219676
+   },
+   "nm_trials": {
+    "n": 366,
+    "neg": 22
+   }
+  },
+  "log10_residual_by_campaign": {
+   "ANT": {
+    "mean": -0.116,
+    "std": 0.196,
+    "count": 26
+   },
+   "BIOSOPE": {
+    "mean": 0.028,
+    "std": 0.138,
+    "count": 23
+   },
+   "EXPORTS": {
+    "mean": -0.067,
+    "std": 0.06,
+    "count": 4
+   },
+   "NAAMES": {
+    "mean": -0.152,
+    "std": 0.173,
+    "count": 11
+   },
+   "RemSensPOC": {
+    "mean": 0.042,
+    "std": 0.102,
+    "count": 27
+   },
+   "SABOR": {
+    "mean": -0.396,
+    "std": 0.915,
+    "count": 9
+   },
+   "Tara Med": {
+    "mean": -0.156,
+    "std": 0.243,
+    "count": 29
+   },
+   "Tara Oceans": {
+    "mean": 0.012,
+    "std": 0.205,
+    "count": 16
+   }
+  }
+ },
+ "port": {
+  "bsw_max_rel_diff": 7.771561172376096e-16,
+  "dRrs_vs_ours_rel_rms": 0.0007994752963247771,
+  "dRrs_vs_ours_eta_Rrs_rel_rms": 4.356154928608135e-05,
+  "dRrs_vs_ours_eta_Rrs_max_abs": 4.4938439119207585e-08,
+  "notes": "port: eta from above-water Rrs; fmin xtol=ftol=1e-6; no Tchla<=0 guard"
+ },
+ "sensitivity": {
+  "woa_vs_insitu": {
+   "dT_insitu_minus_woa": {
+    "count": 145.0,
+    "mean": 0.716,
+    "std": 1.352,
+    "min": -2.742,
+    "25%": 0.085,
+    "50%": 0.66,
+    "75%": 1.326,
+    "max": 8.81
+   },
+   "dS_insitu_minus_woa": {
+    "count": 145.0,
+    "mean": -0.011,
+    "std": 0.411,
+    "min": -1.888,
+    "25%": -0.149,
+    "50%": 0.031,
+    "75%": 0.161,
+    "max": 1.315
+   },
+   "dRrs_rel_rms": 0.0012005891374727985,
+   "dRrs_max_abs": 1.2375448898362292e-06,
+   "Tchla_max_rel_change": 0.1518837568484772,
+   "woa_file_sha256": "0601d0db6b2055442861159ec60e94d78ac2fd8813077244a36eca10df83fd22"
+  },
+  "eta_Rrs_vs_rrs": {
+   "dRrs_rel_rms": 0.0007983012917257557,
+   "dRrs_max_abs": 6.954951376862695e-07
+  },
+  "optimizer_lsq_vs_nm": {
+   "dRrs_rel_rms": 0.5774904266378434,
+   "n_samples_changed_gt_1e-7": 5,
+   "changed_campaigns": {
+    "ANT": 5
+   },
+   "dRrs_rel_rms_unchanged_samples": 5.848567711262855e-08,
+   "Tchla_lsq_fig4": {
+    "n": 145,
+    "R2": 0.6616062778323651,
+    "slope": 0.9605945595409258,
+    "intercept": -0.07511879268583076,
+    "median_ratio": 0.9326284434367438,
+    "rms_log10": 0.34779760652968783
+   }
+  },
+  "double_smoothing": {
+   "dRrs_rel_rms": 0.04005058283173382,
+   "dRrs_max_abs": 3.0238669998685144e-05
+  }
+ },
+ "product": {
+  "file": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/products/gsm_dRrs_insitu.npz",
+  "sha256": "a155b6ce40957f7276f01dc79d96ec901a13d8c5838e4eafa69cfbce4ce52e9b"
+ }
+}

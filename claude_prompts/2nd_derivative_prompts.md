@@ -686,3 +686,54 @@ Following the user's answers to the #1 open items:
   fine. Still nothing is vendored.
 - **cartopy** added to `requirements.txt` and to `install_requires` in
   `setup.py` (kept in sync, as `requirements.txt` asks).
+
+### 2026-10-02 (Execution #2: reproduce δRrs, the GSM-like residual)
+
+New code:
+- `epft_up/sdp/gsm.py`: an independent implementation of Kramer 2022
+  Eqs. 1–6, comprising Lee rrs conversions; Zhang et al. (2009) b_sw written
+  from its equations (ocpy's `betasw_ZHH2009` can't be used: it raises "not
+  successfully converted" and has a Boltzmann-constant typo, 1.38e-22);
+  Carder S_dg; Lee η; the Gordon quadratic; `load_ref_tables()` (A,B,a_w from
+  the pinned checkout, with checksums); `fit_gsm()` with `method='kramer'`
+  (Nelder–Mead with MATLAB fminsearch settings) or `'lsq'` (bounded
+  log-parameters); a `GSMFit` result with δRrs.
+- `epft_up/sdp/spectral.py`: `moving_mean`, `trim_edges`, `kramer_preprocess`
+  (the paper's §2.2 recipe for new, unsmoothed spectra).
+- `scripts/sdp/fetch_woa_ts.py`: WOA23 ¼° monthly surface T/S at each sample
+  via OPeNDAP → `$OS_COLOR/PANGAEA/Kramer2022/woa23_surface_ts.csv` (+ JSON).
+- `scripts/sdp/reproduce_gsm.py`: fit, Fig. 4, Fig. 2B–C, port cross-check,
+  sensitivities; product `$OS_COLOR/.../products/gsm_dRrs_insitu.npz`.
+- `epft_up/tests/test_sdp_gsm.py`: 9 tier-1 tests (synthetic fixed-point
+  spectra recovered by both optimizers, Zhang physics checks, smoothing) and
+  2 tier-2 tests (real tables; Fig. 4B statistics). Full suite: 56 passed.
+- Report §4.1 written.
+
+Findings:
+- **Fig. 4 reproduced.** OC4v6: y = 0.873x − 0.138, R² 0.746 (paper 0.87x −
+  0.14, 0.75). GSM: R² 0.717 and slope 0.942 on all 145. Dropping one
+  degenerate fit (SABOR 2014-07-31, idx 69: Tchla → 4e-4, a_dg(443) = 0.12)
+  gives y = 0.961x − 0.091, R² 0.864, the paper's 0.96x − 0.093, 0.86. That
+  point is absent from the paper's Fig. 4B. The likely cause is MATLAB's
+  complex arithmetic when Nelder–Mead trials Tchla ≤ 0 (22 of 366 trials do,
+  for this sample). It cannot be verified without MATLAB. Not a
+  stop-and-ask: the cause is identified to a single sample.
+- **The printed Eq. 5 has a sign typo.** Both codes use Carder (1999);
+  taken literally, Eq. 5 gives R² 0.07. The paper's text says η uses
+  rrs490/555, but the code uses rrs440/555 (Lee 2002). The 490 variant gives
+  R² 0.62.
+- Python port vs ours (same η convention): max |ΔδRrs| = 4.5e-8 sr⁻¹, below
+  the deposit rounding; b_sw identical. The port uses above-water Rrs for η
+  (0.08% effect).
+- WOA23 vs in-situ T/S: 0.12% relative RMS on δRrs (max 1.2e-6). Q22 is
+  closed: in-situ is fine.
+- Five ANT spectra are fitted with b_bp(443) < 0 (unbounded fit, faithful to
+  MATLAB). A bounded fit changes only those five.
+- An accidental second 5 nm smoothing changes δRrs by 4% RMS, 10–100× the
+  other choices. This confirms #1's warning not to re-smooth.
+- `Kramer_rrs_testdata.mat` in `Rrs_pigments` holds 17 EXPORTS-NA spectra
+  with T, S and chl (no pigments), which is likely the #9 hold-out. Its
+  pigments must still come from SeaBASS.
+
+Open for #3: run the PCR both with and without the degenerate SABOR
+spectrum.
