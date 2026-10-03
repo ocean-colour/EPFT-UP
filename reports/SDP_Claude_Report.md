@@ -1,7 +1,7 @@
 # The 2nd-derivative (SDP) approach to phytoplankton pigments from hyperspectral Rrs
 
 **Author:** Claude (Opus 5.5), for J. Xavier Prochaska
-**Status:** in progress. §3–§6 (data, reproduction, maths/statistics, diagnostics) are written; the other sections are outlines
+**Status:** in progress. §3–§8 (data, reproduction, maths/statistics, diagnostics, learned weighting, uncertainty) are written; the other sections are outlines
 that later Execution prompts in `claude_prompts/2nd_derivative_prompts.md` fill
 in.
 **Scope:** a reproduction and critique of Kramer, Siegel, Maritorena & Catlett
@@ -977,9 +977,395 @@ tests here. A learned wavelength weighting should explicitly penalize the
 high-frequency structure (a smoothness prior and noise whitening), which is
 exactly what the derivative + z-score recipe fails to do.
 
-## 7. Alternatives: a learned wavelength weighting — *Execution #7*
+## 7. Alternatives: a learned wavelength weighting
 
-## 8. Uncertainty — *Execution #8*
+The code is in `epft_up/sdp/weighting.py` and
+`scripts/sdp/learned_weighting.py`. The outputs are `weighting_table.csv`
+(every model × target), `weighting_summary.csv`, `weighting_ranks.csv` and
+`weighting_summary.json`. Everything is scored on the standard Benchmark of
+§6.3: 100 random splits plus LOCO, each target against the best Tchla-only
+null. The primary target is the log₁₀ pigment:Tchla ratio.
+
+### 7.1 Models
+
+The **shared low-rank weighting W** is a multi-output regression of all
+targets of one kind (12 log ratios, or 13 concentrations, standardized) on
+δRrs in physical units plus the three GSM parameters (log₁₀ Tchla_GSM,
+log₁₀ a_dg(443), b_bp(443)). Each weight spectrum $w$ is penalized by
+
+$$\lambda_n\, w^\top\Sigma_n w \;+\; \lambda_s\,\lVert D_2 w\rVert^2 \;+\; \varepsilon\lVert w\rVert^2 .$$
+
+- The first term is the prediction variance that Rrs noise $\Sigma_n$ would
+  inject (§5.2). It is the regression form of noise whitening; $\Sigma_n$ is
+  the in-situ-like `pct:0.02` model through the 5 nm mean.
+- The second term is a smoothness prior, the opposite of §5.1's implied
+  anti-smoothness prior.
+
+The penalized solution is then reduced to rank $r$ along the leading
+directions of its fitted values (reduced-rank regression; Izenman 1975). The
+$r$ columns of $B_{\rm pen}V_r$ are the shared latent weight spectra.
+$(\lambda_n, \lambda_s, r)$ are chosen inside each training set by either:
+- random 5-fold CV ("random inner"), or
+- **leave-one-campaign-out within the training campaigns ("group
+  inner")**, which selects for settings that transfer.
+
+The grid: λₙ ∈ {0, 0.1, 1, 10, 100}, λₛ ∈ {10⁻⁴ … 10³}, r ∈ 1…10.
+
+Controls separate the three ingredients:
+
+| Model | Basis | Estimator | Tests |
+|---|---|---|---|
+| PCR δRrs'' | z-scored δRrs'' | PCR | the paper |
+| ridge / PLS δRrs'' | z-scored δRrs'' | ridge (GCV) / PLS (inner CV) | estimator change only |
+| ridge / PLS δRrs ⊕ GSM | z-scored δRrs ⊕ GSM | ridge / PLS | basis change only |
+| smooth (per pigment) | δRrs ⊕ GSM | the penalty above, rank 1, group inner | penalty without sharing |
+| shared W, random / group | δRrs ⊕ GSM | the penalty above + reduced rank | the full model |
+| shared W on M1 | M1 ⊕ GSM | the same, group inner | El Hourany's spline residual as the basis |
+
+### 7.2 Results
+
+Means over the 13 absolute and 12 ratio targets; counts are targets that
+beat the best Tchla null:
+
+| Model | abs R², random | abs R², LOCO | abs beats null, LOCO | ratio log-R², random | **ratio log-R², LOCO** | ratio beats null (rand / **LOCO**) | ratio LOCO RMS < const |
+|---|---|---|---|---|---|---|---|
+| PCR δRrs'' (paper) | 0.51 | 0.19 | 0 | 0.38 | **0.17** | 8 / **1** | 9 |
+| ridge δRrs'' | 0.36 | 0.19 | 0 | 0.27 | 0.11 | 1 / 0 | 1 |
+| PLS δRrs'' | 0.49 | 0.18 | 0 | 0.38 | 0.17 | 7 / 2 | 8 |
+| ridge δRrs ⊕ GSM | 0.54 | 0.29 | 1 | 0.48 | 0.18 | 10 / 2 | 3 |
+| PLS δRrs ⊕ GSM | 0.57 | 0.33 | 2 | 0.45 | 0.17 | 10 / 0 | 5 |
+| smooth, per pigment (group) | 0.58 | 0.39 | 2 | 0.42 | 0.18 | 9 / 3 | 9 |
+| shared W, random inner | 0.58 | 0.39 | 1 | 0.47 | **0.25** | 11 / 4 | 8 |
+| **shared W, group inner** | 0.57 | 0.39 | **3** | 0.38 | **0.24** | 7 / **6** | **10** |
+| shared W on M1, group inner | 0.55 | **0.40** | 2 | **0.48** | **0.25** | **12** / 4 | **11** |
+
+**Which ratios beat the Tchla null out of campaign** (LOCO R² vs best null R²):
+
+| Ratio | PCR δRrs'' | shared W (group) | shared W on M1 (group) | null |
+|---|---|---|---|---|
+| Fuco:Tchla | 0.40 | **0.45** | **0.55** | 0.31 |
+| Zea:Tchla | 0.34 | **0.48** | **0.51** | 0.35 |
+| DVchla:Tchla | 0.36 | **0.47** | **0.46** | 0.32 |
+| Chlc12:Tchla | 0.28 | **0.43** | 0.38 | 0.27 |
+| Perid:Tchla | 0.09 | **0.20** | 0.08 | 0.08 |
+| Allo:Tchla | 0.08 | 0.24 | 0.22 | 0.20 |
+| HexFuco, ButFuco, MVchlb, Viola, Chlc3 | ≤ 0.17 | ≤ 0.20 | ≤ 0.19 | — (none beat it) |
+
+Bold marks a significant win (the bootstrap 95% CI of ΔR² is above 0).
+Neo:Tchla also "wins" for most models, but that is the zero-replacement
+artifact of §6.1 and is excluded. Among absolute concentrations, the shared
+W beats the null out of campaign for ButFuco (0.61 vs 0.32), Zea (0.13 vs
+0.02) and Neo (0.42 vs 0.23). It never does for Tchla: no linear model on
+these spectra beats the two-parameter GSM-Tchla power law for Tchla itself.
+
+What the controls show:
+1. **Changing only the estimator does nothing.** Ridge and PLS on δRrs''
+   are no better than PCR under LOCO (0.11–0.17 ratio, 0.18–0.19 abs), as
+   §5.3 predicted: they share the basis and its prior.
+2. **Changing only the basis helps absolute concentrations but not ratios.**
+   Ridge/PLS on δRrs ⊕ GSM lift LOCO abs R² from 0.19 to 0.29–0.33, but
+   the ratios stay at 0.17–0.18.
+3. **The smoothness + noise penalty brings absolute concentrations to the
+   null's level** (0.39 LOCO; 2 targets beat it) but on its own adds little
+   for ratios (0.18).
+4. **Sharing across targets is what lifts the ratios.** The rank-reduced W
+   raises LOCO ratio skill to 0.24–0.25 and the number of ratios beating the
+   null to 4–6, against 0–3 for every per-pigment model. Group-inner
+   selection gives the most null-beating ratios (6) and the most ratios that
+   beat a constant out of campaign (10 of 12). Random-inner selection is
+   marginally higher on average but less reliable target by target.
+5. On M1 instead of δRrs the shared W is comparable. It is best for
+   Fuco:Tchla (0.55) and Zea:Tchla (0.51), and has the best random-split
+   ratio skill (12/12 beat the null). The GSM residual is again not
+   essential (cf. §6.3).
+
+### 7.3 The rank, and the 4–5 group ceiling
+
+| Shared model | target kind | selected rank (distribution over 108 splits) | median |
+|---|---|---|---|
+| δRrs ⊕ GSM, random inner | ratios | 5–10 (5: 30, 6: 16, 10: 32) | 7 |
+| δRrs ⊕ GSM, **group inner** | ratios | **2 in 91 of 108 splits** | **2** |
+| δRrs ⊕ GSM, random inner | absolute | 5–6 typical | 6 |
+| δRrs ⊕ GSM, group inner | absolute | 3 (51), 2 (22), 4 (17) | 3 |
+| M1 ⊕ GSM, group inner | ratios | 5 (91) | 5 |
+
+- **Within campaigns** (random inner CV), the data support about 5–7
+  compositional dimensions. That matches the ceiling of 4 global HPLC groups
+  plus 1–2 local ones from Kramer & Siegel (2019) and Kramer et al. (2020),
+  and the 5 groups in this dataset's dendrogram (§4.2).
+- **Across campaigns** (group inner CV on δRrs), only **two** dimensions
+  transfer. With Tchla handled by the GSM term, rank 3 for absolute
+  concentrations is the same two plus Tchla. On M1 the shared model keeps 5,
+  but its out-of-campaign gain is concentrated in the same ratios (Fuco,
+  Zea, DVchla).
+- The two transferable latent dimensions (full-data fit, group-inner
+  hyperparameters λₙ = 1, λₛ = 100, r = 2) are interpretable:
+  - **Latent 1 is a diatom ↔ cyanobacteria axis.** It loads Fuco:Tchla
+    (+0.42) and Chlc12:Tchla (+0.41) against Zea:Tchla (−0.44) and
+    DVchla:Tchla (−0.44). That is the leading global EOF of Kramer & Siegel
+    (2019, mode 1: diatoms/dinoflagellates vs picophytoplankton, 24% of
+    variance).
+  - **Latent 2 is a green-algae/haptophyte axis.** It loads Neo (−0.51),
+    Allo (−0.39), Viola (−0.38) and HexFuco (−0.37), echoing their modes 2–3.
+
+So the optics carry, transferably, roughly the first two axes of the global
+pigment EOFs, not the full 4–5 groups.
+
+![Latent weight spectra](figures/sdp/weighting_latent_spectra.png)
+
+*The two shared latent weight spectra on δRrs, with each latent's largest
+target loadings in its title.*
+
+### 7.4 Which wavelengths carry the weight
+
+![Target weight spectra](figures/sdp/weighting_target_spectra.png)
+
+*Weight spectra on δRrs for four log ratios and two absolute pigments:
+shared W (blue) vs PCR's effective $D^\top A$ (red), each normalized to its
+maximum.*
+
+- **Scale.** The shared-W weight spectra have **no** power at periods
+  < 10 nm. For Fuco, Zea, DVchla and Chlc12 about 50% of the power is at
+  10–40 nm periods, and the rest at longer scales. PCR's effective weights
+  have 99.7% at < 10 nm. The transferable information lives at the widths
+  of absorption *bands* (≈ 15–40 nm), not in the 1–5 nm curvature the second
+  derivative emphasizes.
+- **Location.** As shares of |w(λ)|·SD(δRrs(λ)), summed over bands:
+  - Fuco:Tchla, Zea:Tchla, DVchla:Tchla and Chlc12:Tchla: about **8%** at
+    400–450 nm, 14–16% at 450–500, 15–18% at 500–550, 12–17% at 550–600,
+    and **≈ 46% at 600–700 nm** (23% each in 600–650 and 650–700).
+  - HexFuco:Tchla leans on 500–600 nm (50%).
+  - Absolute Tchla and Fuco lean on 500–600 nm (57–48%) and 650–700 nm.
+- **The recurring features of latent 1:**
+  - positive lobes near 445–455, 490, 520, 555, 600 and 675–680 nm;
+  - negative lobes near 470, 510, 580 and a broad 630–655 nm trough.
+
+  The 675–680 lobe sits on the chlorophyll red absorption peak and the
+  683 nm fluorescence line; the GSM has no fluorescence term, so δRrs keeps
+  it. The 630–655 trough overlaps chlorophyll c absorption (≈ 635 nm) and,
+  for the cyanobacterial ratios, phycobilin absorption (phycoerythrin
+  ≈ 545–565 nm; phycocyanin ≈ 620 nm). These assignments are suggestive,
+  not demonstrated.
+- **The blue matters less than expected.** Little weight sits at 400–450 nm,
+  where most accessory pigments absorb, probably because δRrs is noisiest
+  relative to its signal there (§5.2: SNR minimum ≈ 410 nm) and is most
+  affected by the CDOM/NAP shape the GSM removes imperfectly.
+
+### 7.5 Do the gains over PCR survive LOCO?
+
+**Yes, for a small set of targets.** Compared with the paper's PCR on
+δRrs'', the group-inner shared W:
+- doubles LOCO absolute R² (0.19 → 0.39), matching the Tchla null on
+  average and beating it for 3 pigments;
+- raises LOCO ratio log-R² from 0.17 to 0.24;
+- turns **4 ratios** (Fuco, Zea, DVchla, Chlc12; plus Perid weakly) into
+  significant out-of-campaign wins over the Tchla null, against none for
+  PCR (excluding the Neo artifact);
+- beats a constant ratio for 10 of 12 ratios out of campaign.
+
+The gains are modest in absolute terms: the best LOCO ratio R² values are
+0.45–0.55. They come from three things, none of which is the second
+derivative:
+1. a smooth, noise-aware prior instead of an anti-smooth one;
+2. sharing statistical strength across pigments through a low-rank W;
+3. hyperparameters chosen for transfer (group inner CV).
+
+HexFuco, ButFuco, MVchlb, Viola, Chlc3 and Allo ratios remain
+indistinguishable from the null out of campaign. The haptophyte and green
+algal composition is not retrievable from this dataset in a way that
+transfers.
+
+Two cautions:
+- The hyperparameter grid's smoothness choice sat at the upper end (λₛ =
+  100–1000). Extending the grid by two decades changed the LOCO scores by
+  < 0.01, so the CV surface is flat there.
+- The noise penalty assumes the in-situ-like 2% model. §8 tests robustness
+  to the PACE noise models and attaches predictive uncertainties to the
+  shared W.
+
+## 8. Uncertainty
+
+The code is in `epft_up/sdp/bayes.py` (the model and scores) and
+`epft_up/sdp/noise.py` (covariances and Monte Carlo draws). The script is
+`scripts/sdp/uncertainty.py`, and the outputs are `uncertainty_scores.csv`,
+`uncertainty_summary.csv` and `uncertainty_summary.json`. Everything is under
+leave-one-campaign-out (LOCO), so every predictive interval is for a
+campaign the model never saw.
+
+### 8.1 The Bayesian shared W
+
+The model takes §7's best estimator, the shared low-rank W on δRrs ⊕ GSM
+parameters with a noise + smoothness penalty and (λₙ, λₛ, r) chosen by inner
+leave-campaign-out, and adds a Bayesian layer:
+
+- **Cross-fitted calibration (the default).** Within each training set, the
+  shared W at its selected hyperparameters is refitted leaving out one
+  campaign at a time, giving out-of-campaign predictions ŷ_oof. Each
+  target's Bayesian linear regression y = a + b·ŷ_oof + ε (Gaussian prior,
+  type-II maximum likelihood; `sklearn.BayesianRidge`) gives a Gaussian
+  predictive distribution: residual variance plus coefficient uncertainty.
+  The point predictor is the full-training-set W.
+- **In-sample calibration (shown for contrast).** The same Bayesian
+  regression on the *in-sample* latent scores. Because the latent directions
+  were fitted to these same targets, its residual variance understates the
+  error, both on synthetic data (68%/95% intervals cover 48%/80%) and on the
+  deposit (see below). Cross-fitting is the fix.
+- **Input-noise propagation by Monte Carlo through the whole chain.** For
+  each noise model, 30 noisy realizations of every spectrum are drawn. Each
+  goes through noisy Rrs → GSM refit → δRrs and GSM parameters →
+  prediction, so the GSM projection and the noise in the auxiliary
+  parameters are included. A retrieval's total predictive SD is
+  $\sqrt{\sigma^2_{\rm model} + \sigma^2_{\rm input}}$, with
+  $\sigma^2_{\rm input}$ the across-draw variance of its predictive mean.
+  Coverage is scored on single-draw retrievals (what an observer gets),
+  pooled over the draws.
+- **Noise-aware training (`aware`).** The test noise covariance enters the
+  penalty with no tuning, as $n\,w^\top\Sigma_{\rm test}w$. For a linear
+  predictor with standardized targets this is exactly the extra expected
+  squared error that test-time noise adds (errors-in-variables ridge), so it
+  costs no extra hyperparameter.
+
+Scenarios (all with the 5 nm moving mean the paper's preprocessing implies):
+
+| Scenario | Spectra the model is applied to |
+|---|---|
+| clean, 1 nm | the deposit |
+| in-situ, 1 nm | + `pct:0.02` + floor (white, through the 5 nm mean) |
+| PACE white, 1 nm | + ocpy's OCI σ (white per band) |
+| PACE correlated, 1 nm | + smooth OCI-σ error (ℓ = 30 nm) + 10% white |
+| clean, 5 nm | the deposit subsampled to 400, 405, …, 700 nm; GSM and model rebuilt at 5 nm |
+| PACE white, 5 nm | + OCI σ per 5 nm band |
+
+All models are trained on the clean deposit at the matching resolution. The
+Tchla nulls are also fed the noisy spectra' GSM and OC4 Tchla, so they face
+the same noise.
+
+### 8.2 Calibration
+
+**Log ratios (the primary target):**
+
+| Scenario | model | 68% coverage | 95% coverage | SD of z | CRPS [dex] | model-variance-only coverage (68/95) |
+|---|---|---|---|---|---|---|
+| clean, 1 nm | shared W, in-sample calibration | 0.64 | 0.90 | 1.26 | 0.184 | 0.64 / 0.90 |
+| clean, 1 nm | **shared W, cross-fitted** | **0.71** | **0.94** | 1.07 | 0.184 | 0.71 / 0.94 |
+| in-situ, 1 nm | shared W | 0.70 | 0.94 | 1.07 | 0.194 | 0.68 / 0.93 |
+| in-situ, 1 nm | shared W, aware | 0.68 | 0.93 | 1.10 | 0.198 | 0.67 / 0.93 |
+| PACE white, 1 nm | shared W | 0.70 | 0.94 | 1.05 | 0.218 | **0.63 / 0.90** |
+| PACE white, 1 nm | shared W, aware | 0.69 | 0.94 | 1.09 | 0.199 | 0.68 / 0.93 |
+| PACE correlated, 1 nm | shared W | 0.69 | 0.94 | 1.05 | 0.235 | **0.59 / 0.88** |
+| PACE correlated, 1 nm | shared W, aware | 0.69 | 0.93 | 1.10 | 0.189 | 0.67 / 0.92 |
+| clean, 5 nm | shared W | 0.71 | 0.94 | 1.07 | 0.183 | 0.71 / 0.94 |
+| PACE white, 5 nm | shared W | 0.70 | 0.94 | 1.05 | 0.214 | 0.64 / 0.91 |
+| PACE white, 5 nm | shared W, aware | 0.69 | 0.94 | 1.08 | 0.199 | 0.68 / 0.93 |
+
+![Coverage](figures/sdp/uncertainty_coverage.png)
+
+*68% and 95% interval coverage of the 12 log ratios under LOCO, by scenario,
+for the shared W without and with noise-aware training. Black ticks show
+coverage using the model variance alone.*
+
+![PIT](figures/sdp/uncertainty_pit.png)
+
+*PIT histograms for the 12 log ratios pooled, by scenario (flat = calibrated).*
+
+Points from the table:
+- **With cross-fitting and input-noise propagation, the intervals are
+  calibrated out of campaign in every scenario:** 68–71% and 93–94%
+  coverage, SD of standardized errors 1.05–1.10. The PIT histograms are
+  close to flat. A mild hump at 0.6–0.7 shows the observations sit slightly
+  above the predictive median, a small negative bias, plus a slight excess
+  in the lowest bin.
+- **Propagating the input noise matters.** With the model variance alone,
+  coverage falls to 63/90% (PACE white) and 59/88% (PACE correlated).
+- **Noise-aware training makes the model itself robust enough** that the
+  model variance alone covers almost correctly (67–68 / 92–93%). It also
+  lowers CRPS under PACE noise (0.218 → 0.199 white; 0.235 → 0.189
+  correlated).
+- **Uncertainty budget** (median 1σ, dex), for the two best-constrained
+  ratios:
+
+  | | model | + in-situ noise | + PACE white | + PACE correlated |
+  |---|---|---|---|---|
+  | Fuco:Tchla | 0.27 | 0.29 | 0.33 | 0.35 |
+  | Zea:Tchla | 0.40 | 0.43 | 0.50 | 0.52 |
+
+  The model term (≈ a factor 1.9–2.5 in the ratio) dominates for in-situ
+  data. At OCI noise levels the input term (0.16–0.33 dex) becomes
+  comparable to it.
+
+**Absolute concentrations** are less well served by a Gaussian. The 68%
+coverage is 0.82–0.87 (too wide in the core), the 95% coverage 0.94–0.95,
+and the SD of z is 1.6–1.8 (heavy tails). Concentrations are skewed,
+spanning two decades, so a symmetric linear-space interval is the wrong
+shape. A log-normal or censored likelihood would be appropriate (the
+deferred Tom Jordan model, Q&A #20). The ratios are already in log space,
+which is one more reason to prefer them as the target.
+
+### 8.3 How skill degrades: in situ → OCI noise, and 1 → 5 nm
+
+LOCO log-R² by scenario. "Null" is the best Tchla null under the same noise,
+which is the OC4 null throughout.
+
+| Ratio | clean 1 nm: shared W / PCR / null | in-situ 1 nm: W / W-aware / PCR | PACE white 1 nm: W / W-aware / PCR / null | PACE corr. 1 nm: W / W-aware / PCR / null | clean 5 nm: W / PCR | PACE white 5 nm: W-aware / PCR / null |
+|---|---|---|---|---|---|---|
+| Fuco:Tchla | 0.43 / 0.42 / 0.31 | 0.39 / 0.37 / **0.01** | 0.26 / **0.36** / **0.00** / 0.27 | 0.23 / **0.45** / 0.06 / 0.26 | 0.44 / 0.46 | **0.37** / 0.01 / 0.28 |
+| Zea:Tchla | 0.43 / 0.32 / 0.35 | 0.37 / 0.38 / 0.01 | 0.25 / **0.34** / 0.00 / 0.31 | 0.25 / **0.46** / 0.08 / 0.30 | 0.46 / 0.43 | **0.37** / 0.01 / 0.32 |
+| DVchla:Tchla | 0.44 / 0.35 / 0.32 | 0.36 / 0.36 / 0.00 | 0.23 / **0.33** / 0.00 / 0.29 | 0.24 / **0.44** / 0.04 / 0.27 | 0.47 / 0.50 | **0.34** / 0.01 / 0.30 |
+| Chlc12:Tchla | 0.42 / 0.29 / 0.27 | 0.37 / 0.38 / 0.00 | 0.24 / **0.32** / 0.00 / 0.24 | 0.21 / **0.39** / 0.05 / 0.23 | 0.42 / 0.37 | **0.34** / 0.00 / 0.24 |
+| mean of 12 | 0.20 / 0.17 / 0.20 | 0.16 / 0.14 / 0.00 | 0.10 / 0.13 / 0.00 / 0.18 | 0.09 / **0.19** / 0.03 / 0.15 | 0.20 / 0.22 | 0.13 / 0.00 / 0.19 |
+
+![Skill vs scenario](figures/sdp/uncertainty_skill.png)
+
+*LOCO log-R² across scenarios for four key ratios and the mean over 12: the
+shared W without (blue) and with (orange) noise-aware training, Kramer's PCR
+(red), and the best Tchla null (dashed).*
+
+What degrades:
+1. **The paper's PCR on δRrs'' does not survive any realistic noise.**
+   Trained on the clean deposit and applied to spectra with 2% in-situ-like
+   noise, PACE white or PACE correlated noise, its LOCO R² collapses to ≈ 0
+   for every ratio, and to ≈ 0 for absolute concentrations (mean 0.00–0.02).
+   This is §5.2's 10–15× noise amplification made concrete. SDP as
+   published works only on spectra as clean as the deposit, with
+   band-to-band noise around 0.1%.
+2. **The shared W degrades gracefully, and noise-aware training recovers
+   much of the loss.** For the four transferable ratios, from clean to
+   PACE white at 1 nm, LOCO R² goes from 0.42–0.44 to 0.23–0.26 unaware and
+   0.32–0.36 aware.
+   - The aware model keeps beating the Tchla null for all four ratios under
+     PACE white noise, by 0.03–0.09.
+   - Under smooth, AC-like PACE errors it is essentially unaffected (0.39–0.46),
+     while the GSM-Tchla null collapses (abs Tchla null 0.37 → 0.14). There
+     the aware shared W beats the best null on 9 of 13 absolute pigments and
+     6 of 12 ratios.
+   - Under in-situ 2% noise, awareness neither helps nor hurts (0.16 vs 0.14
+     mean).
+3. **5 nm sampling costs nothing.** The clean 5 nm scores equal or exceed
+   1 nm for every model: shared W mean 0.20 vs 0.20; Fuco:Tchla 0.44 vs
+   0.43. PCR even improves at 5 nm (0.22 vs 0.17 mean, consistent with
+   §4.2). Under PACE white noise, 5 nm and 1 nm are also equivalent (aware
+   W 0.13 vs 0.13 mean; Fuco:Tchla 0.37 vs 0.36). This matches §5.2's
+   degrees-of-freedom analysis: the information is at 10–40 nm scales, and
+   OCI's ≈ 5 nm resolution captures it.
+4. **The honest bottom line for PACE.** At ocpy's OCI noise level, a
+   single-spectrum retrieval of Fuco:Tchla, Zea:Tchla, DVchla:Tchla or
+   Chlc12:Tchla from the noise-aware shared W explains about a third of the
+   out-of-campaign variance (R² 0.32–0.37). That is 0.03–0.09 better than a
+   band-ratio Tchla model, with a calibrated ±0.33–0.50 dex (1σ) interval.
+   The other eight ratios are at or below the null. Spatial or temporal
+   averaging of N pixels would shrink the input term roughly by √N, toward
+   the clean-spectrum skill (R² ≈ 0.43–0.47).
+
+Caveats:
+- The noise models are stand-ins. ocpy's OCI σ comes from one early L2
+  granule, and how it splits between white and smooth error is unknown.
+  "White" and "correlated" bracket that split.
+- The predictive variance is conditional on the selected hyperparameters
+  and on the deposit's campaigns being representative. LOCO tests the
+  second only within these eight campaigns.
+- A single noise draw per spectrum was used for training (none: training
+  is on clean spectra). Training on noise-augmented spectra is an
+  alternative to the analytic noise-aware penalty that was not tested.
 
 ## 9. Hold-out test: EXPORTS North Atlantic 2021 — *Execution #9*
 

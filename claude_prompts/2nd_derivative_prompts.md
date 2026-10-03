@@ -953,3 +953,101 @@ Findings:
   ridge (CV) has effective dof 68–103; PLS has 5–6 components, effective
   dof 54–74 and fᵢ up to 1.55. All share the same basis and its prior, so
   changing the estimator alone shouldn't fix transfer. That sets up #7.
+
+### 2026-10-03 (Execution #7: learned wavelength weighting)
+
+New code:
+- `epft_up/sdp/weighting.py`:
+  - `RidgeGCVFitter` (closed-form GCV) and `PLSFitter` (inner k-fold CV);
+  - `PenalizedRRR`: a multi-output regression on raw-unit spectra ⊕
+    standardized auxiliaries, with penalty λ_n wᵀΣ_n w + λ_s‖D₂w‖² + ε‖w‖²
+    on the spectral block and a ridge on the auxiliaries, then reduced-rank
+    projection; (λ_n, λ_s, r) by inner CV;
+  - `SharedRRRFitter`: a Benchmark adaptor with one cached joint fit per
+    training set, and inner CV that is random k-fold or **leave-campaign-out
+    within the training set**.
+- `scripts/sdp/learned_weighting.py`: 9 models through the Benchmark; rank
+  and hyperparameter tallies; a full-data shared W (group inner) for the
+  figures; band importance. About 25 min.
+- `epft_up/tests/test_sdp_weighting.py`: 6 tests (rank recovery, smoothing,
+  noise down-weighting, caching). Full suite: 89 passed.
+- Report §7 written.
+
+The first run had λ_s at the top of its grid (10) and λ_n close to it. I
+re-ran with λ_n up to 100 and λ_s up to 1000. The choices moved to
+100–1000, but the LOCO scores changed by < 0.01 (a flat CV surface), so I
+did not extend further. My interim remark that very large λ_s means
+"nearly linear weights" was wrong: the fitted weights keep 10–40 nm
+structure (no power below 10 nm).
+
+Findings (LOCO, against the best Tchla null; ratios are primary):
+- Paper PCR on δRrs'': ratio log-R² 0.17, absolute R² 0.19, 1 ratio beats
+  the null (the Neo artifact). Ridge or PLS on δRrs'' (estimator change):
+  no better. Ridge or PLS on δRrs ⊕ GSM (basis change): absolute up to
+  0.29–0.33, ratios unchanged. Per-pigment smooth+noise penalty: absolute
+  0.39, ratios 0.18.
+- **Shared low-rank W:** ratios 0.24–0.25, absolute 0.39. With group inner
+  CV, 6 ratios beat the null: Fuco 0.45, Zea 0.48, DVchla 0.47, Chlc12
+  0.43, Perid 0.20, plus Neo (artifact). 10 of 12 beat a constant out of
+  campaign. Absolute ButFuco, Zea and Neo beat the null; Tchla never does.
+  M1 ⊕ GSM performs about the same (Fuco:Tchla 0.55, Zea:Tchla 0.51).
+- **Rank:** random inner CV chooses 5–7 (≈ the 4–5 group ceiling + local);
+  group inner chooses **2 for ratios (91/108 splits)** and 3 for absolute
+  (2 + Tchla). Latent 1 = diatom/Chlc12 vs Zea/DVchla (≈ Kramer & Siegel
+  2019 EOF mode 1); latent 2 = Neo/Allo/Viola/HexFuco (≈ modes 2–3). Only
+  about two compositional axes transfer between campaigns.
+- **Wavelengths:** the shared-W weights have 0% power below 10 nm periods
+  (PCR 99.7%) and ~50% at 10–40 nm. For the Fuco and cyanobacterial ratios,
+  ≈ 46% of the weight contribution is at 600–700 nm (chlorophyll red
+  absorption/fluorescence near 675–683; the chl c / phycobilin region near
+  620–655) and only ≈ 8% at 400–450 nm.
+- Gains over PCR survive LOCO for Fuco, Zea, DVchla and Chlc12 ratios and
+  for absolute skill overall. They come from the smooth noise-aware prior,
+  sharing across pigments and transfer-aware hyperparameter selection, not
+  from the derivative.
+
+### 2026-10-03 (Execution #8: Bayesian shared W, noise propagation, calibration)
+
+New code:
+- `epft_up/sdp/bayes.py`: `BayesianSharedW`, i.e. #7's shared W (inner
+  leave-campaign-out) plus a per-target `BayesianRidge`. Default
+  `calibration='oof'`: cross-fitted out-of-campaign predictions within the
+  training set, then y = a + b·ŷ_oof. `'insample'` is kept for contrast.
+  Also `gaussian_scores` (coverage, PIT, closed-form CRPS, SD of z).
+- `epft_up/sdp/noise.py`: `band_sigma`, `covariance`, `draw` for 'insitu',
+  'pace_white' and 'pace_corr', on any grid (5 nm mean at 1 nm, identity at
+  5 nm).
+- `epft_up/sdp/weighting.py`: `PenalizedRRR(Sigma_abs=...)` adds the untuned
+  n·wᵀΣ_test w (errors-in-variables) term.
+- `epft_up/sdp/gsm.py`: a `_safe_ratio` guard on the η and S_dg band ratios
+  (negative or zero Rrs(555) in noisy draws overflowed η). It is inactive on
+  the deposit: the clean δRrs matches #2's product to 1.2e-11.
+- `scripts/sdp/uncertainty.py`: 6 scenarios × K=30 Monte Carlo draws
+  through the full GSM chain; LOCO; shared W (unaware, unaware-insample,
+  aware), PCR and nulls on the same noisy inputs; figures, CSVs, JSON.
+  About 2 min.
+- Tests: `test_sdp_bayes.py` (6), plus 1 GSM guard test and 1 Sigma_abs
+  test. Full suite: 98 passed.
+- Report §8 written.
+
+Findings:
+- In-sample Bayesian calibration is over-confident (deposit LOCO coverage
+  64/90% of 68/95%; synthetic 48/80%), because the latent directions are fit
+  to the same targets. Cross-fitted calibration fixes it: 68–71% / 93–94%
+  coverage in all six scenarios, SD of z 1.05–1.10, near-flat PIT (a mild
+  hump at 0.6–0.7 means a small negative bias). Without input-noise
+  propagation, coverage falls to 59–63% / 88–90% under PACE noise.
+  Concentrations are badly served by Gaussian intervals (SD of z 1.6–1.8);
+  a log-normal or censored likelihood is the deferred item.
+- **PCR on δRrs'' (the paper) collapses to LOCO R² ≈ 0** under any realistic
+  noise: in-situ 2%, PACE white and PACE correlated, for ratios and absolute
+  concentrations alike. It only works on deposit-clean spectra.
+- **The noise-aware shared W degrades gracefully.** For the 4 transferable
+  ratios, R² goes from 0.42–0.44 (clean) to 0.32–0.36 (PACE white), still
+  beating the OC4-Tchla null by 0.03–0.09. Under smooth AC-like errors it is
+  nearly unaffected (0.39–0.46), while the GSM-Tchla null collapses; the
+  aware W then beats the null for 9/13 absolute pigments and 6/12 ratios.
+  Uncertainty budget for Fuco:Tchla: model 0.27 dex, total 0.29 (in situ),
+  0.33 (PACE white), 0.35 (PACE correlated).
+- **5 nm sampling costs nothing** (clean and PACE white alike), in line with
+  #6's degrees-of-freedom result.

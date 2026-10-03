@@ -240,14 +240,27 @@ def _at(wave, y, w0):
     return y[..., i]
 
 
+def _safe_ratio(num, den):
+    """Band ratio clipped to ≥ 0 (and 0 where the denominator is ≤ 0).
+
+    A guard for noisy spectra (Execution #8), where Rrs(555) can be near zero
+    or negative: it bounds S_dg ≥ 0.01447 and η to Lee's range [-0.4, 2].
+    It is inactive on the deposit, where every ratio is positive.
+    """
+    num, den = np.asarray(num, float), np.asarray(den, float)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        r = np.where(den > 0, num / den, 0.0)
+    return np.clip(r, 0.0, None)
+
+
 def sdg_slope(Rrs490, Rrs555):
     """CDOM+NAP spectral slope [nm^-1] (Carder et al. 1999; see note 1)."""
-    return 0.01447 + 0.00033 * np.asarray(Rrs490) / np.asarray(Rrs555)
+    return 0.01447 + 0.00033 * _safe_ratio(Rrs490, Rrs555)
 
 
 def eta_lee2002(r440, r555):
     """Particulate backscattering exponent (Lee et al. 2002)."""
-    return 2.0 * (1.0 - 1.2 * np.exp(-0.9 * np.asarray(r440) / np.asarray(r555)))
+    return 2.0 * (1.0 - 1.2 * np.exp(-0.9 * _safe_ratio(r440, r555)))
 
 
 @dataclass

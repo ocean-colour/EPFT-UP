@@ -173,3 +173,9 @@ def test_smoothed_tables_flatten_structure():
     # the narrow 675 nm feature is strongly reduced, the broad mean kept
     assert s.A[275] < t.A[275]
     assert abs(np.mean(np.log(s.A)) - np.mean(np.log(t.A))) < 0.05
+
+
+def test_ratio_guard_bounds_eta_and_sdg():
+    assert gsm.eta_lee2002(0.004, -1e-4) == pytest.approx(2.0 * (1 - 1.2))
+    assert gsm.sdg_slope(0.004, 0.0) == pytest.approx(0.01447)
+    assert gsm.eta_lee2002(0.004, 0.002) == pytest.approx(2 * (1 - 1.2 * np.exp(-1.8)))
