@@ -1,7 +1,7 @@
 # The 2nd-derivative (SDP) approach to phytoplankton pigments from hyperspectral Rrs
 
 **Author:** Claude (Opus 5.5), for J. Xavier Prochaska
-**Status:** in progress. §3 (Data), §4 (reproduction) and §6 (diagnostics) are written; the other sections are outlines
+**Status:** in progress. §3–§6 (data, reproduction, maths/statistics, diagnostics) are written; the other sections are outlines
 that later Execution prompts in `claude_prompts/2nd_derivative_prompts.md` fill
 in.
 **Scope:** a reproduction and critique of Kramer, Siegel, Maritorena & Catlett
@@ -408,7 +408,262 @@ Two results:
   this dataset under this recipe. §5 treats the effective degrees of
   freedom.
 
-## 5. Maths and statistics — *Execution #6*
+## 5. Maths and statistics
+
+The code is in `epft_up/sdp/theory.py` (operators, priors, information
+content, filter factors) and `epft_up/sdp/noise.py` (noise models). The
+script is `scripts/sdp/maths_section.py`, and the numbers are in
+`reports/figures/sdp/maths_summary.json`. Notation: $x\in\mathbb{R}^{301}$
+is a δRrs spectrum on the 1 nm grid. $D\in\mathbb{R}^{299\times301}$ is
+Kramer's second difference, $(Dx)_i = x_{i+1}-2x_i+x_{i-1}$. $M$ is the
+5 nm moving mean. $S=\mathrm{diag}(s)$ holds the per-band standard
+deviations used for z-scoring.
+
+### 5.1 The derivative is a fixed linear operator, so it adds no information to a linear model
+
+Every model in Kramer 2022 is linear in its predictors:
+$\hat p = A^\top(Dx) + C$. Rearranging,
+
+$$\hat p \;=\; A^\top D x + C \;=\; (D^\top A)^\top x + C \;\equiv\; w_{\rm eff}^\top x + C .$$
+
+So a PCR on δRrs'' *is* a linear model on δRrs, with **effective weight
+spectrum** $w_{\rm eff}=D^\top A$. Numerically the identity holds to
+machine precision (max difference 10⁻¹⁴). Two consequences follow
+immediately:
+
+- $D$ annihilates constants and straight lines, so $w_{\rm eff}$ sums to
+  zero and has zero first moment. The model is exactly blind to additive
+  offsets and linear tilts of δRrs. That is the one thing differentiation
+  buys: invariance to broad baseline errors.
+- Any predictive content of δRrs'' is predictive content of δRrs. The
+  derivative cannot create information. It can only change *which* weight
+  spectrum the estimator ends up with.
+
+**The same data give completely different weight spectra.** PCR on δRrs''
+and PCR on δRrs (same settings) produce effective weights that are
+essentially uncorrelated: r = 0.003 for Tchla, 0.001 for Fuco and 0.002 for
+HexFuco.
+- **99.7–99.8%** of the power of $w_{\rm eff}$ lies at spectral frequencies
+  ≥ 0.1 cycles nm⁻¹, i.e. periods shorter than 10 nm.
+- For PCR on δRrs it is **0.6–1.3%**.
+
+Within random splits the two predict comparably; PCR on δRrs is slightly
+better (R² 0.74 vs 0.73 for Tchla, 0.68 vs 0.63 for Fuco, 0.63 vs 0.48 for
+HexFuco). The derivative-based weights are rough, bandwise-alternating
+patterns (see the figure). Physically, phytoplankton absorption features
+are ≳ 10–30 nm wide.
+
+![Effective weights](figures/sdp/maths_effective_weights.png)
+
+*Left: effective weight spectra on δRrs from PCR on δRrs'' (red,
+$D^\top A$) and from PCR on δRrs (blue), median over 100 models. Right: the
+fraction of each weight spectrum's power at frequencies ≥ f.*
+
+**The prior the recipe implies.** PCR, ridge and their Bayesian cousins are
+shrinkage estimators. In their simplest reading, they put an isotropic prior
+on the coefficients of the z-scored predictors, $\beta\sim N(0,\tau^2 I)$
+with $Z=S^{-1}Dx$. That makes $w_{\rm eff}=D^\top S^{-1}\beta$ Gaussian with
+covariance
+
+$$\mathrm{Cov}(w_{\rm eff}) \;=\; \tau^2\, D^\top S^{-2} D .$$
+
+Three properties follow:
+- **Null space:** zero prior weight on constants and lines (as above).
+- **Roughness:** with $S$ roughly constant, $D^\top D$ is the fourth-difference
+  operator, with eigenvalues $(2\sin\pi f)^4$. The prior therefore puts more
+  variance on *rapidly alternating* weight patterns. Drawing from it gives
+  **≈5300×** more prior power at f ≥ 0.3 cycles nm⁻¹ than at f < 0.05. For
+  z-scoring δRrs directly the ratio is ≈1 (white).
+  - This is an **anti-smoothness prior**, the opposite of the physical
+    expectation for absorption features. PC truncation does not remove it:
+    the retained PCs of $Z$ are themselves dominated by high-frequency
+    structure.
+- **Red emphasis:** z-scoring divides by the across-sample SD of δRrs'',
+  which is tiny in the red. The prior variance of $w_{\rm eff}$ is 7.4×
+  larger at 660–700 nm than at 410–460 nm (1.5× without the derivative).
+  That is why the largest PCR weights sit at 520–700 nm (§4.2), exactly
+  where, below, δRrs'' is closest to its noise floor.
+
+![Implied prior](figures/sdp/maths_prior.png)
+
+*Left: prior variance of $w(\lambda)$ implied by derivative + z-score + isotropic
+shrinkage (red) vs z-score only (blue). Right: the prior's power spectrum;
+the dotted line is $(2\sin\pi f)^4$.*
+
+So "δRrs'' + z-score + PCR" is one particular, hand-picked prior on the
+weight spectrum. It makes the model offset-invariant, but it rewards rough,
+noise-like weights. §6.3's finding that every derivative space transfers
+worst between campaigns is what this prior predicts. The natural replacement
+(§7) keeps the offset/tilt invariance, if wanted, but uses a smoothness
+prior on $w$ and noise-whitened predictors.
+
+### 5.2 Noise propagation and information content
+
+**Noise models.** These are per band, on the 1 nm grid, as they reach the
+predictors.
+- **Deposit rounding:** the 10⁻⁶ sr⁻¹ steps of PANGAEA 937536 (§3.4),
+  white, σ = 2.9×10⁻⁷ sr⁻¹.
+- **In-situ-like `pct:0.02` + floor:** IOPtics' model,
+  σ = 0.02·max(|Rrs|, median|Rrs|), defined per 5 nm and passed through the
+  paper's 5 nm mean.
+- **PACE white:** ocpy's OCI per-band Rrs σ (from one early L2 granule; 5.7×10⁻⁴
+  sr⁻¹ at 400 nm falling to 6×10⁻⁵ at 700 nm). It is rescaled from the file's
+  ≈2 nm sampling to 1 nm bands and passed through the 5 nm mean.
+- **PACE correlated:** the same σ, but spectrally smooth (Gaussian
+  correlation, ℓ = 30 nm, like an atmospheric-correction error), plus a white
+  component of 10% of σ.
+
+Instrument noise is passed through $M$ because Kramer's recipe (and the
+port's PACE code) smooths every spectrum before forming δRrs. The deposit's
+rounding comes after smoothing. Noise in δRrs is taken as the noise in Rrs:
+the GSM fit removes only a 3-parameter smooth projection.
+
+**Amplification.** For white noise of variance σ² per band, $D$ gives
+variance 6σ² (coefficients 1, −2, 1), while the across-sample *signal*
+of δRrs'' is far smaller than that of δRrs. Per band, the SNR (signal SD
+across samples over noise SD; median over bands) is:
+
+| Noise model | δRrs | δRrs'' (1 nm) |
+|---|---|---|
+| deposit rounding | 200 | **2.0** |
+| `pct:0.02` + floor | 1.3 | 0.04 |
+| PACE white | 0.5 | 0.02 |
+| PACE correlated + 10% white | 0.3 | 0.17 |
+
+Even the deposit's own rounding brings δRrs'' down to SNR ≈ 1–2 longward of
+≈525 nm. That is where z-scoring puts the largest weights (§5.1). Smooth
+(correlated) noise is the one case where differentiation helps, raising the
+relative SNR by suppressing the broad error. Even then δRrs'' remains below
+SNR 1 in every band.
+
+![Per-band SNR](figures/sdp/maths_snr.png)
+
+**Degrees of freedom for signal.** A per-band SNR overstates what is lost,
+because bands are correlated. The right measure is Rodgers' (2000)
+
+$$d_s = \mathrm{tr}\!\left[C_s\,(C_s+C_n)^{-1}\right] = \sum_i \frac{\lambda_i}{1+\lambda_i},$$
+
+where $\lambda_i$ are the signal-to-noise eigenvalues. Here $C_s$ is the
+across-sample covariance of δRrs (145 spectra), $C_n$ the noise covariance,
+and for δRrs'' both are propagated through $D$. $d_s$ is invariant under any
+invertible linear transform and can only fall under a non-invertible one
+such as $D$. Coarser sampling interpolates the deposit to 2.5, 5 and 10 nm
+before differencing.
+
+| Noise model | 1 nm | 2.5 nm | 5 nm | 10 nm |
+|---|---|---|---|---|
+| deposit rounding: δRrs / δRrs'' | 117.8 / 116.9 | 92.6 / 91.1 | 59.3 / 57.3 | 30.8 / 28.8 |
+| `pct:0.02` + floor | 10.4 / 9.9 | 8.6 / 8.1 | 7.5 / 6.9 | 6.1 / 5.5 |
+| PACE white | 6.0 / 5.4 | 5.3 / 4.7 | 4.5 / 3.8 | 3.5 / 2.8 |
+| PACE correlated + 10% white | 24.4 / 23.6 | 15.5 / 15.0 | 11.3 / 11.2 | 8.2 / 8.0 |
+
+![Degrees of freedom](figures/sdp/maths_dof.png)
+
+Four results:
+1. **Differentiating loses information; it never gains it.** In every case
+   $d_s$(δRrs'') is 0.1–2 below $d_s$(δRrs): the offset and tilt
+   directions that $D$ removes. Whatever δRrs'' does better or worse in
+   practice is the estimator and its prior (§5.1, §5.3), not information.
+2. **At realistic noise, a δRrs spectrum carries only ~5–25 independent
+   pieces of information,** not 300. In-situ-like 2% noise gives ≈ 10 at
+   1 nm; PACE white noise ≈ 5–6; smooth PACE-like errors ≈ 24. With 13
+   pigments, about five pigment groups (Kramer & Siegel 2019), and Tchla
+   taking at least one dimension, a PACE-quality spectrum leaves very few
+   degrees of freedom for composition. The ~118 at deposit-level noise is a
+   ceiling set by the 145 samples and by the deposit's very low (smoothed,
+   rounded) noise. It is not what a satellite delivers.
+3. **Resolution matters less than noise.** Going from 1 to 5 nm costs ≈ 25%
+   of $d_s$ under in-situ-like noise (10.4 → 7.5) and PACE white noise
+   (6.0 → 4.5), and about half under smooth errors (24 → 11). Going to
+   10 nm costs a further ≈ 20–30%. This agrees with §4.2 (no loss at 5 nm),
+   and it is a quantitative version of Kramer's "≤ 5 nm is fine" and of
+   Cael et al. (2020): neighbouring hyperspectral bands are highly redundant.
+4. **The deposit's effective noise is far below 2%.** The PCR works on the
+   deposit (Table 2), yet under 2% white noise its δRrs''-based predictions
+   would be swamped (next table). So the deposited spectra must carry much
+   less band-to-band noise. That is consistent with §3.4, where power at
+   the boxcar sidelobe (0.25–0.30 cycles nm⁻¹) is only 3–4× the rounding
+   floor. Roughly, that implies pre-smoothing white noise of ~2×10⁻⁶ sr⁻¹
+   per nm, ≈ 0.1% of blue Rrs.
+
+**Noise in the predictions.** These are the SD of the PCR prediction due to
+Rrs noise, $\sqrt{w_{\rm eff}^\top C_n w_{\rm eff}}$, relative to the
+pigment's SD across the dataset, with median weights over 100 models:
+
+| Noise model | Tchla: δRrs'' / δRrs | Fuco: δRrs'' / δRrs | HexFuco: δRrs'' / δRrs |
+|---|---|---|---|
+| deposit rounding | 0.08 / 0.001 | 0.07 / 0.001 | 0.05 / 0.001 |
+| `pct:0.02` + floor | 4.7 / 0.40 | 4.0 / 0.36 | 2.9 / 0.30 |
+| PACE white | **11.6** / 0.83 | 9.5 / 0.72 | 7.3 / 0.65 |
+| PACE correlated + 10% white | 1.5 / 1.2 | 3.1 / 1.0 | 1.5 / 1.4 |
+
+- Under band-independent noise, the δRrs''-trained weights amplify noise
+  **10–15× more** than weights learned on δRrs, and so does any model with
+  rough weights.
+- At PACE's white-noise level, a single-spectrum SDP Tchla would have a
+  noise SD of order 10× the natural range of Tchla. That is unusable without
+  heavy spatio-temporal averaging, as Kramer 2022 §4.1 anticipated.
+- Even the deposit's rounding alone contributes 5–8% of each pigment's SD to
+  δRrs''-based predictions.
+- Under smooth (AC-like) errors the two are comparable. Neither is good
+  unless the smooth error is much smaller than ocpy's σ.
+- The pragmatic reading: the true OCI error is a mixture. SDP-style weights
+  are only safe if the band-to-band (white) part of the PACE uncertainty is
+  ≲ 1% of the σ used here.
+
+### 5.3 PCR, ridge and PLS as spectral filters
+
+Write $Z = U\Sigma V^\top$ (z-scored δRrs'', centred). Every linear
+estimator in the row space of $Z$ is
+
+$$\hat\beta = \sum_i f_i\,\frac{u_i^\top y}{\sigma_i}\,v_i ,$$
+
+with **filter factors** $f_i$ (Hansen 1998; Frank & Friedman 1993):
+- PCR: $f_i=1$ for $i\le k$, 0 otherwise (a sharp cut);
+- ridge: $f_i=\sigma_i^2/(\sigma_i^2+\lambda)$ (a smooth roll-off);
+- PLS: Krylov-polynomial factors that oscillate and can exceed 1.
+
+On the full dataset, for Tchla and Fuco:
+
+| | PCR (k from §4.2) | ridge (λ by 5-fold CV) | PLS (comps by 5-fold CV) |
+|---|---|---|---|
+| Tchla: effective dof Σfᵢ | 22 | 68 (λ = 84) | 54 (5 comps; max fᵢ = 1.17) |
+| Fuco: effective dof Σfᵢ | 18 | 103 (λ = 20) | 74 (6 comps; max fᵢ = 1.55) |
+| corr(β, β_PCR): Tchla / Fuco | — | 0.74 / 0.55 | 0.90 / 0.75 |
+
+The top-k PCs retain 73–76% of the variance of $Z$.
+
+![Filter factors](figures/sdp/maths_filter_factors.png)
+
+*Filter factors of PCR, ridge and PLS on z-scored δRrs'' for Tchla and Fuco.
+The grey line (right axis) is each component's fraction of the variance.*
+
+Interpretation:
+- **The three estimators are different spectral filters on the same
+  basis.**
+  - PCR keeps ≈ 20 components outright.
+  - Ridge shrinks every component, leaking weight into the many
+    low-variance, high-frequency components (effective dof 68–103).
+  - PLS behaves like PCR at the top of the spectrum, but over-weights some
+    mid-index components ($f_i>1$).
+- **All three share the basis $Z=S^{-1}Dx$, and with it the anti-smoothness
+  prior of §5.1.** The PCR-vs-ridge/PLS choice moves the cut-off but not the
+  basis. Swapping estimators therefore cannot be expected to fix the
+  cross-campaign transfer (§6.2–6.3); changing the basis and the prior can.
+  §7 tests this directly. There, ridge and PLS on δRrs'' serve as controls,
+  and the candidates are a smoothness-penalized, noise-whitened low-rank
+  weighting on δRrs (or M1/M3) and its Bayesian version, all scored with the
+  standard Benchmark.
+
+**Summary of §5.**
+1. The second derivative is a fixed linear map, so it carries no new
+   information; it removes only the offset and tilt.
+2. Combined with z-scoring and isotropic shrinkage, it imposes a prior that
+   favours rough, noise-like weight spectra.
+3. Under any band-independent noise, that prior amplifies noise 10× or more
+   relative to models fitted on δRrs itself.
+4. At realistic noise levels a spectrum carries ~5–25 independent pieces of
+   information, and 5 nm sampling keeps most of them.
 
 ## 6. Diagnostics — *Execution #4, #5*
 

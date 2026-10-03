@@ -902,3 +902,54 @@ Findings:
   Neo:Tchla is a zero artifact. No space beats the null on absolute Tchla.
 - Best spaces for #7: δRrs (consistent smoothing), M1, and wide-window M3,
   with log ratios as the target.
+
+### 2026-10-03 (Execution #6: Maths/Statistics section)
+
+New code:
+- `epft_up/sdp/theory.py`: `difference_matrix`, `boxcar_matrix`,
+  `subsample_matrix`, `effective_weights` (w = Lᵀ A),
+  `implied_prior_covariance` (Lᵀ S⁻² L), `propagate_covariance`,
+  white/correlated covariances, `dof_signal` (Rodgers d_s via generalized
+  eigenvalues, pseudo-whitening), `filter_factors`, `ridge_coefficients`,
+  `pcr_coefficients`, `frequency_power`.
+- `epft_up/sdp/noise.py`: `pace_sigma` (ocpy `gen_noise_vector`, the
+  IOPtics 'pace' model; ioptics itself is not importable in ocean14),
+  `pct_floor_sigma` (the IOPtics two-part floor, reproduced), and
+  `rounding_sigma`.
+- `scripts/sdp/maths_section.py`: parts (i)–(iii), five figures,
+  `maths_summary.json`.
+- `epft_up/tests/test_sdp_theory.py`: 9 tests. Full suite: 83 passed.
+- Report §5 written.
+
+Two fixes along the way:
+- The first run's "PACE correlated" model (purely Gaussian-correlated) gave
+  an unphysical d_s(δRrs'') > d_s(δRrs). A pure smooth covariance is
+  singular under differencing. It is now smooth plus 10% white.
+- Instrument noise is now passed through the paper's 5 nm mean, and the
+  PACE σ is rescaled to 1 nm. ocpy's PACE_error.csv is at ≈2 nm spacing, so
+  the rescaling factor is √2, not √2.5; one of my tests had assumed 2.5.
+
+Findings:
+- (i) w_eff = Dᵀ A holds to 1e-14. The PCR-on-δRrs'' effective weights are
+  99.7–99.8% high-frequency (periods < 10 nm) and uncorrelated (r ≈ 0.002)
+  with the PCR-on-δRrs weights, which are ~1% high-frequency. Random-split
+  skill is comparable or better on δRrs (HexFuco 0.63 vs 0.48). The
+  implied prior Dᵀ S⁻² D is blind to offset and tilt and anti-smooth
+  (≈5300× more prior power at f ≥ 0.3 than at f < 0.05; ≈1 without D), with
+  red prior variance 7.4× blue.
+- (ii) Per-band median SNR of δRrs'': ≈2 at deposit rounding, 0.04 at 2%
+  in-situ noise, 0.02 at PACE white noise. Degrees of freedom:
+  d_s(δRrs'') ≤ d_s(δRrs) always (a loss of 0.1–2). At 1/2.5/5/10 nm:
+  - in-situ-like: 10.4, 8.6, 7.5, 6.1;
+  - PACE white: 6.0, 5.3, 4.5, 3.5;
+  - PACE smooth: 24, 16, 11, 8;
+  - deposit rounding: 118, 93, 59, 31 (sample-limited).
+
+  Prediction noise from δRrs''-PCR weights is 10–15× that of δRrs-PCR
+  weights under white noise. Tchla's noise SD reaches ~12× its natural
+  range at the PACE white level. The deposit's effective band-to-band noise
+  must be ≲ 0.1% for the published PCR to work as it does.
+- (iii) Filter factors on z-scored δRrs'': PCR (k ≈ 20) is a sharp cut;
+  ridge (CV) has effective dof 68–103; PLS has 5–6 components, effective
+  dof 54–74 and fᵢ up to 1.55. All share the same basis and its prior, so
+  changing the estimator alone shouldn't fix transfer. That sets up #7.

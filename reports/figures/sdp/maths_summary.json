@@ -1,0 +1,363 @@
+{
+ "script": "scripts/sdp/maths_section.py",
+ "epft_up_version": "0.1.0",
+ "input": {
+  "source": "PANGAEA doi:10.1594/PANGAEA.937536 (Kramer et al. 2021), CC-BY-4.0",
+  "file": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/PANGAEA_937536.tab",
+  "sha256": "63da2981596ef8c3d856e0ae12eab4cb715a9ec535e92d83458a7a7f5f910f3b",
+  "sha256_pinned": "63da2981596ef8c3d856e0ae12eab4cb715a9ec535e92d83458a7a7f5f910f3b",
+  "sha256_verified": true,
+  "n_samples": 145,
+  "wave_range_nm": [
+   400.0,
+   700.0
+  ],
+  "ref_repos": {
+   "Rrs_pigments": {
+    "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/ref/Rrs_pigments",
+    "sha": "b3e366225d16c4fe85c7406cd3d57e554b8cb57f",
+    "pinned_sha": "b3e366225d16c4fe85c7406cd3d57e554b8cb57f",
+    "matches_pin": true
+   },
+   "rrs-SDP-pigments": {
+    "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/ref/rrs-SDP-pigments",
+    "sha": "fb17c2f580dea9488b6ba11c690fe8c959e0a0fe",
+    "pinned_sha": "fb17c2f580dea9488b6ba11c690fe8c959e0a0fe",
+    "matches_pin": true
+   }
+  },
+  "loader": "epft_up.sdp.data.load_kramer2022",
+  "epft_up_version": "0.1.0",
+  "loaded_utc": "2026-10-03T16:14:21+00:00"
+ },
+ "gsm_product": {
+  "file": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/products/gsm_dRrs_insitu.npz",
+  "sha256": "a155b6ce40957f7276f01dc79d96ec901a13d8c5838e4eafa69cfbce4ce52e9b"
+ },
+ "settings": {
+  "seed": 1,
+  "ell_nm": 30.0,
+  "pct": 0.02,
+  "steps_nm": [
+   1.0,
+   2.5,
+   5.0,
+   10.0
+  ]
+ },
+ "part_i": {
+  "Tchla": {
+   "identity_max_abs_diff": 8.43769498715119e-15,
+   "sum_w_eff": 0.0,
+   "first_moment_w_eff": 0.0,
+   "frac_power_f_ge_0.1_eff": 0.997300724392185,
+   "frac_power_f_ge_0.1_direct": 0.005816080206684894,
+   "corr_w_eff_w_direct": 0.003278355669070978,
+   "R2_random_d2": 0.7342931053854838,
+   "R2_random_direct": 0.7403886903971031
+  },
+  "Fuco": {
+   "identity_max_abs_diff": 2.886579864025407e-15,
+   "sum_w_eff": 2.8421709430404007e-13,
+   "first_moment_w_eff": 0.0,
+   "frac_power_f_ge_0.1_eff": 0.9975069111483534,
+   "frac_power_f_ge_0.1_direct": 0.008900986940311752,
+   "corr_w_eff_w_direct": 0.0012417368384375282,
+   "R2_random_d2": 0.6273725414779547,
+   "R2_random_direct": 0.6793600077410028
+  },
+  "HexFuco": {
+   "identity_max_abs_diff": 3.4312830354821244e-15,
+   "sum_w_eff": 0.0,
+   "first_moment_w_eff": 0.0,
+   "frac_power_f_ge_0.1_eff": 0.9979611029723614,
+   "frac_power_f_ge_0.1_direct": 0.012987574825506547,
+   "corr_w_eff_w_direct": 0.0017495461269491559,
+   "R2_random_d2": 0.47680285566425856,
+   "R2_random_direct": 0.6311467131936329
+  }
+ },
+ "implied_prior": {
+  "null_space_check_max": 0.001220703125,
+  "diag_var_red_over_blue_d2": 7.411876736119883,
+  "diag_var_red_over_blue_direct": 1.5062324862784287,
+  "prior_power_ratio_hi_lo_d2": 5323.415813809445,
+  "prior_power_ratio_hi_lo_direct": 0.9990206221320076
+ },
+ "part_ii": {
+  "snr": {
+   "rounding (deposit)": {
+    "dRrs": {
+     "median": 199.66423922402169,
+     "frac_bands_gt1": 1.0
+    },
+    "dRrs_d2": {
+     "median": 1.9650400425207888,
+     "frac_bands_gt1": 1.0
+    }
+   },
+   "pct:0.02 + floor (in-situ-like)": {
+    "dRrs": {
+     "median": 1.3238329655908374,
+     "frac_bands_gt1": 0.627906976744186
+    },
+    "dRrs_d2": {
+     "median": 0.03734489939878598,
+     "frac_bands_gt1": 0.0
+    }
+   },
+   "PACE white": {
+    "dRrs": {
+     "median": 0.506992757150574,
+     "frac_bands_gt1": 0.07308970099667775
+    },
+    "dRrs_d2": {
+     "median": 0.01705486801687286,
+     "frac_bands_gt1": 0.0
+    }
+   },
+   "PACE correlated (\u2113=30 nm) + 10% white": {
+    "dRrs": {
+     "median": 0.3274400746582498,
+     "frac_bands_gt1": 0.0
+    },
+    "dRrs_d2": {
+     "median": 0.17015664171930509,
+     "frac_bands_gt1": 0.0
+    }
+   }
+  },
+  "dof": {
+   "rounding (deposit)": {
+    "1.0": {
+     "n_bands": 301,
+     "d_s_dRrs": 117.75278943687513,
+     "d_s_dRrs_d2": 116.9254302109693,
+     "n_lambda_gt1_dRrs": 126,
+     "n_lambda_gt1_dRrs_d2": 125
+    },
+    "2.5": {
+     "n_bands": 121,
+     "d_s_dRrs": 92.62421020361569,
+     "d_s_dRrs_d2": 91.09650359324661,
+     "n_lambda_gt1_dRrs": 93,
+     "n_lambda_gt1_dRrs_d2": 91
+    },
+    "5.0": {
+     "n_bands": 61,
+     "d_s_dRrs": 59.26172958521379,
+     "d_s_dRrs_d2": 57.31466098546728,
+     "n_lambda_gt1_dRrs": 61,
+     "n_lambda_gt1_dRrs_d2": 59
+    },
+    "10.0": {
+     "n_bands": 31,
+     "d_s_dRrs": 30.762329084865048,
+     "d_s_dRrs_d2": 28.773336441477387,
+     "n_lambda_gt1_dRrs": 31,
+     "n_lambda_gt1_dRrs_d2": 29
+    }
+   },
+   "pct:0.02 + floor (in-situ-like)": {
+    "1.0": {
+     "n_bands": 301,
+     "d_s_dRrs": 10.363112580592862,
+     "d_s_dRrs_d2": 9.912770014537351,
+     "n_lambda_gt1_dRrs": 9,
+     "n_lambda_gt1_dRrs_d2": 8
+    },
+    "2.5": {
+     "n_bands": 121,
+     "d_s_dRrs": 8.644542029262908,
+     "d_s_dRrs_d2": 8.065682246143153,
+     "n_lambda_gt1_dRrs": 8,
+     "n_lambda_gt1_dRrs_d2": 7
+    },
+    "5.0": {
+     "n_bands": 61,
+     "d_s_dRrs": 7.504831428351675,
+     "d_s_dRrs_d2": 6.895727878382485,
+     "n_lambda_gt1_dRrs": 7,
+     "n_lambda_gt1_dRrs_d2": 6
+    },
+    "10.0": {
+     "n_bands": 31,
+     "d_s_dRrs": 6.139529195991659,
+     "d_s_dRrs_d2": 5.459702839454917,
+     "n_lambda_gt1_dRrs": 6,
+     "n_lambda_gt1_dRrs_d2": 5
+    }
+   },
+   "PACE white": {
+    "1.0": {
+     "n_bands": 301,
+     "d_s_dRrs": 5.995074347227171,
+     "d_s_dRrs_d2": 5.416451122897666,
+     "n_lambda_gt1_dRrs": 5,
+     "n_lambda_gt1_dRrs_d2": 5
+    },
+    "2.5": {
+     "n_bands": 121,
+     "d_s_dRrs": 5.288923659806876,
+     "d_s_dRrs_d2": 4.685966510004057,
+     "n_lambda_gt1_dRrs": 5,
+     "n_lambda_gt1_dRrs_d2": 5
+    },
+    "5.0": {
+     "n_bands": 61,
+     "d_s_dRrs": 4.470377624827849,
+     "d_s_dRrs_d2": 3.8298150786099034,
+     "n_lambda_gt1_dRrs": 4,
+     "n_lambda_gt1_dRrs_d2": 4
+    },
+    "10.0": {
+     "n_bands": 31,
+     "d_s_dRrs": 3.4580683574999576,
+     "d_s_dRrs_d2": 2.771116441705156,
+     "n_lambda_gt1_dRrs": 3,
+     "n_lambda_gt1_dRrs_d2": 2
+    }
+   },
+   "PACE correlated (\u2113=30 nm) + 10% white": {
+    "1.0": {
+     "n_bands": 301,
+     "d_s_dRrs": 24.3904408182243,
+     "d_s_dRrs_d2": 23.644026953357717,
+     "n_lambda_gt1_dRrs": 18,
+     "n_lambda_gt1_dRrs_d2": 18
+    },
+    "2.5": {
+     "n_bands": 121,
+     "d_s_dRrs": 15.534150207258449,
+     "d_s_dRrs_d2": 15.034243256043146,
+     "n_lambda_gt1_dRrs": 12,
+     "n_lambda_gt1_dRrs_d2": 12
+    },
+    "5.0": {
+     "n_bands": 61,
+     "d_s_dRrs": 11.328055679891241,
+     "d_s_dRrs_d2": 11.180296301547418,
+     "n_lambda_gt1_dRrs": 9,
+     "n_lambda_gt1_dRrs_d2": 9
+    },
+    "10.0": {
+     "n_bands": 31,
+     "d_s_dRrs": 8.159034890122149,
+     "d_s_dRrs_d2": 7.995668623115261,
+     "n_lambda_gt1_dRrs": 7,
+     "n_lambda_gt1_dRrs_d2": 7
+    }
+   }
+  },
+  "prediction_noise": {
+   "Tchla": {
+    "pigment_sd": 0.572067628393653,
+    "rounding (deposit)": {
+     "noise_sd_pcr_d2": 0.04826382838874909,
+     "noise_sd_pcr_direct": 0.000552769165486373,
+     "ratio_to_pigment_sd_d2": 0.08436734748350003,
+     "ratio_to_pigment_sd_direct": 0.0009662654169726936
+    },
+    "pct:0.02 + floor (in-situ-like)": {
+     "noise_sd_pcr_d2": 2.7108936942748594,
+     "noise_sd_pcr_direct": 0.22757055695374956,
+     "ratio_to_pigment_sd_d2": 4.738764369322836,
+     "ratio_to_pigment_sd_direct": 0.3978035911466624
+    },
+    "PACE white": {
+     "noise_sd_pcr_d2": 6.638916897215852,
+     "noise_sd_pcr_direct": 0.47329778952405105,
+     "ratio_to_pigment_sd_d2": 11.60512598109722,
+     "ratio_to_pigment_sd_direct": 0.8273458696711359
+    },
+    "PACE correlated (\u2113=30 nm) + 10% white": {
+     "noise_sd_pcr_d2": 0.8459891334518376,
+     "noise_sd_pcr_direct": 0.703859746117612,
+     "ratio_to_pigment_sd_d2": 1.4788271376713749,
+     "ratio_to_pigment_sd_direct": 1.2303785622235381
+    }
+   },
+   "Fuco": {
+    "pigment_sd": 0.19503665364327755,
+    "rounding (deposit)": {
+     "noise_sd_pcr_d2": 0.014550062766770283,
+     "noise_sd_pcr_direct": 0.00015867900904705266,
+     "ratio_to_pigment_sd_d2": 0.07460168381160999,
+     "ratio_to_pigment_sd_direct": 0.0008135855803662265
+    },
+    "pct:0.02 + floor (in-situ-like)": {
+     "noise_sd_pcr_d2": 0.7703220221083747,
+     "noise_sd_pcr_direct": 0.07075075973322384,
+     "ratio_to_pigment_sd_d2": 3.949626943032438,
+     "ratio_to_pigment_sd_direct": 0.36275622254382567
+    },
+    "PACE white": {
+     "noise_sd_pcr_d2": 1.8443459768846326,
+     "noise_sd_pcr_direct": 0.14101958689563546,
+     "ratio_to_pigment_sd_d2": 9.456407000593567,
+     "ratio_to_pigment_sd_direct": 0.7230414604711204
+    },
+    "PACE correlated (\u2113=30 nm) + 10% white": {
+     "noise_sd_pcr_d2": 0.6116439060755019,
+     "noise_sd_pcr_direct": 0.20342843252801343,
+     "ratio_to_pigment_sd_d2": 3.136045941365462,
+     "ratio_to_pigment_sd_direct": 1.0430266758990054
+    }
+   },
+   "HexFuco": {
+    "pigment_sd": 0.16362836859072705,
+    "rounding (deposit)": {
+     "noise_sd_pcr_d2": 0.008371346341797016,
+     "noise_sd_pcr_direct": 0.00013412455007988367,
+     "ratio_to_pigment_sd_d2": 0.051160727286450665,
+     "ratio_to_pigment_sd_direct": 0.0008196900771855805
+    },
+    "pct:0.02 + floor (in-situ-like)": {
+     "noise_sd_pcr_d2": 0.47207403070111476,
+     "noise_sd_pcr_direct": 0.04893181309113468,
+     "ratio_to_pigment_sd_d2": 2.885037813228357,
+     "ratio_to_pigment_sd_direct": 0.299042357462627
+    },
+    "PACE white": {
+     "noise_sd_pcr_d2": 1.1935576231817766,
+     "noise_sd_pcr_direct": 0.10701381912133603,
+     "ratio_to_pigment_sd_d2": 7.294319643112401,
+     "ratio_to_pigment_sd_direct": 0.6540052928658276
+    },
+    "PACE correlated (\u2113=30 nm) + 10% white": {
+     "noise_sd_pcr_d2": 0.2436838824759877,
+     "noise_sd_pcr_direct": 0.22638712517159,
+     "ratio_to_pigment_sd_d2": 1.4892520445858524,
+     "ratio_to_pigment_sd_direct": 1.3835444741115601
+    }
+   }
+  }
+ },
+ "part_iii": {
+  "Tchla": {
+   "k_pcr": 22,
+   "ridge_lambda_cv": 83.76776400682924,
+   "pls_ncomp_cv": 5,
+   "eff_dof_pcr": 22.000000000000142,
+   "eff_dof_ridge": 68.48219407610678,
+   "eff_dof_pls": 53.924178650946374,
+   "pls_max_filter_factor": 1.1701223927930127,
+   "corr_beta_pcr_ridge": 0.7425162190214166,
+   "corr_beta_pcr_pls": 0.8958549978915263,
+   "frac_var_top_k": 0.7626911996820501
+  },
+  "Fuco": {
+   "k_pcr": 18,
+   "ridge_lambda_cv": 20.30917620904737,
+   "pls_ncomp_cv": 6,
+   "eff_dof_pcr": 17.999999999999904,
+   "eff_dof_ridge": 102.59659291068152,
+   "eff_dof_pls": 74.00690918065236,
+   "pls_max_filter_factor": 1.554057235432458,
+   "corr_beta_pcr_ridge": 0.5467967012180192,
+   "corr_beta_pcr_pls": 0.7481263553369781,
+   "frac_var_top_k": 0.7297769680535313
+  }
+ },
+ "run_utc": "2026-10-03T16:14:28+00:00"
+}
