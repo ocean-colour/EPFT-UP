@@ -447,3 +447,31 @@ def fit_gsm(wave, Rrs, T, S, method='kramer', x0=X0, tol=1e-9, maxiter=2000,
                   settings={'method': method, 'x0': list(map(float, x0)),
                             'tol': tol, 'maxiter': maxiter, 'eta_from': eta_from,
                             'tables': tables.source})
+
+
+def smoothed_tables(tables, fwhm_nm):
+    """A copy of ``tables`` with A(λ) and B(λ) Gaussian-smoothed (Execution #5).
+
+    Removes a_ph spectral structure narrower than ~``fwhm_nm`` while keeping
+    the broad blue/red shape and the Tchla scaling, giving a "featureless"
+    baseline for δRrs. A is smoothed in log space so it stays positive.
+    Edges use reflection.
+
+    Parameters
+    ----------
+    tables : RefTables
+    fwhm_nm : float
+        Full width at half maximum of the Gaussian kernel [nm].
+
+    Returns
+    -------
+    RefTables
+    """
+    from scipy.ndimage import gaussian_filter1d
+    h = float(np.median(np.diff(tables.wave)))
+    sigma = fwhm_nm / (2.0 * np.sqrt(2.0 * np.log(2.0))) / h
+    A = np.exp(gaussian_filter1d(np.log(tables.A), sigma, mode='reflect'))
+    B = gaussian_filter1d(tables.B, sigma, mode='reflect')
+    src = dict(tables.source)
+    src['smoothed_fwhm_nm'] = float(fwhm_nm)
+    return RefTables(wave=tables.wave, A=A, B=B, aw=tables.aw, source=src)

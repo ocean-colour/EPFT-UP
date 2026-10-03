@@ -147,3 +147,28 @@ def test_reproduces_kramer_fig4b():
     assert r2 == pytest.approx(0.86, abs=0.01)
     assert slope == pytest.approx(0.96, abs=0.01)
     assert icpt == pytest.approx(-0.093, abs=0.01)
+
+
+def test_spline_residual_removes_smooth_keeps_bump():
+    w = WAVE
+    smooth = 0.004 * np.exp(-(w - 400) / 120)
+    bump = 2e-5 * np.exp(-0.5 * ((w - 550) / 4)**2)
+    r = spectral.spline_residual(w, np.vstack([smooth, smooth + bump]))
+    assert np.max(np.abs(r[0])) < 0.05 * 2e-5 * 10   # smooth part ~ removed
+    assert r[1][150] - r[0][150] > 0.5 * 2e-5        # narrow bump retained
+
+
+def test_savgol_second_derivative_quadratic():
+    w = WAVE
+    d2 = spectral.savgol_second_derivative(w, 3e-6 * (w - 500.0)**2, 11)
+    np.testing.assert_allclose(d2[0, 10:-10], 6e-6, rtol=1e-6)
+
+
+def test_smoothed_tables_flatten_structure():
+    t = _synthetic_tables()
+    s = gsm.smoothed_tables(t, 80)
+    assert s.source['smoothed_fwhm_nm'] == 80
+    assert np.all(s.A > 0)
+    # the narrow 675 nm feature is strongly reduced, the broad mean kept
+    assert s.A[275] < t.A[275]
+    assert abs(np.mean(np.log(s.A)) - np.mean(np.log(t.A))) < 0.05

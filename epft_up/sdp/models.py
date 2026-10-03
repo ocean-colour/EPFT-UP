@@ -136,6 +136,43 @@ def _fit_fold(Xtr, ytr, Xva, yva, max_pcs, constraint, valid_scaling):
     return beta, alpha, l_best
 
 
+def fit_pcr_one(Xtr, ytr, rng, max_pcs=30, k=5, constraint='pigment',
+                valid_scaling='own'):
+    """One Kramer PCR model from one training set (steps 2-3 of the module docstring).
+
+    Parameters
+    ----------
+    Xtr : ndarray, shape (n_train, n_features)
+    ytr : ndarray, shape (n_train,)
+    rng : numpy.random.Generator
+        Draws the inner k-fold partition.
+    max_pcs, k, constraint, valid_scaling
+        As :func:`train_pcr_kramer`.
+
+    Returns
+    -------
+    coef : ndarray, shape (n_features,)
+        Raw-unit spectral coefficients.
+    intercept : float
+    n_pcs : ndarray of int, shape (k,)
+        PCs selected in each inner fold.
+    """
+    n_tr, p = Xtr.shape
+    betas = np.empty((k, p))
+    alphas = np.empty(k)
+    n_pcs = np.empty(k, dtype=int)
+    for j, fold in enumerate(_kfold_indices(n_tr, k, rng)):
+        mask = np.ones(n_tr, dtype=bool)
+        mask[fold] = False
+        betas[j], alphas[j], n_pcs[j] = _fit_fold(
+            Xtr[mask], ytr[mask], Xtr[fold], ytr[fold], max_pcs, constraint,
+            valid_scaling)
+    mb, ma = betas.mean(axis=0), alphas.mean()
+    mu = Xtr.mean(axis=0)
+    sd = Xtr.std(axis=0, ddof=1)
+    return mb / sd, float(ma - np.sum(mb * mu / sd)), n_pcs
+
+
 def train_pcr_kramer(X, y, n_perm=100, max_pcs=30, k=5, constraint='pigment',
                      train_frac=0.75, seed=1, valid_scaling='own'):
     """Kramer 2022 / ``rrsModelTrain.m`` PCR training (see module docstring).
@@ -183,20 +220,9 @@ def train_pcr_kramer(X, y, n_perm=100, max_pcs=30, k=5, constraint='pigment',
         valid_idx.append(va)
         Xtr, ytr = X[tr], y[tr]
 
-        betas = np.empty((k, p))
-        alphas = np.empty(k)
-        for j, fold in enumerate(_kfold_indices(n_tr, k, rng)):
-            mask = np.ones(n_tr, dtype=bool)
-            mask[fold] = False
-            betas[j], alphas[j], n_pcs[i, j] = _fit_fold(
-                Xtr[mask], ytr[mask], Xtr[fold], ytr[fold], max_pcs, constraint,
-                valid_scaling)
-
-        mb, ma = betas.mean(axis=0), alphas.mean()
-        mu = Xtr.mean(axis=0)
-        sd = Xtr.std(axis=0, ddof=1)
-        coefs[i] = mb / sd
-        icpts[i] = ma - np.sum(mb * mu / sd)
+        coefs[i], icpts[i], n_pcs[i] = fit_pcr_one(Xtr, ytr, rng, max_pcs=max_pcs,
+                                                   k=k, constraint=constraint,
+                                                   valid_scaling=valid_scaling)
 
         pred = _clip(X[va] @ coefs[i] + icpts[i], constraint)
         obs = y[va].copy()

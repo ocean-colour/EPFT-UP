@@ -1,7 +1,7 @@
 # The 2nd-derivative (SDP) approach to phytoplankton pigments from hyperspectral Rrs
 
 **Author:** Claude (Opus 5.5), for J. Xavier Prochaska
-**Status:** in progress. §3 (Data) and §4 (reproduction) are written; the other sections are outlines
+**Status:** in progress. §3 (Data), §4 (reproduction) and §6.1–6.2 (diagnostics) are written; the other sections are outlines
 that later Execution prompts in `claude_prompts/2nd_derivative_prompts.md` fill
 in.
 **Scope:** a reproduction and critique of Kramer, Siegel, Maritorena & Catlett
@@ -412,8 +412,178 @@ Two results:
 
 ## 6. Diagnostics — *Execution #4, #5*
 
-### 6.1 Skill beyond Tchla (null model; pigment:Tchla ratios)
+The code is in `epft_up/sdp/validate.py` and `scripts/sdp/diagnostics_null_loco.py`.
+The numbers are in `reports/figures/sdp/diag_summary.json` and
+`diag_skill_table.csv`. Everything here uses all 145 spectra, as the paper
+does. Dropping the degenerate SABOR fit changes no conclusion; those numbers
+are in the JSON.
+
+**Design.** Every model is trained and scored on *identical* splits, so the
+comparisons are paired. There are two validation schemes:
+- Kramer's 100 random 75/25 splits (the same split sizes; seed 1);
+- **leave-one-campaign-out (LOCO)**: each of the 8 campaigns held out in
+  turn, with one prediction per sample pooled over the folds.
+
+The models compared:
+
+| Model | Predictor | What it measures |
+|---|---|---|
+| PCR | δRrs'' (Kramer 2022) | the paper's method |
+| null_GSM | log₁₀ P = a + b log₁₀ Tchla_GSM, fitted per split | what a hyperspectral Tchla retrieval alone gives |
+| null_OC4 | the same with OC4v6 band-ratio Tchla | what a *multispectral* Tchla gives |
+| oracle | the same with HPLC Tchla | the ceiling of Tchla covariance (not achievable) |
+| const | training mean | no skill (ratios) |
+
+The two null models have only 2 parameters, fitted on the training split.
+Zeros are replaced by ½·LOD wherever a log is taken, through
+`validate.replace_zeros`, with the LOD proxy of §4.2.
+
+### 6.1 Skill beyond Tchla
+
+**Absolute concentrations: SDP has no skill beyond Tchla, except for the
+cyanobacterial pigments, and that exception disappears out of campaign.**
+R² below is Table 2's linear-space statistic. "PCR > null_GSM" is the
+fraction of the 100 paired splits in which PCR has the higher R².
+
+| Pigment | PCR | null_GSM | null_OC4 | oracle | PCR > null_GSM |
+|---|---|---|---|---|---|
+| Tchla | 0.72 | **0.81** | 0.65 | — | 22% |
+| Chlc12 | 0.64 | **0.78** | 0.55 | 0.92 | 18% |
+| Chlc3 | 0.62 | **0.73** | 0.47 | 0.82 | 31% |
+| Fuco | 0.61 | **0.72** | 0.57 | 0.81 | 21% |
+| MVchlb | 0.44 | **0.62** | 0.45 | 0.74 | 18% |
+| HexFuco | 0.48 | **0.61** | 0.39 | 0.73 | 30% |
+| Perid | 0.55 | 0.56 | **0.60** | 0.53 | 55% |
+| ButFuco | 0.50 | **0.52** | 0.34 | 0.60 | 53% |
+| Neo | 0.43 | **0.52** | 0.40 | 0.66 | 34% |
+| Viola | 0.38 | **0.52** | 0.42 | 0.68 | 28% |
+| Allo | 0.38 | **0.47** | 0.38 | 0.75 | 33% |
+| Zea | **0.37** | 0.20 | 0.08 | 0.21 | 87% |
+| DVchla | **0.48** | 0.06 | 0.02 | 0.06 | 100% |
+
+What the table shows:
+- A two-parameter power law in the **GSM-retrieved Tchla beats PCR for 11
+  of 13 pigments**, Tchla itself included. That GSM Tchla is a by-product of
+  the very residual step SDP uses.
+- **Even the multispectral OC4 Tchla matches or beats PCR for 6 of 13**
+  pigments.
+- PCR beats the Tchla nulls only for **DVchla and Zea**, the two pigments
+  whose concentration does *not* scale with Tchla (Prochlorococcus and
+  Synechococcus dominate the oligotrophic end, so the null R² is ≈0).
+- The oracle sits above PCR for every pigment except Perid and Zea. Most of
+  the information in the HPLC table is Tchla covariance, and SDP recovers
+  less of it than a direct Tchla retrieval does.
+- Log-space scoring gives the same picture. There, PCR is further penalized
+  by its clipped zeros: Tchla log-R² is 0.43 for PCR vs 0.72 for null_GSM.
+
+**Composition (log₁₀ pigment:Tchla).** The table compares three versions of
+the ratio:
+- PCR trained directly on the log ratio;
+- the ratio of PCR's *absolute* predictions ("derived"), which is what a
+  user of SDP pigment products would compute;
+- the better of the two Tchla nulls (a ratio-on-Tchla power law).
+
+| Ratio | random: PCR_log | derived | best null | PCR > null | LOCO: PCR_log | best null | ΔR² 95% CI |
+|---|---|---|---|---|---|---|---|
+| DVchla:Tchla | 0.69 | 0.29 | 0.42 | 100% | 0.36 | 0.32 | [−0.05, 0.12] |
+| Fuco:Tchla | 0.61 | 0.03 | 0.38 | 100% | 0.40 | 0.31 | [−0.01, 0.17] |
+| Zea:Tchla | 0.57 | 0.22 | 0.42 | 90% | 0.34 | 0.35 | [−0.10, 0.09] |
+| Chlc3:Tchla | 0.55 | 0.03 | 0.34 | 98% | 0.17 | 0.20 | [−0.14, 0.07] |
+| Chlc12:Tchla | 0.44 | 0.03 | 0.34 | 94% | 0.28 | 0.27 | [−0.05, 0.08] |
+| Neo:Tchla | 0.38 | 0.09 | 0.20 | 91% | 0.20 | 0.04 | [0.02, 0.28]* |
+| Allo:Tchla | 0.31 | 0.02 | 0.05 | 99% | 0.08 | 0.20 | [−0.24, 0.02] |
+| Perid:Tchla | 0.29 | 0.08 | 0.19 | 83% | 0.09 | 0.08 | [−0.08, 0.08] |
+| MVchlb:Tchla | 0.24 | 0.02 | 0.17 | 74% | 0.03 | 0.04 | [−0.06, 0.03] |
+| HexFuco:Tchla | 0.18 | 0.02 | 0.06 | 89% | 0.03 | 0.21 | [−0.30, −0.06] |
+| ButFuco:Tchla | 0.18 | 0.02 | 0.06 | 80% | 0.00 | 0.08 | [−0.21, 0.01] |
+| Viola:Tchla | 0.17 | 0.02 | 0.04 | 92% | 0.01 | 0.29 | [−0.44, −0.13] |
+
+\* Neo is 74% below detection, and its result is an artifact of the zero
+replacement. Under LOCO its PCR log-ratio R² is 0.03, 0.20 and 0.47 for
+zeros at 0.1, 0.5 and 1.0 × LOD. The ratios with few zeros are insensitive
+to that choice: Fuco 0.39/0.42/0.41, Zea 0.33 throughout, Chlc12 0.28
+throughout.
+
+Three conclusions:
+1. **The derived ratios are empty.** The pigment ratios implied by SDP's
+   absolute products carry essentially no compositional information:
+   R² 0.02–0.09, rising to 0.2–0.3 only for Zea and DVchla. SDP's absolute
+   pigments are, to first order, Tchla times a constant.
+2. **Trained on the ratio itself, the spectra do carry composition in
+   random splits.** Fuco:Tchla, Chlc3:Tchla, DVchla:Tchla and Zea:Tchla
+   reach R² 0.55–0.69 and beat the nulls in 90–100% of splits. This is
+   where δRrs'' has genuine information beyond Tchla.
+3. **That information does not transfer between campaigns (§6.2).**
+
 ### 6.2 Leakage: random splits vs leave-one-campaign-out
+
+Kramer's random splits put samples from the same cruise in both training and
+validation. Holding out a whole campaign shows how much of the skill is
+cruise-specific.
+
+**Absolute concentrations, LOCO pooled R²:**
+
+| | Tchla | Fuco | Chlc12 | Chlc3 | HexFuco | MVchlb | Perid | DVchla | Zea |
+|---|---|---|---|---|---|---|---|---|---|
+| PCR, random | 0.72 | 0.61 | 0.64 | 0.62 | 0.48 | 0.44 | 0.55 | 0.48 | 0.37 |
+| **PCR, LOCO** | **0.44** | **0.32** | **0.29** | **0.24** | **0.12** | **0.15** | **0.45** | **0.04** | **0.01** |
+| null_GSM, LOCO | 0.66 | 0.56 | 0.54 | 0.58 | 0.39 | 0.37 | 0.48 | 0.21 | 0.02 |
+| null_OC4, LOCO | 0.46 | 0.39 | 0.28 | 0.20 | 0.16 | 0.13 | 0.50 | 0.12 | 0.02 |
+
+- PCR loses **roughly half its R²** when a campaign is held out: Tchla 0.72
+  → 0.44, HexFuco 0.48 → 0.12. Its advantage on the cyanobacterial
+  pigments vanishes: DVchla goes from 0.48 to 0.04.
+- The Tchla nulls lose much less (null_GSM Tchla 0.81 → 0.66).
+- Under LOCO, PCR is **significantly worse than null_GSM** (the paired
+  bootstrap 95% interval of ΔR² lies below 0) for Tchla, HexFuco, Allo,
+  DVchla, MVchlb, Chlc12 and Chlc3. It is better for none of the 13
+  pigments.
+
+![Absolute-concentration skill](figures/sdp/diag_skill_absolute.png)
+
+*R² of PCR and the Tchla-only null models for each pigment: random splits
+(left) vs LOCO (right), linear (top) vs log (bottom) scoring. The open
+diamonds (oracle, HPLC Tchla) show how much of each pigment is explained by
+Tchla covariance alone.*
+
+**Composition under LOCO.**
+- **No ratio retains significant skill beyond the Tchla nulls** when a
+  campaign is held out. Neo appears to, but only through the zero
+  replacement (see above).
+- The best candidates are **Fuco:Tchla** (0.40 vs 0.31; CI [−0.01, 0.17]),
+  then DVchla:Tchla and Zea:Tchla (≈ the null).
+- For HexFuco, ButFuco, MVchlb and Viola, PCR's held-out log-ratio RMS error
+  is **no better than predicting the training-mean ratio**: 0.28 vs 0.25,
+  0.31 vs 0.30, 0.35 vs 0.35, and 0.35 vs 0.33 dex. Only Fuco (0.29 vs
+  0.37), Zea (0.44 vs 0.54) and DVchla (0.77 vs 0.98) clearly beat a constant
+  ratio out of campaign.
+
+![Ratio skill](figures/sdp/diag_skill_ratio.png)
+
+**Why LOCO hurts.** Held-out-campaign predictions are systematically offset
+by campaign. When it is held out, BIOSOPE (South Pacific gyre, Tchla ≈ 0.02
+mg m⁻³) is predicted at 0.2–0.5 mg m⁻³. Many RemSensPOC and Tara Med
+spectra are predicted at ≤ 0. The PCR weights the fine spectral structure
+of δRrs'', and part of that structure is specific to the instrument, the
+processing or the region of each campaign (§3.4, §4.1): RAMSES for ANT,
+HyperPro for the others, and different processing chains. A two-parameter
+Tchla model does not see that structure and transfers better.
+
+![LOCO Tchla](figures/sdp/diag_loco_tchla.png)
+
+**Bottom line for §6.1–6.2.** On this dataset:
+1. SDP's absolute pigment concentrations are matched or beaten by a
+   Tchla-only power law, using the GSM Tchla that SDP already computes,
+   under both random and campaign-held-out validation.
+2. δRrs'' does carry compositional information within campaigns, most
+   clearly for Fuco:Tchla and the cyanobacterial ratios.
+3. **None of it is demonstrated to transfer to an unseen campaign.** At most
+   a weak Fuco:Tchla signal survives (not significant at 95%).
+
+Kramer's Table 2 statistics are real, but they measure mostly Tchla and
+within-cruise similarity. The question for §6.3 and §7 is whether a
+different predictor space or a regularized, noise-aware weighting can make
+the compositional signal transfer.
 ### 6.3 What the residual buys (source-space comparison)
 
 ## 7. Alternatives: a learned wavelength weighting — *Execution #7*

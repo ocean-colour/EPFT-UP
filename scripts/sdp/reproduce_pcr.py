@@ -50,6 +50,7 @@ from scipy.spatial.distance import pdist  # noqa: E402
 
 from epft_up import __version__  # noqa: E402
 from epft_up.sdp import data as sdpdata, models, spectral  # noqa: E402
+from epft_up.sdp import validate as V  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / 'reports' / 'figures' / 'sdp'
@@ -75,25 +76,8 @@ SOURCE_COLORS = {
     'EXPORTS': 'black'}
 
 
-#: Reporting resolution of the deposited pigments [mg m^-3].
-PIGMENT_RESOLUTION = 0.001
-
-
-def lod_proxy(pigments):
-    """Per-pigment detection-limit proxy [mg m^-3].
-
-    The deposit gives below-LOD values as 0 and reports to 0.001 mg m^-3; the
-    method LODs themselves (Van Heukelem & Thomas 2001) are not in it. For a
-    pigment that has below-LOD zeros, the smallest non-zero value bounds its
-    effective LOD from above and is used. For a pigment that is never below
-    LOD here (Tchla, Zea, Chlc12) the smallest value is just the sample
-    minimum (0.019 for Tchla), so the reporting resolution is used instead.
-    """
-    out = {}
-    for p in pigments.columns:
-        v = pigments[p]
-        out[p] = float(v[v > 0].min()) if (v == 0).any() else PIGMENT_RESOLUTION
-    return out
+#: Detection-limit proxy (single definition in epft_up.sdp.validate).
+lod_proxy = V.lod_proxy
 
 
 def train_all(X, pig, keep, lods):

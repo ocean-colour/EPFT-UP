@@ -28,7 +28,7 @@
   },
   "loader": "epft_up.sdp.data.load_kramer2022",
   "epft_up_version": "0.1.0",
-  "loaded_utc": "2026-10-02T21:41:03+00:00"
+  "loaded_utc": "2026-10-02T22:16:17+00:00"
  },
  "gsm_product": {
   "file": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/products/gsm_dRrs_insitu.npz",
@@ -59,7 +59,7 @@
  },
  "seed": 1,
  "excluded_for_144": 69,
- "run_utc": "2026-10-02T21:41:03+00:00",
+ "run_utc": "2026-10-02T22:16:17+00:00",
  "settings": {
   "n_perm": 100,
   "max_pcs": 30,
@@ -1030,6 +1030,6 @@
  },
  "product": {
   "file": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/products/pcr_rrsD2_1nm.npz",
-  "sha256": "1557e07d329d4116766842e12ce4aa92cf29738ab77812fc9ad009921bad1cd0"
+  "sha256": "abbc75722ac9a4228f33e1ccd7832b1e8d5a8f2bc16bf8f3bea5658dcad8247b"
  }
 }

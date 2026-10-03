@@ -12,8 +12,10 @@ quantify what a second, accidental smoothing would do.
 Finite differences (:func:`difference`, :func:`derivative_features`) follow
 Kramer's ``Kramer_Rrs_pigments.m``: plain MATLAB ``diff`` along wavelength,
 i.e. ``diff(y, 2)`` = y[i+1] - 2 y[i] + y[i-1] (Catlett & Siegel 2018 Eq. 2
-times Δλ²; Δλ = 1 nm) and a *forward* first difference ``diff(y, 1)``. The
-alternative transforms are added in Execution #5.
+times Δλ²; Δλ = 1 nm) and a *forward* first difference ``diff(y, 1)``.
+
+El Hourany & Kramer (2026) source spaces (Execution #5): :func:`spline_residual`
+(M1) and :func:`savgol_second_derivative` (M3). Their M2 is Kramer's δRrs.
 """
 
 from __future__ import annotations
@@ -165,3 +167,75 @@ def derivative_features(wave, y, orders=(2,), step=1):
         labels += [f'd{o}_{x:g}' for x in w]
         blocks.append(np.atleast_2d(d))
     return labels, np.hstack(blocks)
+
+
+# --------------------------------------------------------------------------
+# El Hourany & Kramer (2026) source spaces (Execution #5)
+# --------------------------------------------------------------------------
+#: El Hourany & Kramer (2026) smoothing parameter for M1 (MATLAB ``csaps`` p),
+#: tuned by them on a 2.5 nm grid.
+EH_ALPHA = 0.0005
+#: Their grid spacing [nm]; used to rescale the penalty to other grids.
+EH_GRID = 2.5
+
+
+def spline_residual(wave, y, alpha=EH_ALPHA, ref_spacing=EH_GRID):
+    """El Hourany & Kramer (2026) M1: ``y - smoothing_spline(y)``, per spectrum.
+
+    MATLAB ``csaps(x, y, p)`` minimises ``p Σ (y - f)² + (1 - p) ∫ f''²``,
+    i.e. the scipy penalty ``lam = (1 - p) / p`` with unit weights. The data
+    term grows with the number of points, so to keep the same balance on a
+    grid of spacing ``h`` the penalty is scaled by ``ref_spacing / h``. That
+    keeps their 2.5 nm tuning on our 1 nm grid.
+
+    Parameters
+    ----------
+    wave : ndarray, shape (n,)
+    y : ndarray, shape (n_samples, n)
+    alpha : float, optional
+        csaps ``p``.
+    ref_spacing : float, optional
+        Grid spacing [nm] at which ``alpha`` was tuned.
+
+    Returns
+    -------
+    ndarray, shape (n_samples, n)
+    """
+    from scipy.interpolate import make_smoothing_spline
+    wave = np.asarray(wave, dtype=float)
+    y = np.atleast_2d(np.asarray(y, dtype=float))
+    h = float(np.median(np.diff(wave)))
+    lam = (1.0 - alpha) / alpha * (ref_spacing / h)
+    out = np.empty_like(y)
+    for i, r in enumerate(y):
+        out[i] = r - make_smoothing_spline(wave, r, lam=lam)(wave)
+    return out
+
+
+def savgol_second_derivative(wave, y, window_nm=11, polyorder=3):
+    """El Hourany & Kramer (2026) M3: Savitzky-Golay (order 3) second derivative.
+
+    The paper gives the polynomial order (3) but not the window. The default
+    11 nm is our choice; the source-space comparison also runs other windows.
+
+    Parameters
+    ----------
+    wave : ndarray, shape (n,)
+        Uniform grid [nm].
+    y : ndarray, shape (n_samples, n)
+    window_nm : int, optional
+        Window length in nm (made odd in samples).
+    polyorder : int, optional
+
+    Returns
+    -------
+    ndarray, shape (n_samples, n)
+        d²y/dλ² [units of y per nm²].
+    """
+    from scipy.signal import savgol_filter
+    wave = np.asarray(wave, dtype=float)
+    h = float(np.median(np.diff(wave)))
+    win = int(round(window_nm / h))
+    win += 1 - win % 2
+    return savgol_filter(np.atleast_2d(y), window_length=win, polyorder=polyorder,
+                         deriv=2, delta=h, axis=-1)

@@ -798,3 +798,57 @@ Findings:
 - The port's `run_sdp` re-smooths new spectra with a **trailing**
   `rolling(5, min_periods=1)` window (a 2 nm shift). Relevant for PACE
   application.
+
+### 2026-10-02 (Execution #4: honest diagnostics: skill beyond Tchla, ratios, LOCO)
+
+New code:
+- `epft_up/sdp/validate.py`:
+  - `lod_proxy` (moved here as the single definition) and `replace_zeros`
+    (the one swappable ½·LOD rule);
+  - `oc4v6`;
+  - `random_splits`, `loco_splits`;
+  - fitters (`PCRFitter`, `LogLinearFitter` (the Tchla null),
+    `ConstantFitter`) and `cross_validate`;
+  - `score_linear` (Table 2 style), `score_log`, `per_split_scores`,
+    `pooled_predictions`, `paired`, `bootstrap_paired`.
+- `epft_up/sdp/models.py`: factored out `fit_pcr_one()` (one model from one
+  training set). `train_pcr_kramer` is unchanged numerically (Tchla R²
+  0.7342 before and after).
+- `scripts/sdp/diagnostics_null_loco.py`:
+  - 13 pigments × {PCR, null_GSM, null_OC4, oracle};
+  - 12 ratios × {PCR_log, PCR_lin, PCR_derived, nulls, const};
+  - random (100) and LOCO (8) schemes, linear and log scoring;
+  - a zero-replacement sensitivity (0.1, 0.5, 1.0 × LOD);
+  - the N=144 repeat;
+  - figures and `diag_summary.json` / `diag_skill_table.csv`.
+- `scripts/sdp/reproduce_pcr.py` now takes `lod_proxy` from `validate`
+  (Table 2 output byte-identical).
+- `epft_up/tests/test_sdp_validate.py`: 7 tests. Full suite: 70 passed.
+- Report §6.1–6.2 written.
+
+Findings (N=145; N=144 gives the same verdicts):
+- **Absolute concentrations: no skill beyond Tchla.** A two-parameter
+  log–log fit on the GSM-retrieved Tchla beats PCR for 11 of 13 pigments
+  under random splits (Tchla 0.81 vs 0.72, Fuco 0.72 vs 0.61, Chlc12 0.78 vs
+  0.64). Even the OC4 Tchla matches or beats PCR for 6 of 13. PCR wins only
+  for DVchla (0.48 vs 0.06) and Zea (0.37 vs 0.20), the pigments that don't
+  scale with Tchla.
+- **LOCO halves PCR's skill** (Tchla 0.72 → 0.44, HexFuco 0.48 → 0.12,
+  DVchla 0.48 → 0.04). Under LOCO, PCR is significantly worse than null_GSM
+  for 7 pigments and better for none.
+- **Ratios:** ratios derived from SDP's absolute products have R² ≈ 0.02–0.09
+  (0.2–0.3 for Zea and DVchla), so they carry no compositional information.
+  PCR trained on log ratios has real within-campaign skill (Fuco:Tchla 0.61,
+  DVchla 0.69, Zea 0.57, Chlc3 0.55; beating the nulls in ≥ 90% of splits).
+  Under LOCO nothing survives significantly. Neo:Tchla appears to, but it is
+  an artifact of zero replacement (LOCO R² 0.03/0.20/0.47 for 0.1/0.5/1.0 ×
+  LOD). The best candidate is Fuco:Tchla (0.40 vs 0.31; ΔR² CI
+  [−0.01, 0.17]). For HexFuco, ButFuco, MVchlb and Viola, LOCO log-ratio RMS
+  is no better than a constant ratio.
+- Mechanism: held-out campaigns are offset as a block (BIOSOPE Tchla
+  predicted 10× too high; RemSensPOC and Tara Med often ≤ 0). The PCR uses
+  campaign-specific fine spectral structure (instrument and processing).
+
+Not a stop-and-ask: these are new tests that the paper did not run, not
+contradictions of a quoted number. They are, however, the most consequential
+result so far, so they are worth discussing before #7.
