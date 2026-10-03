@@ -28,7 +28,7 @@
   },
   "loader": "epft_up.sdp.data.load_kramer2022",
   "epft_up_version": "0.1.0",
-  "loaded_utc": "2026-10-03T02:47:31+00:00"
+  "loaded_utc": "2026-10-03T15:14:33+00:00"
  },
  "gsm_product": {
   "file": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/products/gsm_dRrs_insitu.npz",
@@ -78,13 +78,21 @@
   "GSM3": 3,
   "dRrs_d2_flat30": 299,
   "dRrs_d2_flat80": 299,
-  "dRrs_flat80": 301
+  "dRrs_flat80": 301,
+  "dRrs_awsm": 301,
+  "dRrs_d2_awsm": 299
  },
  "m1_alpha": 0.0005,
  "curvature_budget": {
   "frac_var_Rrs_d2_removed": -0.5164262944285576,
   "frac_var_Rrs_d2_in_model": 1.2960081220792554,
   "mean_band_corr_Rrs_d2_vs_dRrs_d2": 0.7211084090789998,
+  "note": "variance across samples, summed over 299 bands"
+ },
+ "curvature_budget_aw_smoothed": {
+  "frac_var_Rrs_d2_removed": 0.010428192647114254,
+  "frac_var_Rrs_d2_in_model": 0.6368722967590432,
+  "mean_band_corr_Rrs_d2_vs_dRrs_d2": 0.8065231491111773,
   "note": "variance across samples, summed over 299 bands"
  },
  "flat_baselines": {
@@ -99,6 +107,10 @@
    "Tchla_log_R2_vs_HPLC": 0.7179194813644841,
    "dRrs_corr_with_original": 0.9311045768405055,
    "dRrs_d2_corr_with_original": 0.9974397234903072
+  },
+  "aw_smoothed": {
+   "n_converged": 145,
+   "dRrs_d2_corr_with_original": 0.6151990094692634
   }
  },
  "summary": {
@@ -297,7 +309,35 @@
    "ratio_beats_null_random": 9,
    "ratio_beats_null_loco": 3,
    "ratio_beats_const_rms_loco": 8
+  },
+  "dRrs_awsm": {
+   "abs_R2_random": 0.5929857594,
+   "abs_R2_loco": 0.3909647391,
+   "abs_dR2_null_random": 0.0429527867,
+   "abs_dR2_null_loco": 0.0224653177,
+   "abs_beats_null_random": 1,
+   "abs_beats_null_loco": 2,
+   "ratio_logR2_random": 0.4593001974,
+   "ratio_logR2_loco": 0.1970013781,
+   "ratio_dR2_null_loco": -0.0013020525,
+   "ratio_beats_null_random": 10,
+   "ratio_beats_null_loco": 3,
+   "ratio_beats_const_rms_loco": 7
+  },
+  "dRrs_d2_awsm": {
+   "abs_R2_random": 0.5228614575,
+   "abs_R2_loco": 0.2142566437,
+   "abs_dR2_null_random": -0.0271715153,
+   "abs_dR2_null_loco": -0.1542427778,
+   "abs_beats_null_random": 2,
+   "abs_beats_null_loco": 0,
+   "ratio_logR2_random": 0.39411785,
+   "ratio_logR2_loco": 0.1746208237,
+   "ratio_dR2_null_loco": -0.0236826069,
+   "ratio_beats_null_random": 8,
+   "ratio_beats_null_loco": 2,
+   "ratio_beats_const_rms_loco": 9
   }
  },
- "run_utc": "2026-10-03T12:14:03+00:00"
+ "run_utc": "2026-10-03T15:20:51+00:00"
 }

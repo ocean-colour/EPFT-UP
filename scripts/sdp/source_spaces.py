@@ -21,6 +21,8 @@ Predictor spaces (N = 145):
 ``dRrs_d2_flat30``  δRrs'' with A,B Gaussian-smoothed (FWHM 30 nm) in the GSM fit
 ``dRrs_d2_flat80``  the same with FWHM 80 nm
 ``dRrs_flat80``     δRrs with FWHM-80 nm tables
+``dRrs_awsm``       δRrs with a_w, A, B smoothed like the data (5 nm mean)
+``dRrs_d2_awsm``    its ``diff(·, 2)``
 ==================  ==========================================================
 
 Also: how much of the Rrs'' variance the GSM model's own curvature
@@ -33,6 +35,7 @@ rows), ``source_spaces_summary.csv``, ``source_spaces_heatmap.png``,
 Run with::
 
     conda run -n ocean14 python scripts/sdp/source_spaces.py
+    conda run -n ocean14 python scripts/sdp/source_spaces.py --replot   # figure only
 """
 import datetime
 import json
@@ -99,7 +102,18 @@ def build_spaces(data, z):
         spaces[f'dRrs_d2_flat{fw}'] = d2(fit.dRrs)
         if fw == 80:
             spaces['dRrs_flat80'] = fit.dRrs
-    return spaces, flat_info
+    # Consistent smoothing: the deposited Rrs carry a 5 nm moving mean, the a_w
+    # table does not. Smooth a_w (and A, B) the same way before the GSM fit.
+    sm = lambda x: np.r_[x[:2], spectral.moving_mean(x, 5)[2:-2], x[-2:]]  # noqa: E731
+    t_sm = gsm.RefTables(w, sm(tables.A), sm(tables.B), sm(tables.aw),
+                         dict(tables.source, smoothed='5 nm moving mean (A, B, aw)'))
+    fit = gsm.fit_gsm(w, data.Rrs, T, S, tables=t_sm)
+    flat_info['aw_smoothed'] = {'n_converged': int(fit.converged.sum()),
+                                'dRrs_d2_corr_with_original': float(np.corrcoef(
+                                    d2(fit.dRrs).ravel(), d2(dRrs).ravel())[0, 1])}
+    spaces['dRrs_awsm'] = fit.dRrs
+    spaces['dRrs_d2_awsm'] = d2(fit.dRrs)
+    return spaces, flat_info, fit
 
 
 def curvature_budget(data, z):
@@ -143,6 +157,9 @@ def summarize(df):
 def heatmap(df, path):
     order = list(dict.fromkeys(df['model']))
     targets = list(dict.fromkeys(df.index))
+    targets = ([t for t in targets if t.startswith('abs:')]
+               + [t for t in targets if t.startswith('ratio:')])
+    n_abs = sum(t.startswith('abs:') for t in targets)
     fig, axes = plt.subplots(1, 2, figsize=(14, 6.5), sharey=True)
     for ax, scheme in zip(axes, ('random', 'loco')):
         M = np.full((len(order), len(targets)), np.nan)
@@ -155,7 +172,7 @@ def heatmap(df, path):
                            rotation=90, fontsize=7)
         ax.set_yticks(range(len(order)))
         ax.set_yticklabels(order, fontsize=8)
-        ax.axvline(12.5, color='k', lw=0.8)
+        ax.axvline(n_abs - 0.5, color='k', lw=0.8)
         ax.set_title(f'R²(model) − R²(best Tchla null), {scheme}', fontsize=9)
         for i, m in enumerate(order):
             g = df[df.model == m]
@@ -172,13 +189,19 @@ def heatmap(df, path):
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    if '--replot' in sys.argv:
+        heatmap(pd.read_csv(OUT / 'source_spaces_table.csv', index_col=0),
+                OUT / 'source_spaces_heatmap.png')
+        return
     data = sdpdata.load_kramer2022()
     gsm_prod = sdpdata.kramer2022_dir() / 'products' / 'gsm_dRrs_insitu.npz'
     z = np.load(gsm_prod)
     bench = V.Benchmark(data.pigments13, z['params'][:, 0], V.oc4v6(data.wave, data.Rrs),
                         data.meta['campaign'].to_numpy(), n_perm=100, seed=SEED)
-    spaces, flat_info = build_spaces(data, z)
+    spaces, flat_info, fit_awsm = build_spaces(data, z)
     budget = curvature_budget(data, z)
+    budget_awsm = curvature_budget(data, {'Rrs_mod': fit_awsm.Rrs_mod})
+    print('curvature budget (aw smoothed):', budget_awsm)
     print('curvature budget:', budget)
     print('flat-baseline GSM fits:', flat_info)
 
@@ -202,6 +225,7 @@ def main():
                          'lods': bench.lods, 'loco': bench.loco_names},
            'n_features': {k: int(v.shape[1]) for k, v in spaces.items()},
            'm1_alpha': spectral.EH_ALPHA, 'curvature_budget': budget,
+           'curvature_budget_aw_smoothed': budget_awsm,
            'flat_baselines': flat_info, 'summary': json.loads(summ.to_json(orient='index')),
            'run_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')}
     with open(OUT / 'source_spaces_summary.json', 'w', encoding='utf-8') as fh:

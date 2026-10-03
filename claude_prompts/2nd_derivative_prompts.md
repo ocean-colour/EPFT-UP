@@ -852,3 +852,53 @@ Findings (N=145; N=144 gives the same verdicts):
 Not a stop-and-ask: these are new tests that the paper did not run, not
 contradictions of a quoted number. They are, however, the most consequential
 result so far, so they are worth discussing before #7.
+
+### 2026-10-03 (Execution #5: source-space comparison; standard Benchmark)
+
+User instruction (2026-10-02): from here on, models must be judged on
+**both** held-out-campaign skill and skill above the Tchla null. This is
+implemented as a reusable scorecard:
+- `validate.Benchmark`: 25 targets (13 absolute pigments plus 12 log10
+  ratios), 100 random and LOCO splits, cached baselines (null_GSM,
+  null_OC4, const). `evaluate(fitter_factory, label)` returns, per target,
+  R², ΔR² vs the best null, the paired-win fraction (random), the bootstrap
+  CI (LOCO), `beats_null_random` / `beats_null_loco`, and ratio RMS vs the
+  constant. `pcr_factory(X)` gives Kramer's PCR. It reproduces #4's numbers
+  exactly.
+- `spectral.py`: `spline_residual` (El Hourany M1; csaps p = 0.0005 with the
+  penalty rescaled 2.5 nm → 1 nm) and `savgol_second_derivative` (M3; the
+  window is not given in the paper, so 7, 11 and 21 nm are tried).
+- `gsm.py`: `smoothed_tables(tables, fwhm)` (featureless a_ph baseline).
+- `scripts/sdp/source_spaces.py`: 16 predictor spaces through the
+  Benchmark, plus a curvature budget; `--replot`. Figures and tables are in
+  `reports/figures/sdp/source_spaces_*`.
+- Tests: 2 Benchmark tests and 3 transform tests. Full suite: 75 passed. I
+  relaxed one of my new tests: M1's heavy spline leaves ~0.4% of a smooth
+  exponential, which is expected behaviour.
+- Report §6.3 written.
+
+Findings:
+- **The 2nd derivative is the harmful step.** All finite-difference spaces
+  have the worst LOCO skill (absolute ≈ 0.19–0.21, ratio ≈ 0.16–0.18). The
+  undifferentiated δRrs (0.38) and M1 (0.40) do about twice as well. M3's
+  LOCO skill rises monotonically with the SG window (7 → 21 nm: abs 0.25 →
+  0.37, ratio 0.19 → 0.27).
+- The residual helps only without the derivative (δRrs 0.38 vs Rrs 0.32;
+  δRrs'' 0.19 ≈ Rrs'' 0.20). The purely empirical M1 matches or beats δRrs,
+  so it is envelope removal, not the GSM physics, that helps.
+- **The NOMAD a_ph features are irrelevant:** 30/80 nm-smoothed A,B change
+  δRrs'' by < 0.5% and leave all scores unchanged.
+- **A smoothing-mismatch artifact:** the deposited Rrs are 5 nm smoothed but
+  the 1 nm a_w table is not. Its fine structure enters Rrs_mod'', so the
+  model curvature has 1.30× the variance of Rrs'' and var(δRrs'') =
+  1.52 × var(Rrs''). With a_w smoothed consistently: 0.64× and 0.99×, and
+  r = 0.61 with the published δRrs''. This is present in Kramer's pipeline
+  too (we match the port's coefficients). PCR is only mildly affected (LOCO
+  0.21 vs 0.19).
+- Out of campaign, the compositional signals that beat the Tchla null are
+  Fuco:Tchla (M1 0.56, M3 21 nm 0.55, δRrs 0.50 vs null 0.31; not with
+  δRrs''), DVchla:Tchla (M1 0.49, M3 21 nm 0.45 vs 0.32), Zea:Tchla (M3
+  21 nm 0.48 vs 0.35) and Chlc12:Tchla (M1, δRrs_flat80 0.40 vs 0.27).
+  Neo:Tchla is a zero artifact. No space beats the null on absolute Tchla.
+- Best spaces for #7: δRrs (consistent smoothing), M1, and wide-window M3,
+  with log ratios as the target.

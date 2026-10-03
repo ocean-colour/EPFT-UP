@@ -1,7 +1,7 @@
 # The 2nd-derivative (SDP) approach to phytoplankton pigments from hyperspectral Rrs
 
 **Author:** Claude (Opus 5.5), for J. Xavier Prochaska
-**Status:** in progress. §3 (Data), §4 (reproduction) and §6.1–6.2 (diagnostics) are written; the other sections are outlines
+**Status:** in progress. §3 (Data), §4 (reproduction) and §6 (diagnostics) are written; the other sections are outlines
 that later Execution prompts in `claude_prompts/2nd_derivative_prompts.md` fill
 in.
 **Scope:** a reproduction and critique of Kramer, Siegel, Maritorena & Catlett
@@ -585,6 +585,142 @@ within-cruise similarity. The question for §6.3 and §7 is whether a
 different predictor space or a regularized, noise-aware weighting can make
 the compositional signal transfer.
 ### 6.3 What the residual buys (source-space comparison)
+
+**Standard scorecard from here on.** `validate.Benchmark` fixes the 25
+targets (13 absolute pigments and 12 log₁₀ ratios), the splits (100 random
+and LOCO) and the baselines (Tchla nulls; a constant ratio). Every model in
+§6.3–§8 is judged on two things together: **skill above the best Tchla null
+and skill under LOCO**. Reported per target:
+- R²;
+- ΔR² vs the best null;
+- "beats null, random": the model wins in ≥ 90% of paired splits;
+- "beats null, LOCO": the bootstrap 95% CI of ΔR² is above 0.
+
+Running PCR on δRrs'' through the Benchmark reproduces §6.1–6.2 exactly.
+The script is `scripts/sdp/source_spaces.py`; the outputs are
+`source_spaces_table.csv` (every model × target),
+`source_spaces_summary.csv` and `source_spaces_summary.json`.
+
+**Predictor spaces, all with Kramer's PCR, N = 145:**
+
+| Space | What it is |
+|---|---|
+| Rrs | measured spectra (like Lange et al. 2020's PCR, without SST) |
+| Rrs'' | `diff(Rrs, 2)` |
+| δRrs | Kramer's residual |
+| δRrs'' | the paper's predictor |
+| M1 | El Hourany & Kramer (2026) spline residual of rrs (csaps p = 0.0005, penalty rescaled from their 2.5 nm grid to 1 nm) |
+| M3 (7/11/21 nm) | El Hourany M3: Savitzky–Golay (order 3) 2nd derivative of rrs. Their window is not given; three tried |
+| δRrs ⊕ GSM, δRrs'' ⊕ GSM | plus log₁₀ Tchla_GSM, log₁₀ a_dg(443), b_bp(443) |
+| GSM3 | the three GSM parameters alone |
+| δRrs''_flat30/80, δRrs_flat80 | GSM refitted with A(λ),B(λ) Gaussian-smoothed (FWHM 30, 80 nm): a featureless a_ph baseline |
+| δRrs_awsm, δRrs''_awsm | GSM refitted with a_w, A, B given the same 5 nm moving mean as the deposited Rrs (see below) |
+
+**Summary.** Means over the 13 absolute and 12 ratio targets. The counts
+are the number of targets that beat the Tchla null.
+
+| Space | abs R², random | abs R², LOCO | abs beats null (rand / LOCO) | ratio log-R², random | ratio log-R², LOCO | ratio beats null (rand / LOCO) | ratio LOCO RMS < const |
+|---|---|---|---|---|---|---|---|
+| Rrs | 0.56 | 0.32 | 1 / 1 | 0.42 | 0.22 | 9 / 2 | 8 |
+| Rrs'' | 0.49 | 0.20 | 1 / 0 | 0.36 | 0.16 | 7 / 2 | 7 |
+| δRrs | 0.60 | 0.38 | 1 / 1 | 0.46 | 0.20 | 10 / 2 | 7 |
+| **δRrs'' (paper)** | 0.51 | **0.19** | 1 / 0 | 0.38 | **0.17** | 8 / 1 | 9 |
+| M1 | 0.59 | **0.40** | 1 / 0 | 0.46 | 0.26 | 10 / **5** | 10 |
+| M3, 7 nm | 0.55 | 0.25 | 1 / 0 | 0.39 | 0.19 | 10 / 2 | 8 |
+| M3, 11 nm | 0.56 | 0.31 | 1 / 0 | 0.42 | 0.23 | 11 / 4 | 10 |
+| **M3, 21 nm** | 0.59 | 0.37 | 1 / 1 | **0.47** | **0.27** | **12 / 5** | **11** |
+| δRrs ⊕ GSM | 0.60 | 0.39 | 1 / 1 | 0.47 | 0.20 | 10 / 1 | 7 |
+| δRrs'' ⊕ GSM | 0.52 | 0.20 | 1 / 0 | 0.38 | 0.17 | 8 / 1 | 9 |
+| GSM3 | 0.43 | 0.17 | 1 / 0 | 0.25 | 0.17 | 0 / 1 | 8 |
+| δRrs''_flat30 | 0.50 | 0.19 | 1 / 0 | 0.39 | 0.17 | 8 / 2 | 9 |
+| δRrs''_flat80 | 0.51 | 0.20 | 1 / 0 | 0.38 | 0.16 | 8 / 1 | 9 |
+| δRrs_flat80 | 0.59 | **0.40** | 2 / 2 | 0.46 | 0.22 | 9 / 3 | 8 |
+| δRrs_awsm | 0.59 | 0.39 | 1 / 2 | 0.46 | 0.20 | 10 / 3 | 7 |
+| δRrs''_awsm | 0.52 | 0.21 | 2 / 0 | 0.39 | 0.18 | 8 / 2 | 9 |
+
+![Source-space heat map](figures/sdp/source_spaces_heatmap.png)
+
+*ΔR² against the best Tchla null for every space (rows) and target
+(columns; absolute pigments left of the line, log ratios right), for random
+splits (left) and LOCO (right). Dots mark targets that beat the null.*
+
+**Targets that beat the Tchla null under LOCO** (R² vs best-null R²):
+- **Fuco:Tchla** beats it with M1 (0.56 vs 0.31), M3 21 nm (0.55),
+  δRrs_flat80 (0.53), δRrs (0.50) and raw Rrs (0.46). It does **not** with
+  δRrs'' (0.40; CI includes 0).
+- **DVchla:Tchla** with M1 (0.49 vs 0.32) and M3 21 nm (0.45).
+- **Zea:Tchla** with M3 21 nm (0.48 vs 0.35).
+- **Chlc12:Tchla** with M1 and δRrs_flat80 (0.40 vs 0.27).
+- MVchlb:Tchla with M1 and M3 21 nm, but at low R² (0.16 vs 0.04).
+- Among absolute concentrations: Zea with δRrs (0.25 vs 0.02) and ButFuco
+  with raw Rrs and M3 21 nm.
+- Neo:Tchla appears for every space but is the zero-replacement artifact of
+  §6.1.
+
+No space beats the null on absolute Tchla under LOCO. The best are M1 (0.70)
+and δRrs (0.66), against the GSM null's 0.66.
+
+**What this says about the derivative and the residual:**
+
+1. **The second derivative is the harmful step.** Every
+   finite-difference space (Rrs'', δRrs'', δRrs'' ⊕ GSM, δRrs''_flat,
+   δRrs''_awsm) has the lowest LOCO skill, about 0.19–0.21 absolute and
+   0.16–0.18 ratio. The same information without differentiating does about
+   twice as well out of campaign: δRrs 0.38, M1 0.40. M3 shows the same
+   effect smoothly: widening the Savitzky–Golay window from 7 to 11 to
+   21 nm raises LOCO skill monotonically (absolute 0.25 → 0.31 → 0.37;
+   ratio 0.19 → 0.23 → 0.27). This is the noise-amplification argument of
+   Q&A #11 seen empirically. Differentiation boosts the highest
+   frequencies, where the deposit is at its rounding floor (§3.4) and where
+   campaign-specific instrument structure lives (§6.2). Within a campaign
+   the PCR can exploit those frequencies (random-split skill is only modestly
+   lower); across campaigns they do not transfer.
+2. **The residual step helps a little, and only without the derivative.**
+   δRrs vs raw Rrs: LOCO absolute 0.38 vs 0.32. But δRrs'' (0.19) is no
+   better than Rrs'' (0.20). M1, a purely empirical spline residual with no
+   bio-optical model, does as well as or better than δRrs, so the
+   semi-analytical GSM is not what helps. What helps is removing the
+   broad-scale envelope.
+3. **The NOMAD a_ph features in the GSM baseline are irrelevant.**
+   - Replacing A(λ), B(λ) by 30 or 80 nm-smoothed versions changes δRrs''
+     by < 0.5% (r = 0.996–0.997).
+   - The GSM Tchla retrieval is unaffected (log-R² 0.72 for every baseline).
+   - Every score is unchanged within noise; δRrs_flat80 is in fact
+     marginally the best absolute space under LOCO.
+   - So δRrs is not a "compositional anomaly relative to a mean NOMAD
+     community" (Q&A §C-10): the model's pigment features barely enter it.
+     It is, to a good approximation, Rrs minus a smooth, Tchla- and
+     IOP-scaled envelope.
+4. **A smoothing mismatch artifact in δRrs''.** The deposited Rrs carry the
+   5 nm moving mean, but Rrs_mod is built from the 1 nm pure-water
+   absorption table without it. The fine structure of a_w, scaled differently
+   in every spectrum, therefore enters Rrs_mod''. As a result:
+   - The model curvature has **1.30×** the across-sample variance of the
+     measured Rrs''.
+   - Subtracting it **raises** the variance: var(δRrs'') = 1.52 × var(Rrs'').
+   - Smoothing a_w the same way as the data drops the model curvature to
+     0.64× and δRrs'' to 0.99× var(Rrs''). The resulting δRrs'' correlates
+     only 0.61 with the published one. Smoothing A and B instead changes
+     nothing (r = 0.99998).
+
+   This is an inconsistency in the published pipeline. We reproduce it, so
+   Kramer's own δRrs'' presumably carries it too. The PCR is fairly
+   insensitive to it (LOCO absolute 0.21 vs 0.19 once fixed), because
+   z-scoring and PC truncation down-weight it, but it is a genuine artifact.
+5. **GSM parameters add nothing linear.** Appending log Tchla_GSM, a_dg(443)
+   and b_bp(443) to δRrs changes little (0.39 vs 0.38 absolute LOCO). On
+   their own they are weaker than the two-parameter null (abs 0.43 vs ≈0.55
+   random), because a linear PCR on log Tchla is the wrong functional form
+   for concentration. The null's power law is the right one.
+
+**Implications for §7.** The most promising inputs are spaces that remove the
+broad envelope without amplifying high frequencies: δRrs (with consistent
+smoothing), M1, or M3 with wide windows. The target should be the log
+pigment:Tchla ratio. Fuco:Tchla and the cyanobacterial ratios
+(DVchla:Tchla, Zea:Tchla) are the only compositional signals that pass both
+tests here. A learned wavelength weighting should explicitly penalize the
+high-frequency structure (a smoothness prior and noise whitening), which is
+exactly what the derivative + z-score recipe fails to do.
 
 ## 7. Alternatives: a learned wavelength weighting — *Execution #7*
 
