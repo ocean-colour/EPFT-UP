@@ -1367,6 +1367,45 @@ Caveats:
   is on clean spectra). Training on noise-augmented spectra is an
   alternative to the analytic noise-aware penalty that was not tested.
 
-## 9. Hold-out test: EXPORTS North Atlantic 2021 — *Execution #9*
+## 9. Hold-out test: EXPORTS North Atlantic 2021 — *Execution #9, provisional (Tchla only)*
+
+**Status: incomplete.** The EXPORTS-NA (May 2021) HPLC pigments could not be
+obtained programmatically. SeaBASS's `file_search.cgi` refuses access (HTTP
+403/444, also with Earthdata credentials), and its archive pages list files
+only via JavaScript. The pigment and ratio parts of this test are pending.
+
+What *was* possible: Kramer's `Rrs_pigments` repository (pinned commit)
+ships `Kramer_rrs_testdata.mat`, which holds the 17 EXPORTS-NA spectra used
+by Kramer et al. (2024), with T, S, position and HPLC chlorophyll-a. The
+script is `scripts/sdp/exports_na_holdout.py` and the numbers are in
+`reports/figures/sdp/exports_na_summary.json`. Every model was trained on
+the 145 deposit samples, with no retraining.
+
+**Caveat: these spectra are not processed like the deposit.** They are not
+rounded to 10⁻⁶ and are much smoother at high spectral frequency (§3.4's
+test). One spectrum is clipped to 0 at 697–700 nm.
+
+| Model (Tchla, N = 17, HPLC range 0.53–1.15 mg m⁻³) | bias [dex] | RMS [dex] | log-R² |
+|---|---|---|---|
+| PCR on δRrs'' (this work, N=145) | +0.02 | 0.09 | 0.66 |
+| PCR, Kramer's original coefficients | +0.02 | 0.10 | 0.65 |
+| GSM Tchla (raw) | −0.08 | 0.15 | 0.90 |
+| null: GSM Tchla calibrated on the 145 | −0.18 | 0.19 | 0.90 |
+| null: OC4 calibrated on the 145 | −0.25 | 0.26 | 0.87 |
+| shared W (Bayesian, §8) | −0.17 | 0.25 | 0.42; 68/95% coverage 0.59/1.00, mean z +0.58 |
+
+On this one campaign, PCR on δRrs'' gives the best Tchla: unbiased, about
+23% RMS. That runs against the LOCO picture of §6.2, where PCR Tchla was the
+weakest. Possible reasons:
+- These spectra are smoother than the deposit, which is exactly what helps a
+  derivative model (§5.2).
+- The 17 samples sit in the mid-range where the deposit is dense.
+- With N = 17 and a factor-2 dynamic range, the R² values say little. The
+  bias and RMS are the informative numbers.
+
+The calibrated nulls and the shared W are biased low here by 0.17–0.25 dex
+(×0.56–0.68), largely a between-campaign offset of the kind §6.2 found.
+
+![EXPORTS-NA Tchla](figures/sdp/exports_na_tchla.png)
 
 ## 10. Conclusions and recommendations — *Execution #10*

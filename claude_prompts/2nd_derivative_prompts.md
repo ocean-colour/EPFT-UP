@@ -1051,3 +1051,73 @@ Findings:
   0.33 (PACE white), 0.35 (PACE correlated).
 - **5 nm sampling costs nothing** (clean and PACE white alike), in line with
   #6's degrees-of-freedom result.
+
+### 2026-10-03 (Execution #9: EXPORTS-NA hold-out; partial, STOP-AND-ASK)
+
+**Stopped per the prompt's instruction: the matchups cannot be
+reconstructed.**
+- SeaBASS programmatic access is refused: `cgi-bin/file_search.cgi` returns
+  403 (also with a browser user agent and as a POST) and 444 with the
+  Earthdata `~/.netrc` credentials. The `/archive/EXPORTS/...` pages return
+  an empty table filled by JavaScript; `/search/archive/...` gives 404.
+- PANGAEA has no EXPORTS-NA 2021 HPLC dataset (its Kramer & Siegel 2019
+  compilation predates the cruise). There is no local copy.
+- The Python port's `generate_coefficients` reads an
+  `HPLC_Rrs_forAli_2025.xlsx` that isn't shipped.
+
+What was done (provisional, `scripts/sdp/exports_na_holdout.py`): a
+Tchla-only hold-out on the 17 EXPORTS-NA spectra in `Rrs_pigments`'
+`Kramer_rrs_testdata.mat` (Rrs, T, S, lat/lon, HPLC chl; **no sample
+times**; pinned commit), with every model trained on the 145.
+- These spectra are processed differently from the deposit: not rounded,
+  much smoother at high frequency, one clipped to 0 at 697–700 nm.
+- PCR on δRrs'' gives the best Tchla here: bias +0.02 dex, RMS 0.09 (ours
+  and Kramer's coefficients agree). The GSM and OC4 nulls calibrated on the
+  145 are biased −0.18 and −0.25 dex. The shared W is biased −0.17, with
+  68/95% coverage 0.59/1.00. N = 17 and the range 0.53–1.15 mg m⁻³ make
+  R² uninformative.
+- Report §9 holds a provisional Tchla-only section marked incomplete.
+
+Follow-up (2026-10-03), after the user's answers to the stop-and-ask: (1) the
+user will download the files and asked for a HOWTO; (2) use Kramer's 17
+spectra as-is and flag the processing difference.
+- Found the file layout from the SeaBASS cruise page
+  (`/cruise/EXPORTSNA`), which lists every archive path in plain HTML.
+  - **HPLC:** UCSB/CRSEO rosette files for JC214, DY131 and DY130
+    (`*_rosette_HPLC_20230202_R1.sb`), plus Bowdoin/Roesler DY131 inline and
+    pump files.
+  - **Radiometry:** 99 UCSB/CRSEO `exports_na_{dy131,jc214}_*_C-OPS_CAST_R0.sb`
+    casts (2–29 May 2021). Kramer's test file has positions but no times,
+    so these casts are needed to time-match the HPLC.
+- Direct archive URLs and the "Download All" endpoint return the
+  JavaScript page or HTML, not data, so downloading needs a logged-in
+  browser.
+- Wrote `docs/HOWTO_SeaBASS_EXPORTS_NA.md`: exactly which 3 (+2) HPLC and
+  99 C-OPS files, two browser routes (File Search with wildcards, or the
+  archive browser), the target folder `$OS_COLOR/PANGAEA/Kramer2022/EXPORTS_NA/`,
+  quick checks, and the matching plan (position → cast time → ±2 h surface
+  HPLC; stop and ask on ambiguity; cross-check against Kramer's chl).
+- #9 resumes once the files are in place.
+
+HOWTO revision 2 (2026-10-03), after the user reported that the File Search
+for `exports_na_*C-OPS_CAST*` returned 0 files (their screenshot is
+`context/SeaBASS/Search - SeaBASS.pdf`).
+- Cause: SeaBASS's "Keyword Search Filters" box matches only affiliation,
+  investigator, experiment or cruise names, not file names. My first HOWTO
+  was wrong on this.
+- Re-examined the EXPORTSNA cruise file list. Kramer's 17 test spectra are
+  1 nm hyperspectral, so the right radiometry for timing is NASA GSFC's DY131
+  **HyperSAS** L2 Rrs: 34 per-station files `*_L2_Rrs_STATION_<n>_0_R1.sb`,
+  13 stations, 2–29 May 2021. Their smoothness (≈3.3 nm native,
+  interpolated to 1 nm) would also explain the test spectra's smoothness.
+  The UCSB C-OPS casts are multispectral and are now optional.
+- Rewrote `docs/HOWTO_SeaBASS_EXPORTS_NA.md`:
+  - Route 1 (recommended): the archive browser, with the table filter box,
+    in three directories.
+  - Route 2: the File Search with the correct settings (keyword `EXPORTSNA`,
+    dates, box, Data Use Warnings = Yes, Experimental ticked, HPLC / AOP +
+    Hyperspectral products).
+  - Where to put the files, quick checks (including the HTML-instead-of-data
+    pitfall), the revised matching plan (HyperSAS station → time → ±2 h
+    surface rosette HPLC; C-OPS as fallback), and an appendix of the 37
+    exact archive URLs (3 HPLC + 34 HyperSAS).

@@ -1,0 +1,91 @@
+{
+ "script": "scripts/sdp/exports_na_holdout.py",
+ "epft_up_version": "0.1.0",
+ "status": "provisional: Tchla only; EXPORTS-NA pigments not obtainable",
+ "exports_na_source": {
+  "file": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/ref/Rrs_pigments/Kramer_rrs_testdata.mat",
+  "sha256": "b0141be8ddd3880be133b8e8847385dd71325ea711b62c6f9dac33ec5c200d2c"
+ },
+ "processing_check": {
+  "on_1e-6_grid": false,
+  "d2_power_over_deposit_rounding_floor": {
+   "0.05": 26272.93730764232,
+   "0.10": 160.74136528177863,
+   "0.15": 0.7426679640159143,
+   "0.20": 4.403857981253803,
+   "0.25": 1.7531807674089335,
+   "0.30": 0.027300354650064754,
+   "0.35": 0.585510018976201,
+   "0.40": 0.04614764567510883,
+   "0.45": 0.042207095452488554,
+   "0.50": 0.12390094490633755
+  },
+  "n_nonpositive_Rrs": 4,
+  "chl_range": [
+   0.531,
+   1.1525
+  ]
+ },
+ "gsm_converged": 17,
+ "scores": {
+  "PCR (this work, N=145)": {
+   "n": 17,
+   "bias_log10": 0.01792392263128059,
+   "rms_log10": 0.0902467251919354,
+   "R2_log": 0.6573656629899116,
+   "median_ratio": 0.9775914342695892,
+   "n_nonpositive_pred": 0
+  },
+  "PCR (Kramer original coefs)": {
+   "n": 17,
+   "bias_log10": 0.01670388998184557,
+   "rms_log10": 0.09584272372868524,
+   "R2_log": 0.6530462961002308,
+   "median_ratio": 0.9764458809032427,
+   "n_nonpositive_pred": 0
+  },
+  "null GSM": {
+   "n": 17,
+   "bias_log10": -0.1773782206220544,
+   "rms_log10": 0.193672084272552,
+   "R2_log": 0.9026515396537164,
+   "median_ratio": 0.6353504419153504,
+   "n_nonpositive_pred": 0
+  },
+  "null OC4": {
+   "n": 17,
+   "bias_log10": -0.24923665561358402,
+   "rms_log10": 0.25589176916800277,
+   "R2_log": 0.8727609641439745,
+   "median_ratio": 0.5543324327131812,
+   "n_nonpositive_pred": 0
+  },
+  "GSM Tchla (raw)": {
+   "n": 17,
+   "bias_log10": -0.07509374967847356,
+   "rms_log10": 0.14975589475300424,
+   "R2_log": 0.9026515396537163,
+   "median_ratio": 0.7742076693326928,
+   "n_nonpositive_pred": 0
+  },
+  "shared W (Bayesian)": {
+   "n": 17,
+   "bias_log10": -0.1660217218982277,
+   "rms_log10": 0.24641066569534587,
+   "R2_log": 0.41692179737372237,
+   "median_ratio": 0.6497913808729033,
+   "n_nonpositive_pred": 0,
+   "cov68": 0.5882352941176471,
+   "cov95": 1.0,
+   "z_sd": 0.802540377233661,
+   "z_mean": 0.5785209716256867,
+   "sd_median": 0.33930467602627934
+  }
+ },
+ "shared_W_hp": [
+  0.1,
+  100.0,
+  3
+ ],
+ "run_utc": "2026-10-03T23:51:48+00:00"
+}
