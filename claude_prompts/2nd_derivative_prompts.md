@@ -1121,3 +1121,57 @@ for `exports_na_*C-OPS_CAST*` returned 0 files (their screenshot is
     pitfall), the revised matching plan (HyperSAS station → time → ±2 h
     surface rosette HPLC; C-OPS as fallback), and an appendix of the 37
     exact archive URLs (3 HPLC + 34 HyperSAS).
+
+### 2026-10-03 (Execution #9, completed: EXPORTS-NA hold-out)
+
+Matchups. The user placed the SeaBASS files in `$OS_COLOR/SeaBASS/EXPORTS`.
+- New `epft_up/sdp/seabass.py`:
+  - `read_sb` handles −9999 → NaN, a below-detection mask and a
+    `datetime` column;
+  - `index_dir` strips the 10-hex-character bundle prefix and de-duplicates
+    byte-identical copies. The user's download held 34 duplicated files.
+- **Learned:** the test spectra are *not* the DY131 HyperSAS Rrs (no match;
+  best relative RMS 5–13%). The HOWTO's inference was wrong, and a note was
+  added to it. The working key is that the test positions are HPLC positions
+  and the test chl is the replicate-mean surface HPLC Tchla.
+- New `scripts/sdp/exports_na_matchups.py` matches the shallowest bottle at
+  ≤ 12 m, with replicates averaged:
+  - within 1 km, with |ΔTchla| ≤ 6e-4;
+  - 17/17 unique, maximum 0.28 km, |Δ| ≤ 1e-16;
+  - 13 DY131 + 4 JC214, depths 4–9 m, quality flags all 0.
+  
+  Output: `$OS_COLOR/PANGAEA/Kramer2022/EXPORTS_NA/exports_na_matchups.csv`
+  plus a JSON with input SHA-256s.
+
+Hold-out. `scripts/sdp/exports_na_holdout.py` was rewritten to cover 13
+pigments and 12 log ratios, with no retraining:
+- models: PCR (ours and Kramer's coefficients), the GSM/OC4/constant nulls,
+  and the Bayesian shared W (abs hp 0.1/100/rank 3; ratio 1/100/rank 2);
+- a paired bootstrap (2000 draws) of ΔRMS against the best null per target;
+- outputs: `exports_na_scores.csv`, `exports_na_vs_null.csv`,
+  `exports_na_tchla.png`, `exports_na_ratios.png` and
+  `exports_na_summary.json`.
+
+Findings (report §9 rewritten, no longer provisional):
+- The campaign is narrow: Tchla 0.53–1.15, DVchla below LOD in all 17, Zea
+  ≤ 0.07.
+- PCR beats the best null on 7 of 13 absolute targets: Tchla, Fuco, Chlc12,
+  Chlc3, HexFuco, ButFuco and Perid. Its ratios beat the null on Fuco,
+  Chlc12, Chlc3 and Zea.
+  - The gain is almost all campaign-level bias. The nulls under-predict
+    Fuco by 0.6 dex.
+  - PCR is worse by 0.5–1.1 dex on the trace pigments (Allo, MVchlb, Neo,
+    Viola, DVchla).
+- Kramer's coefficients and ours agree to ≤ 0.03 dex.
+- The shared W sits in between.
+  - Pooled coverage is 0.76/0.90 for abs and 0.28/0.89 for ratios: the
+    errors are dominated by campaign bias, which a per-sample SD cannot
+    represent.
+  - Perid intervals miss; the trace-pigment intervals are too wide.
+- This is consistent with LOCO (§6.2): one favourable campaign drawn from a
+  wide between-campaign distribution. No contradiction with Kramer+2024,
+  so no stop.
+- Processing difference flagged: the test spectra are off the 1e-6 grid,
+  smoother than the deposit, and have 4 non-positive values.
+
+- Added `epft_up/tests/test_sdp_seabass.py` (reader + de-duplication); suite: 100 passed.

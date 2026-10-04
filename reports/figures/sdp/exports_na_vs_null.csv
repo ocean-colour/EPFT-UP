@@ -1,0 +1,51 @@
+kind,target,model,best_null,d_rms,lo95,hi95,verdict
+abs,Tchla,PCR,null_GSM,-0.1034,-0.1544,-0.0483,beats null
+abs,Tchla,sharedW,null_GSM,0.0527,-0.0206,0.122,tie
+abs,HexFuco,PCR,null_GSM,-0.1906,-0.2551,-0.1102,beats null
+abs,HexFuco,sharedW,null_GSM,-0.1655,-0.2653,-0.0489,beats null
+abs,ButFuco,PCR,null_GSM,-0.165,-0.2381,-0.0803,beats null
+abs,ButFuco,sharedW,null_GSM,-0.1211,-0.2308,0.003,tie
+abs,Allo,PCR,null_OC4,0.7131,0.6794,0.7506,worse
+abs,Allo,sharedW,null_OC4,0.2671,0.1357,0.3973,worse
+abs,Fuco,PCR,null_GSM,-0.4604,-0.5336,-0.3886,beats null
+abs,Fuco,sharedW,null_GSM,-0.4258,-0.5397,-0.3201,beats null
+abs,Perid,PCR,null_GSM,-0.3047,-0.334,-0.2781,beats null
+abs,Perid,sharedW,null_GSM,0.063,0.0326,0.0992,worse
+abs,Zea,PCR,null_OC4,0.0876,0.0572,0.1154,worse
+abs,Zea,sharedW,null_OC4,-0.1145,-0.2113,-0.0081,beats null
+abs,DVchla,PCR,null_OC4,0.212,0.1364,0.2781,worse
+abs,DVchla,sharedW,null_OC4,0.1171,-0.0332,0.2584,tie
+abs,MVchlb,PCR,null_OC4,0.3599,0.322,0.4055,worse
+abs,MVchlb,sharedW,null_OC4,0.7649,0.6594,0.8671,worse
+abs,Chlc12,PCR,null_GSM,-0.3282,-0.371,-0.2883,beats null
+abs,Chlc12,sharedW,null_GSM,-0.3342,-0.3872,-0.2827,beats null
+abs,Chlc3,PCR,null_GSM,-0.2724,-0.3316,-0.21,beats null
+abs,Chlc3,sharedW,null_GSM,-0.3061,-0.3745,-0.2259,beats null
+abs,Neo,PCR,null_OC4,0.4223,0.3878,0.4607,worse
+abs,Neo,sharedW,null_OC4,0.3486,0.2594,0.4338,worse
+abs,Viola,PCR,null_OC4,0.4149,0.3861,0.4491,worse
+abs,Viola,sharedW,null_OC4,0.4073,0.3256,0.4957,worse
+ratio,HexFuco,PCR_derived,const,-0.0087,-0.0298,0.0092,tie
+ratio,HexFuco,sharedW,const,-0.006,-0.0118,0.0001,tie
+ratio,ButFuco,PCR_derived,const,-0.0076,-0.0355,0.0199,tie
+ratio,ButFuco,sharedW,const,0.0,0.0,0.0,worse
+ratio,Allo,PCR_derived,const,0.5391,0.5243,0.5552,worse
+ratio,Allo,sharedW,const,0.1344,0.0909,0.1725,worse
+ratio,Fuco,PCR_derived,null_OC4,-0.2549,-0.3072,-0.1935,beats null
+ratio,Fuco,sharedW,null_OC4,-0.1288,-0.159,-0.0988,beats null
+ratio,Perid,PCR_derived,const,0.0531,0.0261,0.0839,worse
+ratio,Perid,sharedW,const,0.1581,0.1208,0.2089,worse
+ratio,Zea,PCR_derived,null_OC4,-0.154,-0.1849,-0.1237,beats null
+ratio,Zea,sharedW,null_OC4,-0.1704,-0.2198,-0.1197,beats null
+ratio,DVchla,PCR_derived,null_OC4,-0.0477,-0.1325,0.0266,tie
+ratio,DVchla,sharedW,null_OC4,-0.2854,-0.3625,-0.2099,beats null
+ratio,MVchlb,PCR_derived,const,0.298,0.2822,0.3174,worse
+ratio,MVchlb,sharedW,const,0.1013,0.0867,0.1163,worse
+ratio,Chlc12,PCR_derived,null_OC4,-0.1431,-0.1616,-0.1291,beats null
+ratio,Chlc12,sharedW,null_OC4,-0.0824,-0.0994,-0.0673,beats null
+ratio,Chlc3,PCR_derived,null_GSM,-0.0857,-0.118,-0.0534,beats null
+ratio,Chlc3,sharedW,null_GSM,0.0074,-0.0112,0.0241,tie
+ratio,Neo,PCR_derived,null_GSM,0.1824,0.16,0.2049,worse
+ratio,Neo,sharedW,null_GSM,0.0328,0.0039,0.0615,worse
+ratio,Viola,PCR_derived,null_GSM,0.2154,0.1991,0.2335,worse
+ratio,Viola,sharedW,null_GSM,0.0414,0.024,0.058,worse

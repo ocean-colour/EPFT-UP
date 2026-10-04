@@ -7,6 +7,15 @@ each spectrum be tied to a time. SeaBASS refuses scripted access
 (`cgi-bin/file_search.cgi` returns 403/444, and archive pages list files only
 via JavaScript), so this is a manual, logged-in browser download.
 
+> **Outcome (2026-10-03): only the HPLC files (A) are needed.** The HyperSAS
+> files turned out **not** to be the source of Kramer's 17 spectra: none
+> matches (best relative RMS 5–13%). They are not needed. The matching
+> instead uses the fact that the test positions are HPLC sample positions
+> and the test chl is the replicate-mean surface HPLC Tchla. All 17 match
+> uniquely by position (≤ 0.28 km) plus exact Tchla; see
+> `scripts/sdp/exports_na_matchups.py` and report §9.1. The files live in
+> `$OS_COLOR/SeaBASS/EXPORTS`, not the folder suggested below.
+
 > **Revision 2 (2026-10-03).** The first version told you to search for the
 > file-name pattern `exports_na_*C-OPS_CAST*`. That returns nothing, because
 > the File Search's **"Keyword Search Filters" box matches only affiliation,

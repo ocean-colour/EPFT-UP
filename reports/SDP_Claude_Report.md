@@ -1367,45 +1367,188 @@ Caveats:
   is on clean spectra). Training on noise-augmented spectra is an
   alternative to the analytic noise-aware penalty that was not tested.
 
-## 9. Hold-out test: EXPORTS North Atlantic 2021 — *Execution #9, provisional (Tchla only)*
+## 9. Hold-out test: EXPORTS North Atlantic 2021 — *Execution #9*
 
-**Status: incomplete.** The EXPORTS-NA (May 2021) HPLC pigments could not be
-obtained programmatically. SeaBASS's `file_search.cgi` refuses access (HTTP
-403/444, also with Earthdata credentials), and its archive pages list files
-only via JavaScript. The pigment and ratio parts of this test are pending.
+**Question.** A campaign that took no part in training is the cleanest test.
+How do the reproduced PCR, the Tchla nulls and the shared W of §7–§8 do on
+it, with no retraining?
 
-What *was* possible: Kramer's `Rrs_pigments` repository (pinned commit)
-ships `Kramer_rrs_testdata.mat`, which holds the 17 EXPORTS-NA spectra used
-by Kramer et al. (2024), with T, S, position and HPLC chlorophyll-a. The
-script is `scripts/sdp/exports_na_holdout.py` and the numbers are in
-`reports/figures/sdp/exports_na_summary.json`. Every model was trained on
-the 145 deposit samples, with no retraining.
+### 9.1 Data and matchups
 
-**Caveat: these spectra are not processed like the deposit.** They are not
-rounded to 10⁻⁶ and are much smoother at high spectral frequency (§3.4's
-test). One spectrum is clipped to 0 at 697–700 nm.
+- **Spectra.** The 17 EXPORTS-NA (May 2021) Rrs spectra used by Kramer et
+  al. (2024) come from `Kramer_rrs_testdata.mat` in the pinned
+  `Rrs_pigments` repository. The file holds Rrs at 400–700 nm, T, S,
+  position and HPLC chlorophyll-a, but no sample times.
+- **Pigments.** These come from SeaBASS: the UCSB/CRSEO rosette HPLC files for
+  RRS *James Cook* (JC214) and RRS *Discovery* (DY131). The user downloaded
+  them by hand (`docs/HOWTO_SeaBASS_EXPORTS_NA.md`) into
+  `$OS_COLOR/SeaBASS/EXPORTS`. Byte-identical duplicates are dropped
+  (`epft_up/sdp/seabass.py`).
+- **Matching.** `scripts/sdp/exports_na_matchups.py` treats each (ship, cast
+  time) as one sample: the shallowest bottle at ≤ 12 m, with its replicates
+  averaged. For each spectrum it keeps the candidates within 1 km whose
+  replicate-mean Tchla equals the test chl to ≤ 6×10⁻⁴. All **17/17 match
+  uniquely**:
+  - maximum distance 0.28 km;
+  - maximum |ΔTchla| 10⁻¹⁶;
+  - 13 DY131 and 4 JC214 samples, at depths of 4–9 m;
+  - all quality flags 0.
+  
+  Below-detection values become 0, as in Kramer's data. The matched table
+  and its provenance (SHA-256 of every input) are in
+  `$OS_COLOR/PANGAEA/Kramer2022/EXPORTS_NA/`.
+- **The spectra are not NASA GSFC's DY131 HyperSAS Rrs.** No HyperSAS
+  spectrum in SeaBASS matches any test spectrum: the best relative RMS is
+  5–13%. Their radiometer and processing are therefore undocumented here.
+- **Caveat: processing differs from the deposit.** The test spectra are not
+  on the 10⁻⁶ grid, they carry less high-frequency power than the deposit
+  (§3.4's test), and 4 values are ≤ 0, at 697–700 nm in one spectrum. Per
+  the user's choice they are used **as-is**, so the processing difference is
+  part of the transfer test.
+- **A narrow campaign.** Tchla spans only 0.53–1.15 mg m⁻³ (SD 0.11 dex).
+  For most pigments the within-campaign log SD is 0.08–0.27 dex. DVchla is
+  below detection in all 17 samples, and Zea is 0.005–0.07 mg m⁻³. This is
+  a diatom- and haptophyte-rich subpolar bloom (Fuco up to 0.63 mg m⁻³). A
+  single campaign mostly tests whether a model gets the **campaign-level
+  bias** right; R² over 17 points with a factor-2 range says little.
 
-| Model (Tchla, N = 17, HPLC range 0.53–1.15 mg m⁻³) | bias [dex] | RMS [dex] | log-R² |
-|---|---|---|---|
-| PCR on δRrs'' (this work, N=145) | +0.02 | 0.09 | 0.66 |
-| PCR, Kramer's original coefficients | +0.02 | 0.10 | 0.65 |
-| GSM Tchla (raw) | −0.08 | 0.15 | 0.90 |
-| null: GSM Tchla calibrated on the 145 | −0.18 | 0.19 | 0.90 |
-| null: OC4 calibrated on the 145 | −0.25 | 0.26 | 0.87 |
-| shared W (Bayesian, §8) | −0.17 | 0.25 | 0.42; 68/95% coverage 0.59/1.00, mean z +0.58 |
+### 9.2 Models and scoring
 
-On this one campaign, PCR on δRrs'' gives the best Tchla: unbiased, about
-23% RMS. That runs against the LOCO picture of §6.2, where PCR Tchla was the
-weakest. Possible reasons:
-- These spectra are smoother than the deposit, which is exactly what helps a
-  derivative model (§5.2).
-- The 17 samples sit in the mid-range where the deposit is dense.
-- With N = 17 and a factor-2 dynamic range, the R² values say little. The
-  bias and RMS are the informative numbers.
+Every model was fitted on the 145 deposit samples, and nothing was refitted
+on EXPORTS-NA. The GSM residual and δRrs'' were computed with the code and
+tables of Execution #2.
 
-The calibrated nulls and the shared W are biased low here by 0.17–0.25 dex
-(×0.56–0.68), largely a between-campaign offset of the kind §6.2 found.
+- **PCR:** this work's 100-member ensemble (§4.2) and Kramer's original
+  coefficients. For ratios, PCR's ratio is the ratio of its absolute
+  predictions, with ½·LOD zero replacement.
+- **Nulls:** log–log calibrations on GSM Tchla and on OC4 Tchla, plus the
+  constant (training-mean) log ratio. Each pigment and model pair is compared
+  with **the best null for that target on this campaign**, a generous
+  baseline.
+- **Shared W, Bayesian (§8).** It uses cross-fitted calibration and the in
+  situ noise model. The selected hyperparameters (λ_n, λ_s, rank) are:
+  - absolute targets: (0.1, 100, 3);
+  - ratio targets: (1, 100, 2).
+
+The scores are bias, RMS and centred RMS in log10 space, plus a **paired
+bootstrap** over the 17 samples (2000 draws) of ΔRMS = RMS(model) −
+RMS(best null). This bootstrap captures only within-campaign sampling.
+**It cannot capture campaign-to-campaign variation; that is exactly what
+§6.2's LOCO estimates, and one campaign is one draw from it.** The outputs
+are:
+- `reports/figures/sdp/exports_na_scores.csv`
+- `reports/figures/sdp/exports_na_vs_null.csv`
+- `reports/figures/sdp/exports_na_summary.json`
+- `scripts/sdp/exports_na_holdout.py`
+
+### 9.3 Results
+
+**Tchla** (N = 17):
+
+| Model | bias [dex] | RMS [dex] | centred RMS | log-R² |
+|---|---|---|---|---|
+| PCR on δRrs'' (this work) | +0.02 | 0.09 | 0.09 | 0.66 |
+| PCR, Kramer's coefficients | +0.02 | 0.10 | 0.09 | 0.65 |
+| GSM Tchla (raw) | −0.08 | 0.15 | 0.13 | 0.90 |
+| null: GSM calibrated on the 145 | −0.18 | 0.19 | 0.08 | 0.90 |
+| null: OC4 calibrated on the 145 | −0.25 | 0.26 | 0.06 | 0.87 |
+| shared W (Bayesian) | −0.17 | 0.25 | 0.18 | 0.42 |
+
+**Absolute pigments, RMS [dex]**, with the ΔRMS verdict against the best
+null:
+
+| Pigment | PCR | PCR (Kramer) | best null | shared W | PCR vs null | shared W vs null |
+|---|---|---|---|---|---|---|
+| Fuco | **0.18** | 0.18 | 0.64 | 0.21 | beats | beats |
+| Chlc12 | 0.13 | 0.13 | 0.46 | **0.12** | beats | beats |
+| Chlc3 | 0.21 | 0.19 | 0.49 | **0.18** | beats | beats |
+| HexFuco | **0.29** | 0.28 | 0.48 | 0.31 | beats | beats |
+| ButFuco | **0.22** | 0.22 | 0.39 | 0.27 | beats | tie |
+| Perid | **0.47** | 0.46 | 0.77 | 0.84 | beats | worse |
+| Zea | 0.59 | 0.56 | 0.51 | **0.39** | worse | beats |
+| DVchla (all < LOD) | 0.92 | 0.94 | **0.71** | 0.83 | worse | tie |
+| MVchlb | 0.65 | 0.67 | **0.29** | 1.06 | worse | worse |
+| Allo | 1.10 | 1.10 | **0.38** | 0.65 | worse | worse |
+| Neo | 0.55 | 0.56 | **0.13** | 0.48 | worse | worse |
+| Viola | 0.74 | 0.74 | **0.32** | 0.73 | worse | worse |
+
+**Log pigment:Tchla ratios, RMS [dex]:**
+
+| Ratio | PCR-derived | best null | shared W | PCR vs null | shared W vs null |
+|---|---|---|---|---|---|
+| Fuco | **0.16** | 0.42 | 0.29 | beats | beats |
+| Chlc12 | **0.13** | 0.27 | 0.19 | beats | beats |
+| Chlc3 | **0.21** | 0.30 | 0.30 | beats | tie |
+| Zea | 0.59 | 0.75 | **0.57** | beats | beats |
+| DVchla (all < LOD) | 0.91 | 0.96 | **0.68** | tie | beats |
+| HexFuco | 0.27 | 0.28 (const) | 0.27 | tie | tie |
+| ButFuco | 0.20 | 0.21 (const) | 0.21 | tie | ≡ const |
+| Perid | 0.49 | **0.44** (const) | 0.59 | worse | worse |
+| MVchlb | 0.63 | **0.33** (const) | 0.43 | worse | worse |
+| Allo | 1.07 | **0.53** (const) | 0.67 | worse | worse |
+| Neo | 0.53 | **0.35** | 0.38 | worse | worse |
+| Viola | 0.72 | **0.50** | 0.54 | worse | worse |
 
 ![EXPORTS-NA Tchla](figures/sdp/exports_na_tchla.png)
+
+![EXPORTS-NA ratios](figures/sdp/exports_na_ratios.png)
+
+**Interval calibration (shared W):**
+
+| Kind | 68% coverage | 95% coverage | SD(z) | CRPS |
+|---|---|---|---|---|
+| absolute | 0.76 | 0.90 | 1.36 | 0.042 mg m⁻³ |
+| ratio | 0.28 | 0.89 | 1.41 | 0.28 dex |
+
+The pooled figures hide two failure modes. Perid's intervals miss almost
+everywhere (absolute 68/95% coverage of 0.00/0.06). The intervals for the
+trace pigments (Allo, MVchlb, Neo, Viola, DVchla in absolute terms) are far
+too wide (SD(z) 0.07–0.21). The ratio intervals under-cover at 68% because
+the errors are dominated by **a shared campaign bias, which a per-sample
+predictive SD cannot represent**.
+
+### 9.4 Reading
+
+1. **The derivative model transfers well for the diatom and haptophyte
+   pigments on this campaign.**
+   - For Fuco, Chlc1+2, Chlc3, HexFuco and ButFuco (absolute) and the Fuco,
+     Chlc12 and Chlc3 ratios, PCR's ΔRMS against the best null is negative
+     with a 95% CI that excludes zero.
+   - The gain is almost entirely **bias**. The nulls under-predict Fuco by
+     0.6 dex, because this bloom carries more Fuco per Tchla than the
+     145-sample relationship. PCR's Fuco bias is −0.02 dex.
+   - Within the campaign the nulls track the Tchla co-variation better:
+     absolute Fuco log-R² is 0.86 for OC4 against 0.59 for PCR. So PCR gets
+     the level right, not the sample-to-sample pattern.
+   - Kramer's original coefficients and our reproduction agree to ≤ 0.03 dex
+     everywhere, which confirms §4.2's reproduction on independent data.
+2. **It fails, by +0.5 to +1.1 dex, for the trace pigments.** These are
+   Allo, MVchlb, Neo, Viola, DVchla and Zea (absolute), whose true values
+   here are 10⁻³–10⁻² mg m⁻³. The ensemble's floor and the training set's
+   cyanobacteria and green-algae examples push them far above truth. The
+   Tchla nulls do much better simply by scaling with chlorophyll.
+3. **The shared W sits between the two.**
+   - It beats the null on the same diatom and haptophyte pigments as PCR,
+     plus absolute Zea and the DVchla ratio, and it is never as badly off as
+     PCR on the trace pigments.
+   - It gives up PCR's Tchla accuracy (−0.17 dex).
+   - Under one campaign's bias its intervals are honest at 95% (0.89–0.90)
+     but not at 68%.
+4. **How this fits §6.2 (LOCO).** LOCO found PCR losing to the null for most
+   pigments, averaged over 8 held-out campaigns. Here it wins on 7 of 13
+   absolute targets. Both can be true: one campaign is one draw from a wide
+   between-campaign distribution, and EXPORTS-NA is a favourable one:
+   - mid-range Tchla, where the deposit is dense;
+   - smoother spectra than the deposit, which is what a derivative needs
+     (§5.2);
+   - a bloom whose pigment ratios differ from the training mean in exactly
+     the direction the spectral shape encodes.
+   
+   The paired bootstrap's CIs are narrow because they ignore that
+   between-campaign spread. **Take "beats null" here as "consistent with
+   real skill on diatom pigments", not as a general result.**
+5. **No contradiction with Kramer et al. (2024).** They also report useful
+   EXPORTS-NA retrievals for the dominant accessory pigments. We find
+   nothing beyond the quoted uncertainty that needs stopping for.
 
 ## 10. Conclusions and recommendations — *Execution #10*
