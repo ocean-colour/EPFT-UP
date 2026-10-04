@@ -91,6 +91,9 @@ def extract_paper_figs():
             pix = fitz.Pixmap(fitz.csRGB, pix)
         dest = PFIG / f'{key}.png'
         pix.save(dest)
+        im = Image.open(dest).convert('RGB')
+        im.thumbnail((2400, 2400))  # plenty for a 13.3 in slide; keeps the deck small
+        im.save(dest)
         out[key] = {'path': dest, 'cite': cite, 'pdf': pdf, 'page': page,
                     'pdf_sha256': sha256(PAPERS / pdf)}
     return out
@@ -375,7 +378,7 @@ def build(pf, charts):
         '- skill under **leave-one-campaign-out** (LOCO), not only random splits',
         '**Then:** maths of the derivative, alternatives, Bayesian uncertainty, '
         'PACE-like noise, an independent campaign (EXPORTS-NA 2021)',
-        'Every number traces to a script (13 scripts, 100 tests)'])
+        'Every number traces to a script in scripts/sdp/ (100 unit tests)'])
 
     # --- REPRODUCTION
     d.fig_text('Reproduction 1: the GSM residual',

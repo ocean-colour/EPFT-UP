@@ -1,6 +1,6 @@
 {
  "script": "scripts/sdp/make_slides.py",
- "git_head": "ef050bd10af2dba606a3ea40bc6c67242693d55b",
+ "git_head": "a006dac151c191e6c5e510e95ff96e875b6bff0a",
  "n_slides": 27,
  "min_font_pt": 20,
  "paper_figures": {
@@ -111,7 +111,7 @@
  ],
  "output": {
   "file": "reports/slides/SDP_Claude_Slides.pptx",
-  "sha256": "2b5ca76fedd7cd9b1c684edf7fb81fb6a6bb574c0b06460c6c3e2326ad49c86a"
+  "sha256": "504c435bbed7db98e0aa37a4ce356d8876d6309e7b3ea877db2cd0047d99ec1f"
  },
- "run_utc": "2026-10-04T14:59:53+00:00"
+ "run_utc": "2026-10-04T15:00:36+00:00"
 }

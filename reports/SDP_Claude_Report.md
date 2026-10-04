@@ -1952,6 +1952,7 @@ Run the scripts in this order, each with `conda run -n ocean14 python …`:
 | 11 | `scripts/sdp/exports_na_matchups.py` (needs the manual SeaBASS download, `docs/HOWTO_SeaBASS_EXPORTS_NA.md`) | §9 |
 | 12 | `scripts/sdp/exports_na_holdout.py` | §9 |
 | 13 | `scripts/sdp/report_provenance.py` | all |
+| 14 | `scripts/sdp/make_slides.py` (slide deck `reports/slides/SDP_Claude_Slides.pptx`) | all |
 
 The last step writes `reports/figures/sdp/report_manifest.json`. It maps
 each section to its scripts and outputs, with SHA-256s, and verifies:
