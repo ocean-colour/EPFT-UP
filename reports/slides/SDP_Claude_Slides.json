@@ -1,0 +1,117 @@
+{
+ "script": "scripts/sdp/make_slides.py",
+ "git_head": "ef050bd10af2dba606a3ea40bc6c67242693d55b",
+ "n_slides": 27,
+ "min_font_pt": 20,
+ "paper_figures": {
+  "k22_fig1": {
+   "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/paper_figs/k22_fig1.png",
+   "cite": "Kramer et al. 2022, Fig. 1",
+   "pdf": "kramer2022.pdf",
+   "page": "4",
+   "pdf_sha256": "22f6d9fb4d5a89f70b26bb4d82d9aeeee46d80ecdce159429f6fd80ac62cc883"
+  },
+  "k22_fig2": {
+   "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/paper_figs/k22_fig2.png",
+   "cite": "Kramer et al. 2022, Fig. 2",
+   "pdf": "kramer2022.pdf",
+   "page": "4",
+   "pdf_sha256": "22f6d9fb4d5a89f70b26bb4d82d9aeeee46d80ecdce159429f6fd80ac62cc883"
+  },
+  "k22_fig3": {
+   "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/paper_figs/k22_fig3.png",
+   "cite": "Kramer et al. 2022, Fig. 3",
+   "pdf": "kramer2022.pdf",
+   "page": "5",
+   "pdf_sha256": "22f6d9fb4d5a89f70b26bb4d82d9aeeee46d80ecdce159429f6fd80ac62cc883"
+  },
+  "k22_fig5": {
+   "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/paper_figs/k22_fig5.png",
+   "cite": "Kramer et al. 2022, Fig. 5",
+   "pdf": "kramer2022.pdf",
+   "page": "7",
+   "pdf_sha256": "22f6d9fb4d5a89f70b26bb4d82d9aeeee46d80ecdce159429f6fd80ac62cc883"
+  },
+  "k22_fig6": {
+   "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/paper_figs/k22_fig6.png",
+   "cite": "Kramer et al. 2022, Fig. 6",
+   "pdf": "kramer2022.pdf",
+   "page": "9",
+   "pdf_sha256": "22f6d9fb4d5a89f70b26bb4d82d9aeeee46d80ecdce159429f6fd80ac62cc883"
+  },
+  "k24_fig1": {
+   "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/paper_figs/k24_fig1.png",
+   "cite": "Kramer et al. 2024, Fig. 1",
+   "pdf": "Kramer_etal_2024.pdf",
+   "page": "4",
+   "pdf_sha256": "9fd75fce1b02057e8905db4d128f090ab86c6f9bb7ecebf39baab538cea85d41"
+  },
+  "k24_fig3": {
+   "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/paper_figs/k24_fig3.png",
+   "cite": "Kramer et al. 2024, Fig. 3",
+   "pdf": "Kramer_etal_2024.pdf",
+   "page": "6",
+   "pdf_sha256": "9fd75fce1b02057e8905db4d128f090ab86c6f9bb7ecebf39baab538cea85d41"
+  },
+  "ks19_dendro": {
+   "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/paper_figs/ks19_dendro.png",
+   "cite": "Kramer & Siegel 2019, Fig. 3",
+   "pdf": "Kramer2019.pdf",
+   "page": "9",
+   "pdf_sha256": "634b32c0db35cb0f06b5775b638af3b82d4187187d677aa6df77704a6f26b30c"
+  },
+  "ks19_eof": {
+   "path": "/Users/xavier/Projects/Oceanography/data/Color/PANGAEA/Kramer2022/paper_figs/ks19_eof.png",
+   "cite": "Kramer & Siegel 2019, Fig. 4",
+   "pdf": "Kramer2019.pdf",
+   "page": "10",
+   "pdf_sha256": "634b32c0db35cb0f06b5775b638af3b82d4187187d677aa6df77704a6f26b30c"
+  }
+ },
+ "charts": {
+  "table2": {
+   "path": "reports/slides/figures/slide_table2.png",
+   "sha256": "a732a313b2d5c7a96aad4e9b3cb64bea7d5cd2e6f5beb5243e6744c9bac4871e"
+  },
+  "spaces": {
+   "path": "reports/slides/figures/slide_spaces.png",
+   "sha256": "482259751444a309281493c9b605494d3a13925564860354554e052d93d7241c"
+  },
+  "models": {
+   "path": "reports/slides/figures/slide_models.png",
+   "sha256": "3ec73032ae4badd3cfb3d31bdbb3a8b5a12f781de5f41c4ed10ca5b319365a2f"
+  }
+ },
+ "pipeline_figures_available": [
+  "reports/figures/sdp/diag_loco_tchla.png",
+  "reports/figures/sdp/diag_skill_absolute.png",
+  "reports/figures/sdp/diag_skill_ratio.png",
+  "reports/figures/sdp/exports_na_ratios.png",
+  "reports/figures/sdp/exports_na_tchla.png",
+  "reports/figures/sdp/gsm_sensitivity.png",
+  "reports/figures/sdp/kramer_fig1_map.png",
+  "reports/figures/sdp/kramer_fig2a_rrs.png",
+  "reports/figures/sdp/kramer_fig2bc_model_residual.png",
+  "reports/figures/sdp/kramer_fig3_dendrograms.png",
+  "reports/figures/sdp/kramer_fig4_chl.png",
+  "reports/figures/sdp/kramer_fig6_pigments.png",
+  "reports/figures/sdp/maths_dof.png",
+  "reports/figures/sdp/maths_effective_weights.png",
+  "reports/figures/sdp/maths_filter_factors.png",
+  "reports/figures/sdp/maths_prior.png",
+  "reports/figures/sdp/maths_snr.png",
+  "reports/figures/sdp/pcr_coefficients.png",
+  "reports/figures/sdp/source_spaces_heatmap.png",
+  "reports/figures/sdp/uncertainty_coverage.png",
+  "reports/figures/sdp/uncertainty_examples.png",
+  "reports/figures/sdp/uncertainty_pit.png",
+  "reports/figures/sdp/uncertainty_skill.png",
+  "reports/figures/sdp/weighting_latent_spectra.png",
+  "reports/figures/sdp/weighting_target_spectra.png"
+ ],
+ "output": {
+  "file": "reports/slides/SDP_Claude_Slides.pptx",
+  "sha256": "2b5ca76fedd7cd9b1c684edf7fb81fb6a6bb574c0b06460c6c3e2326ad49c86a"
+ },
+ "run_utc": "2026-10-04T14:59:53+00:00"
+}

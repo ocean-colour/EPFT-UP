@@ -28,6 +28,9 @@ cartopy
 # credentials in ~/.netrc; code paths that use it are skip-guarded.
 earthaccess
 
+# Slide decks (SDP track, scripts/sdp/make_slides.py)
+python-pptx
+
 # Sibling packages (not on PyPI) — uncomment as they are needed.
 # Ocean-colour utilities shared with IOPtics:
 # git+https://github.com/ocean-colour/ocpy

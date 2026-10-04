@@ -28,7 +28,9 @@ setup_keywords['install_requires'] = [
     # Map projections (SDP figures)
     'cartopy',
     # NASA Earthdata access (MOANA track; skip-guarded)
-    'earthaccess']
+    'earthaccess',
+    # Slide decks (scripts/sdp/make_slides.py)
+    'python-pptx']
 # Sibling packages (e.g. ocpy) are not on PyPI; install them from
 # source / GitHub via requirements.txt (git+https://github.com/ocean-colour/...).
 setup_keywords['zip_safe'] = False
