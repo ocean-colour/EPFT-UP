@@ -1,9 +1,11 @@
 # The 2nd-derivative (SDP) approach to phytoplankton pigments from hyperspectral Rrs
 
 **Author:** Claude (Opus 5.5), for J. Xavier Prochaska
-**Status:** in progress. §3–§8 (data, reproduction, maths/statistics, diagnostics, learned weighting, uncertainty) are written; the other sections are outlines
-that later Execution prompts in `claude_prompts/2nd_derivative_prompts.md` fill
-in.
+**Status:** complete (Execution #1–#10 of
+`claude_prompts/2nd_derivative_prompts.md`, 2026-10-02 to 2026-10-04).
+**Reproducibility:** every number traces to a script in `scripts/sdp/` and
+its output in `reports/figures/sdp/`. §10.4 gives the run order, and
+`scripts/sdp/report_provenance.py` re-checks the headline numbers.
 **Scope:** a reproduction and critique of Kramer, Siegel, Maritorena & Catlett
 (2022, *RSE* **270**, 112879), "SDP", and the alternatives to it, written for any
 ocean-color scientist.
@@ -12,14 +14,191 @@ ocean-color scientist.
 
 ## 1. Introduction
 
-*(Execution #10.)* Motivation; what SDP claims; what this report tests.
+**Why this matters.** Phytoplankton functional types (PFTs) are the
+community-level quantity that biogeochemical and ecosystem models need and
+that multispectral ocean color cannot deliver directly. Hyperspectral
+radiometry, now global with PACE OCI, promises more: absorption features of
+accessory pigments are 10–40 nm wide and should, in principle, leave
+recognisable fingerprints in remote-sensing reflectance (Rrs).
+
+**What SDP claims.** The Spectral Derivative Pigments (SDP) approach of
+Kramer, Siegel, Maritorena & Catlett (2022) works in four steps:
+1. It fits a GSM-like bio-optical model to each hyperspectral Rrs spectrum.
+2. It takes the residual δRrs = Rrs − Rrs_mod.
+3. It differentiates that residual twice.
+4. It regresses 13 HPLC pigment concentrations on δRrs'' by principal
+   component regression (PCR).
+
+On 145 global matchups the paper reports validation R² of 0.37–0.72. It also
+reports that 1–5 nm resolution suffices and that the five HPLC pigment
+groups re-emerge from the modelled pigments. The method has a public MATLAB
+implementation, a Python port and a NASA notebook for OCI (`oci_sdp`), so it
+is on its way to being used on satellite data.
+
+**What this report tests.** Six questions, in order:
+1. Can the paper be reproduced from its public data and code? (§3–§4)
+2. What does the second derivative do, mathematically and statistically?
+   (§5)
+3. Is there skill beyond what a chlorophyll retrieval alone gives, and does
+   that skill transfer to a campaign the model has not seen? (§6)
+4. Can a learned, noise-aware wavelength weighting do better? (§7)
+5. How large are the per-retrieval uncertainties, and are they calibrated?
+   (§8)
+6. How does everything fare on an independent campaign, EXPORTS North
+   Atlantic 2021? (§9)
+
+Throughout, every model is judged on two tests together:
+- skill above a **two-parameter Tchla-only null model** (each pigment as a
+  power law of retrieved chlorophyll);
+- skill under **leave-one-campaign-out (LOCO)** validation, not just the
+  paper's random splits.
+
+**Findings in brief.**
+1. **The paper reproduces.**
+   - Table 2: all 13 R² values are within one quoted SD.
+   - Fig. 4: GSM Tchla slope 0.961 and R² 0.864, without one degenerate fit.
+   - Kramer's own trained coefficients give the same predictions on our
+     δRrs''.
+   - One open discrepancy: the Fig. 6 slopes.
+2. **The second derivative adds no information to a linear model.**
+   - It is a fixed linear operator; what it does change is the implied prior
+     on the weights.
+   - With z-scoring and PCR, that prior is anti-smooth: 99.7% of the
+     effective weight power sits at periods < 10 nm.
+   - Under realistic band-to-band noise it amplifies prediction noise by more
+     than 10×.
+3. **Most of SDP's skill is chlorophyll.**
+   - In the paper's own random splits, a power law in the GSM-retrieved Tchla
+     beats SDP for 11 of 13 pigments.
+   - Under LOCO, SDP's Tchla R² falls from 0.72 to 0.44, against the null's
+     0.66.
+   - No ratio beats the null significantly out of campaign.
+4. **The derivative is the harmful step.**
+   - Every finite-difference predictor space has the worst LOCO skill: 0.19
+     for absolute pigments, 0.17 for ratios.
+   - The same information without the derivative does about twice as well
+     (δRrs 0.38; El Hourany's spline residual M1 0.40).
+5. **A shared, low-rank, smoothness- and noise-penalized weighting on δRrs
+   transfers.**
+   - It brings LOCO absolute skill to the null's level (0.39).
+   - It beats the null out of campaign for the Fuco, Zea, DVchla and Chlc1+2
+     ratios to Tchla, where PCR beats it for none.
+   - Only about **two** compositional axes transfer between campaigns: a
+     diatom ↔ cyanobacteria axis and a green-algae/haptophyte axis.
+6. **The Bayesian version gives calibrated out-of-campaign intervals**
+   (68/95% coverage 0.71/0.94).
+   - Under PACE-like noise, SDP's PCR loses all skill.
+   - The noise-aware shared W keeps a modest edge over the null (Fuco:Tchla
+     R² 0.36 vs 0.27).
+   - 5 nm sampling costs nothing.
+7. **On EXPORTS-NA 2021 the picture is mixed.**
+   - SDP gets the bloom's diatom and haptophyte pigment *levels* right, where
+     the Tchla nulls are biased low by up to 0.6 dex.
+   - It over-predicts the trace pigments by 0.5–1.1 dex.
+   - One campaign is one draw from the wide between-campaign spread that
+     LOCO measures.
+
+§10 states the conclusions, the limitations and what applying any of this
+to PACE would require.
 
 ## 2. Literature
 
-*(Execution #10; the reading notes are in the prompt doc's Logs, 2026-09-28/29.)*
-Catlett & Siegel 2018; Kramer & Siegel 2019; Kramer, Siegel & Graff 2020;
-Kramer et al. 2022; Kramer et al. 2024; El Hourany & Kramer 2026; and Lange
-et al. 2020 as a brief non-derivative comparison.
+The 2nd-derivative work forms one lineage from UCSB (Siegel group). Read
+together, its papers establish three facts: what HPLC pigment data can
+resolve, how absorption derivatives map onto pigments, and how that mapping
+was moved to reflectance. Numbers in this section are quoted from the papers,
+not computed here.
+
+| Paper | Data | Optical input | Method | Target | Validation |
+|---|---|---|---|---|---|
+| Catlett & Siegel 2018 (JGR Oceans) | Plumes & Blooms, Santa Barbara Channel, n = 491 | a_ph(λ), 350–700 nm, 1 nm | 15 nm Hamming smoothing; 1st + 2nd derivatives; PCR on z-scored derivatives | pigments, pigment EOF amplitudes, community fractions | 500 random permutations |
+| Kramer & Siegel 2019 (JGR Oceans) | 4,480 global surface HPLC samples | none | clustering + EOFs of 17 pigment:Tchla ratios | pigment communities | — |
+| Kramer, Siegel & Graff 2020 (Front. Mar. Sci.) | NAAMES 1–4 HPLC, n = 229 | none | clustering, EOFs, network community detection (WGCNA) | 5 groups | — |
+| **Kramer et al. 2022 (RSE 270, 112879)** | 145 global HPLC + hyperspectral Rrs matchups (178 before visual QC), 8 campaigns | Rrs, 400–700 nm, 1 nm, 5 nm moving mean | GSM residual δRrs → δRrs'' → PCR | 13 pigments | 100 random 75/25 splits |
+| Kramer et al. 2024 (Opt. Express 32, 34482) | the 145 + 17 EXPORTS-NA 2021 (N = 162) | δRrs | network community detection on δRrs and on pigment ratios | 3 optical vs 3 pigment communities | agreement of assignments |
+| El Hourany & Kramer 2026 (SSRN preprint) | 237 HPLC–Rrs stations, 2.5 nm | Rrs, M1 spline residual, M2 GSM residual, M3 Savitzky–Golay 2nd derivative | SOM classes of pigment ratios → Random Forest | community classes (K = 2…50) | temporal blocking |
+| Lange et al. 2020 (Opt. Express) | AMT24 | per-spectrum standardized Rrs + SST | PCR | Prochlorococcus, Synechococcus, picoeukaryote counts | 80/20 bootstraps |
+
+**Catlett & Siegel (2018)** set up the machinery that SDP inherits:
+- Smoothed absorption spectra, then first and second derivatives by finite
+  differences.
+- PCR on z-scored derivative bands, with coefficients back-transformed to
+  wavelength weights.
+- Random permutation validation.
+
+Their key argument is that success comes from pigment *covariance*:
+communities of co-occurring pigments leave composite absorption signatures.
+So pigments that never vary independently can still be "retrieved". In the
+Santa Barbara Channel, EOF modes 1, 2 and 4 of the pigment table reached
+R² > 0.8. Fractional community contributions were retrieved less well than
+concentrations or EOF amplitudes. Their code (`rrsModelTrain.m`, edited by
+Kramer) is the PCR used in 2022.
+
+**Kramer & Siegel (2019) and Kramer, Siegel & Graff (2020)** concern
+pigments alone, and set the ceiling for any optical method.
+- Globally, HPLC pigment ratios resolve **four** robust groups; diatoms and
+  dinoflagellates merge. At individual time-series sites, four to six
+  groups appear.
+- In the North Atlantic (NAAMES), five groups emerge: diatoms,
+  dinoflagellates, haptophytes, green algae and cyanobacteria.
+  Dinoflagellates separate only on a minor EOF plane.
+- The leading global EOF contrasts diatoms/dinoflagellates with
+  picophytoplankton (24% of variance). §7.3 finds that this is the axis
+  optics recover most transferably.
+
+**Kramer et al. (2022)** moved the derivative approach from absorption to
+reflectance.
+- A GSM-like model removes the "average" bio-optical signal. Its inputs are
+  the Gordon quadratic, a_ph = A(λ)·Tchla^B(λ) from NOMAD, CDOM/NAP and
+  particle-backscatter shapes from band ratios, and a three-parameter fit.
+- The residual δRrs is differentiated twice and fed to PCR.
+- The results: validation R² 0.37–0.72 for 13 pigments (Table 2); 1–5 nm
+  sampling adequate and 10 nm degraded; and the five pigment groups
+  recovered by clustering modelled pigment ratios (Fig. 3).
+- The data are on PANGAEA (doi:10.1594/PANGAEA.937536).
+- The paper does not compare against a chlorophyll-only baseline, nor
+  validate across campaigns. Those two gaps are the core of §6.
+
+**Kramer et al. (2024)** use δRrs itself, not pigment retrievals.
+- Network community detection on the 162 δRrs spectra yields three optical
+  communities. The same method on pigment ratios yields three pigment
+  communities. 74% of samples fall in matching communities, and the result
+  is unchanged at 5 nm.
+- The 17 EXPORTS-NA samples were added for this clustering. No pigment
+  retrieval is reported for them, which makes them a clean hold-out for §9.
+
+**El Hourany & Kramer (2026)** generalise the residual idea and compare
+four "source spaces" for classifying pigment-ratio communities with a
+Random Forest. The spaces are raw Rrs, an empirical spline residual (M1),
+the GSM residual (M2, SDP's δRrs) and a Savitzky–Golay second derivative
+(M3).
+- At K = 12 classes, balanced accuracy is ≈ 0.67 for M1–M3 against 0.42 for
+  raw Rrs.
+- The transformed spaces degrade faster under MODIS-like noise.
+  Concatenating raw Rrs stabilises them.
+- There is an exploratory PACE L3 application.
+
+That noise sensitivity is the empirical face of §5.2. §6.3 compares the same
+source spaces under LOCO.
+
+**Lange et al. (2020)** are a non-derivative comparison point.
+- PCR on Rrs standardized per spectrum, plus SST, predicts picophytoplankton
+  cell counts along an Atlantic transect.
+- Per-spectrum standardization removes magnitude, much as the GSM residual
+  removes the envelope, without differentiating.
+- Their QC rejects spectra with |Rrs''| > 2×10⁻⁴ sr⁻¹ nm⁻² at 610–660 nm.
+  §3.5 shows that cut is inert on the already-smoothed PANGAEA deposit.
+- Our "Rrs" predictor space in §6.3 is close to Lange's model without SST.
+  It transfers better than any derivative space.
+
+**Where this report fits.** The lineage moved from absorption to
+reflectance and from regression to classification. Its validation stayed
+within-dataset and random-split, and its baseline was never chlorophyll.
+This report adds:
+- those two baselines (a Tchla null and LOCO);
+- the linear-algebra view of the derivative;
+- noise-propagated uncertainties;
+- an independent campaign.
 
 ## 3. Data
 
@@ -266,8 +445,9 @@ Within a fold the PC scores are orthogonal and centred, so the OLS
 coefficients of the first l PCs do not depend on l. All 30 candidate models
 therefore come from one fit; a unit test checks this against explicit
 refits. The script is `scripts/sdp/reproduce_pcr.py`; the numbers are in
-`reports/figures/sdp/pcr_summary.json` and `kramer_table2.csv`, and the
-model ensembles are in `$OS_COLOR/PANGAEA/Kramer2022/products/pcr_rrsD2_1nm.npz`.
+`reports/figures/sdp/pcr_summary.json` (the N = 145 values below are its
+`table2.n145`; `kramer_table2.csv` holds the N = 144 run), and the model
+ensembles are in `$OS_COLOR/PANGAEA/Kramer2022/products/pcr_rrsD2_1nm.npz`.
 MATLAB's random splits cannot be reproduced across languages, so agreement
 is statistical (seed 1).
 
@@ -1547,8 +1727,237 @@ predictive SD cannot represent**.
    The paired bootstrap's CIs are narrow because they ignore that
    between-campaign spread. **Take "beats null" here as "consistent with
    real skill on diatom pigments", not as a general result.**
-5. **No contradiction with Kramer et al. (2024).** They also report useful
-   EXPORTS-NA retrievals for the dominant accessory pigments. We find
-   nothing beyond the quoted uncertainty that needs stopping for.
+5. **Nothing here contradicts the papers.** Kramer et al. (2024) used
+   these 17 samples only for community detection and report no pigment
+   retrievals for them. Kramer 2022 never applied SDP to EXPORTS-NA. So no
+   published number is contradicted. One statement is questionable:
+   Kramer et al. (2024) describe the EXPORTS-NA processing as "consistent
+   with" the 145, but the spectra are demonstrably different (§9.1).
 
-## 10. Conclusions and recommendations — *Execution #10*
+## 10. Conclusions and recommendations
+
+### 10.1 Conclusions
+
+1. **SDP is reproducible from public material** (§3–§4).
+   - The PANGAEA deposit matches Table 1 exactly.
+   - The GSM-like residual matches Fig. 4 once one degenerate fit is
+     excluded.
+   - The PCR matches Table 2 within the quoted spread for all 13 pigments.
+   - Kramer's own trained coefficients, applied to our δRrs'', reproduce our
+     predictions on the deposit and, to within 0.03 dex, on EXPORTS-NA.
+   - Several details of the paper's text are wrong or under-specified, and
+     the code resolves them: the S_dg sign, the η band ratio, what
+     "normalized MAD" is, and how the number of PCs is chosen.
+   - The visual QC (178 → 145) cannot be reproduced, because the rejected
+     spectra are not public.
+2. **The second derivative is a prior, not information** (§5).
+   - For any linear model, δRrs'' predictors are equivalent to an effective
+     weight spectrum Dᵀw on δRrs.
+   - Combined with z-scoring and PC truncation, that prior favours rough,
+     alternating weights, and puts the largest weights in the red, where the
+     signal is weakest.
+   - It buys invariance to offsets and tilts. It costs a ≥10× amplification
+     of band-to-band noise relative to weights learned on δRrs.
+3. **The published skill is mostly chlorophyll and within-campaign
+   similarity** (§6).
+   - A two-parameter power law in the GSM Tchla that SDP itself computes
+     matches or beats SDP for 11 of 13 pigments.
+   - Holding out a campaign halves SDP's R².
+   - The pigment ratios implied by SDP's absolute products carry almost no
+     compositional information (R² 0.02–0.09 except Zea and DVchla).
+4. **Composition is retrievable, but only about two dimensions of it
+   transfer** (§6.3, §7).
+   - What does transfer comes from three changes: removing the broad
+     envelope without differentiating, a smoothness- and noise-penalized
+     weighting shared across pigments, and hyperparameters chosen by
+     leave-campaign-out.
+   - The Fuco, Zea, DVchla and Chlc1+2 ratios to Tchla then beat the null
+     out of campaign (LOCO R² 0.43–0.55 vs 0.27–0.35).
+   - Haptophyte and green-algal ratios do not.
+   - The transferable latent axes are the leading global pigment EOFs of
+     Kramer & Siegel (2019), not the full 4–5 groups.
+   - The weight sits at 10–40 nm scales, with substantial weight at
+     600–700 nm, where chlorophyll's red band, fluorescence and possibly
+     phycobilins live.
+5. **The GSM residual itself is not essential** (§6.3).
+   - The NOMAD a_ph features in its baseline barely enter δRrs.
+   - An empirical spline residual (M1) does as well.
+   - δRrs'' also carries an artifact of the published pipeline: smoothed
+     data minus an unsmoothed a_w model.
+6. **Calibrated uncertainties are achievable under LOCO** (§8), with
+   cross-fitted calibration plus Monte Carlo input-noise propagation.
+   - At ocpy's PACE OCI noise level, SDP's PCR has no skill.
+   - The noise-aware shared W explains about a third of the out-of-campaign
+     variance in the four transferable ratios, with ±0.33–0.50 dex (1σ)
+     intervals.
+   - 5 nm sampling loses nothing.
+7. **The independent campaign is consistent with, not a refutation of, the
+   above** (§9).
+   - On EXPORTS-NA, SDP got the bloom's Fuco, Chlc and HexFuco levels right
+     where the Tchla nulls were biased low.
+   - It badly over-predicted the trace pigments.
+   - The shared W's 95% intervals held (0.89–0.90 coverage), but its 68%
+     intervals did not cover the campaign-level bias (0.28 for ratios).
+
+**Bottom line.** Hyperspectral Rrs does carry phytoplankton composition
+beyond chlorophyll. That signal is a few smooth, 10–40 nm-scale
+dimensions, and the second derivative is a poor way to extract it.
+
+Claims of pigment skill should always be stated against:
+- a Tchla-only baseline;
+- a held-out campaign.
+
+Methods for satellite use should be:
+- trained on the target (log ratios), not on concentrations;
+- regularized toward smooth, noise-aware weights;
+- reported with intervals that include a between-campaign term.
+
+### 10.2 Limitations
+
+- **Small, heterogeneous training set.** There are 145 samples in 8
+  campaigns, one with only 4 samples. LOCO has 8 folds, so its confidence
+  intervals are wide, and the "beats null" counts across 25 targets and
+  many models are not corrected for multiple comparisons.
+- **The deposit's noise is unknown.** The spectra are pre-smoothed and
+  rounded to 10⁻⁶ sr⁻¹. Their effective band-to-band noise (≈ 0.1%; §5.2)
+  is far below any field or satellite instrument. Our noise scenarios are
+  stand-ins: IOPtics' 2% model, and ocpy's OCI σ from one early granule
+  with an assumed white/correlated split.
+- **Inherited choices.** These include:
+  - the visual QC;
+  - below-detection values set to zero, plus a LOD *proxy* (no method LODs
+    in the deposit);
+  - ½·LOD zero replacement for ratios.
+
+  Neo's apparent skill is an artifact of the last.
+- **Model class.** Only linear models (PCR, ridge, PLS, reduced-rank and its
+  Bayesian layer) were tested. The Random Forest classification of El
+  Hourany & Kramer (2026), the community detection of Kramer et al. (2024),
+  and non-linear regressors (GPs, boosted trees) were not reproduced or
+  tested.
+- **Gaussian intervals** fit log ratios well and absolute concentrations
+  poorly (heavy tails, skew). A censored log-normal likelihood is deferred
+  (Tom Jordan's work).
+- **Open discrepancies.**
+  - Our Fig. 6 slopes are 0.02–0.23 lower than the paper's, with R² that
+    agrees. The cause is unknown.
+  - The degenerate SABOR GSM fit probably behaved differently in MATLAB.
+  - The smoothness hyperparameter sat at the upper edge of its grid,
+    although the CV surface is flat there.
+- **The hold-out is one narrow campaign:** 17 samples, Tchla 0.53–1.15
+  mg m⁻³, DVchla undetected. Its spectra come from an undocumented
+  radiometer and processing chain, demonstrably different from the
+  deposit's.
+
+### 10.3 Recommendations
+
+**For users of SDP products (including `oci_sdp`):**
+1. Treat SDP absolute pigment concentrations as, to first order, Tchla
+   scaled by a constant. Do not derive pigment ratios or PFT fractions from
+   them (§6.1).
+2. Do not apply the published coefficients to single satellite spectra.
+   Under PACE white noise their Tchla prediction noise is 11.6× the natural
+   SD of Tchla. Since that noise falls as 1/√N, at least 135 independent
+   pixels must be averaged just to bring it down to one natural SD, and far
+   more for useful precision (§5.2). Under in-situ-like 2% noise the PCR's
+   out-of-campaign R² is already ≈ 0 (§8.3).
+3. The 5 nm-equivalent information content is what matters: OCI's ≈ 5 nm
+   resolution is not the limitation (§5.2, §8.3).
+
+**For EPFT-UP:**
+1. **Target and model.**
+   - Make log pigment:Tchla ratios the primary product, predicted by the
+     shared low-rank W on δRrs (or M1) ⊕ GSM parameters, as in §7–§8.
+   - Use a smoothness prior, a noise penalty with the *deployment*
+     instrument's covariance (the "aware" variant), and rank and
+     hyperparameters chosen by leave-campaign-out.
+   - Expect about two transferable axes, and report the latent scores
+     alongside the individual ratios.
+2. **Scorecard.** Keep `validate.Benchmark` as the standard for every new
+   model. It scores skill above the best Tchla null, under random splits and
+   LOCO together, with paired bootstrap intervals. Add an independent-campaign
+   test whenever one exists.
+3. **A between-campaign variance term.** The EXPORTS-NA result shows that
+   per-sample predictive SDs miss a shared campaign bias. Estimate a
+   campaign-level random effect from the LOCO residuals and add it to the
+   predictive variance. A hierarchical version of `BayesianSharedW` is the
+   natural next model.
+4. **Data.**
+   - Get raw (unsmoothed, unrounded) spectra with uncertainties, the 33
+     QC-rejected spectra, and the EXPORTS-NA processing details (ask Sasha
+     Kramer; also ask for a LICENSE on `Rrs_pigments`).
+   - Add El Hourany & Kramer's 237 stations and PACE-era matchups (PVST,
+     SeaBASS) to raise the number of campaigns. More campaigns, not more
+     samples per campaign, is what tightens LOCO.
+5. **Fix the pipeline inconsistency.** Apply the data's spectral smoothing
+   (or the instrument's spectral response) to a_w, A and B before forming
+   Rrs_mod (§6.3, point 4).
+6. **Concentrations.** Model absolute concentrations through a censored
+   log-normal likelihood once Tom Jordan's work is available. The
+   `replace_zeros` hook in `validate.py` is where it plugs in.
+
+**What PACE OCI application would require:**
+1. **A noise model for OCI Rrs**, split into white (band-to-band) and smooth
+   (atmospheric-correction-like) parts, with their spectral covariance.
+   - The per-pixel `Rrs_unc` distributed with OCI L2, where available, gives
+     only the diagonal.
+   - The split matters: smooth errors are benign for the shared W and fatal
+     for the GSM-Tchla null; white errors are the reverse (§8.3).
+2. **Training data processed like OCI data.**
+   - In-situ spectra convolved to OCI's band responses (≈ 5 nm FWHM,
+     2.5 nm sampling) and *not* pre-smoothed.
+   - The forward model's a_w, A and B convolved the same way.
+   - Training with noise-aware penalties (or noise augmentation) at OCI's
+     covariance.
+3. **Handling of non-compositional fine structure** that δRrs retains and
+   that varies on orbit: sun-induced chlorophyll fluorescence near 683 nm
+   (weighted by latent 1 at 675–680 nm), Raman scattering, and residual gas
+   absorption bands. The safest options are to model them or to mask the
+   affected bands, and then re-test transfer.
+4. **Validation against both baselines, on PACE-era data.**
+   - A Tchla-only null computed from the same OCI pixels (OCI's standard
+     chlor_a and a GSM fit).
+   - Campaign-held-out matchups from PACE-era HPLC.
+   - A direct comparison with NASA's SDP product, against the same baselines.
+5. **Uncertainty products**: per-pixel predictive SD with input noise
+   propagated, plus the between-campaign term above. Also report coverage
+   on held-out matchups as part of the product's validation.
+6. **Averaging guidance**: for any derivative-based product, a stated
+   minimum averaging footprint. For the shared W, the single-pixel R² at
+   OCI noise (≈ 0.3) and how it rises with √N averaging toward the
+   clean-spectrum ≈ 0.45.
+
+### 10.4 Provenance and reproducibility
+
+All code is in `epft_up/sdp/` (tests in `epft_up/tests/`, 100 passing).
+External data and the reference repositories live under
+`$OS_COLOR/PANGAEA/Kramer2022/` (and `$OS_COLOR/SeaBASS/EXPORTS/`). They are
+checksummed, pinned and never committed. Every output JSON records its
+script, its inputs' SHA-256 and the reference-repo commits.
+
+Run the scripts in this order, each with `conda run -n ocean14 python …`:
+
+| Step | Script | Report section |
+|---|---|---|
+| 1 | `scripts/sdp/fetch_kramer2022.py` | §3.1 |
+| 2 | `scripts/sdp/ingest_kramer2022.py` | §3 |
+| 3 | `scripts/sdp/fetch_woa_ts.py` | §4.1 |
+| 4 | `scripts/sdp/reproduce_gsm.py` | §4.1 |
+| 5 | `scripts/sdp/reproduce_pcr.py` | §4.2 |
+| 6 | `scripts/sdp/diagnostics_null_loco.py` | §6.1–6.2 |
+| 7 | `scripts/sdp/source_spaces.py` | §6.3 |
+| 8 | `scripts/sdp/maths_section.py` | §5 |
+| 9 | `scripts/sdp/learned_weighting.py` | §7 |
+| 10 | `scripts/sdp/uncertainty.py` | §8 |
+| 11 | `scripts/sdp/exports_na_matchups.py` (needs the manual SeaBASS download, `docs/HOWTO_SeaBASS_EXPORTS_NA.md`) | §9 |
+| 12 | `scripts/sdp/exports_na_holdout.py` | §9 |
+| 13 | `scripts/sdp/report_provenance.py` | all |
+
+The last step writes `reports/figures/sdp/report_manifest.json`. It maps
+each section to its scripts and outputs, with SHA-256s, and verifies:
+- that every referenced figure exists;
+- that every script is cited and every output is claimed by a section;
+- that the headline numbers quoted in §1 and §10 (34 of them) equal, to the
+  printed precision, the values in the outputs.
+
+Numbers in §2 are quoted from the papers.

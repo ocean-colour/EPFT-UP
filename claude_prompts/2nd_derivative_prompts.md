@@ -173,6 +173,15 @@ the quoted uncertainty and the cause isn't obvious.
     require). Every number must trace to a script in the repo.
     Use Opus 5.5. Log your work.
 
+11. **Slides.** Generate a set of slides for the report.  
+    Provide context on the what, why, how, and what we found.
+    Use Figures as often as you can.  Include ones from the 
+    Kramer papers too.
+    Avoid using fonts with a size less than 20pt.
+    Place the file in the `reports/slides/` directory and call it 
+    `SDP_Claude_Slides.pptx`.
+    Use Opus 5.5.  Log your work.
+
 ## Q&A
 
 ### Setup
@@ -1175,3 +1184,51 @@ Findings (report §9 rewritten, no longer provisional):
   smoother than the deposit, and have 4 non-positive values.
 
 - Added `epft_up/tests/test_sdp_seabass.py` (reader + de-duplication); suite: 100 passed.
+
+### 2026-10-04 (Execution #10: final report)
+
+Finished `reports/SDP_Claude_Report.md`:
+- **Header:** status set to complete.
+- **§1 Introduction:** motivation, what SDP claims, the six questions, the
+  two-test standard (Tchla null + LOCO), and the findings in brief.
+- **§2 Literature:**
+  - a summary table and a paragraph per paper: Catlett & Siegel 2018; Kramer
+    & Siegel 2019; Kramer, Siegel & Graff 2020; Kramer 2022; Kramer 2024; El
+    Hourany & Kramer 2026;
+  - Lange 2020 as a brief non-derivative comparison;
+  - where this report fits.
+- **§10:**
+  - 10.1 conclusions (7 points plus a bottom line);
+  - 10.2 limitations;
+  - 10.3 recommendations for SDP users, for EPFT-UP, and what PACE OCI
+    application would require;
+  - 10.4 provenance and run order of the 13 scripts.
+
+Corrections made while writing:
+- §4.2 said its N=145 Table 2 was in `kramer_table2.csv`. That CSV holds the
+  N=144 run; the N=145 values are `pcr_summary.json` → `table2.n145`. The
+  wording is fixed.
+- §9.4: I had written that Kramer+2024 report EXPORTS-NA pigment retrievals.
+  Rechecked the paper: they used the 17 samples only for community
+  detection, and report no retrievals. They also call the processing
+  "consistent with" the 145, which §9.1 shows is not quite so. The point is
+  rewritten.
+
+Traceability. New `scripts/sdp/report_provenance.py` writes
+`reports/figures/sdp/report_manifest.json`:
+- section → scripts → outputs, with SHA-256;
+- each JSON's recorded `script` checked;
+- every referenced figure exists, every script is cited, every output is
+  mapped;
+- 34 headline numbers quoted in §1/§10 re-read from the outputs and compared
+  to the printed precision.
+
+Result: 34/34 ok, 0 problems. One derived number was added through the
+script: ⌈11.6²⌉ = 135 PACE pixels needed to bring SDP Tchla white-noise
+below the natural SD of Tchla.
+
+Learned:
+- The report numbers are consistent with the saved outputs.
+- `kramer_table2.csv` (N=144) vs `pcr_summary.json` (N=145) was the only
+  mislabelled pointer found.
+- The test suite is unchanged (100 passed).

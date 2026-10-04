@@ -1,0 +1,655 @@
+{
+ "script": "scripts/sdp/report_provenance.py",
+ "git_head": "f1174ad3cdc4facbe09748e5664d21c21bf49cf3",
+ "report_sha256": "b57919301287e0de6a49c89bf12a428fd1f389b8c86cf8deebadfe647df89070",
+ "sections": {
+  "3 Data": {
+   "scripts": [
+    {
+     "script": "scripts/sdp/fetch_kramer2022.py",
+     "exists": true,
+     "sha256": "8de604d46ff68f48cc56132fde0883ad3a397e8f69706d55b5415991281d6259",
+     "cited_in_report": true
+    },
+    {
+     "script": "scripts/sdp/ingest_kramer2022.py",
+     "exists": true,
+     "sha256": "632c2a40a1e4560bc30fb8d26f790c4695166fe30985698e229607a6f8878cb6",
+     "cited_in_report": true
+    }
+   ],
+   "outputs": [
+    {
+     "output": "reports/figures/sdp/ingest_summary.json",
+     "exists": true,
+     "sha256": "a3ee057873a1ad1c8b367f241dcf3f0a7f1fb79ad6f3bbff29a768d27f175ed7",
+     "records_script": "scripts/sdp/ingest_kramer2022.py"
+    },
+    {
+     "output": "reports/figures/sdp/kramer_fig1_map.png",
+     "exists": true,
+     "sha256": "2958ae285b6cabfff101b78ac0fd8a18ca2a5b653f59df986811b5011a351789"
+    },
+    {
+     "output": "reports/figures/sdp/kramer_fig2a_rrs.png",
+     "exists": true,
+     "sha256": "49b612f335f6e7d978d3cdeb167d67231121eb26d6a0b5715c6cb596a4510f04"
+    }
+   ]
+  },
+  "4.1 GSM residual": {
+   "scripts": [
+    {
+     "script": "scripts/sdp/reproduce_gsm.py",
+     "exists": true,
+     "sha256": "98994837bd96dabc5d80d1b584ba8d81cbfc0e374586687ae46de5d51a85ef5f",
+     "cited_in_report": true
+    },
+    {
+     "script": "scripts/sdp/fetch_woa_ts.py",
+     "exists": true,
+     "sha256": "817bc9f6e79caacccffbce9c6487370085644db024eb242aabc5a2a4e98539b4",
+     "cited_in_report": true
+    }
+   ],
+   "outputs": [
+    {
+     "output": "reports/figures/sdp/gsm_summary.json",
+     "exists": true,
+     "sha256": "41432c3a33ce1723bdf7d7023a33e777c11dc8612aa28b4fc4c654fe23fa66f8",
+     "records_script": "scripts/sdp/reproduce_gsm.py"
+    },
+    {
+     "output": "reports/figures/sdp/kramer_fig4_chl.png",
+     "exists": true,
+     "sha256": "f59127bff377aa30ed685af10d9b5ab0aa82f3fb786a28100ceb5292676eb176"
+    },
+    {
+     "output": "reports/figures/sdp/kramer_fig2bc_model_residual.png",
+     "exists": true,
+     "sha256": "65a04226ddf9a055abf772a6dd7e040749707b41da3128b487ade849603868ad"
+    },
+    {
+     "output": "reports/figures/sdp/gsm_sensitivity.png",
+     "exists": true,
+     "sha256": "9f76d84fcd3db8c1c51e89cdf792bc5093b533af07585204c45a097fd05c703e"
+    }
+   ]
+  },
+  "4.2 PCR": {
+   "scripts": [
+    {
+     "script": "scripts/sdp/reproduce_pcr.py",
+     "exists": true,
+     "sha256": "214aad0c8ef738b41b746ee3d7bf782f6fc0c8ae11026f3708d78b04dd8892e1",
+     "cited_in_report": true
+    }
+   ],
+   "outputs": [
+    {
+     "output": "reports/figures/sdp/pcr_summary.json",
+     "exists": true,
+     "sha256": "16b9c242fbae57b8c16951bffd5abc5c3726c36cbaf590390c1f0fca66cc77f3",
+     "records_script": "scripts/sdp/reproduce_pcr.py"
+    },
+    {
+     "output": "reports/figures/sdp/kramer_table2.csv",
+     "exists": true,
+     "sha256": "06e504b45de6adcd1180ee7ac365d1fc2f9b7971e460e92dc7bceca4f089fb2f"
+    },
+    {
+     "output": "reports/figures/sdp/pcr_coefficients.png",
+     "exists": true,
+     "sha256": "e58a63561e723e817a55cc367101fc445fa0f79a570737d14de82bb4e02d1a58"
+    },
+    {
+     "output": "reports/figures/sdp/kramer_fig6_pigments.png",
+     "exists": true,
+     "sha256": "b698c3bde4b0c81d1e6f77d9dbe40bd9809d17f138235c7ec5c522d2dbc00d91"
+    },
+    {
+     "output": "reports/figures/sdp/kramer_fig3_dendrograms.png",
+     "exists": true,
+     "sha256": "89c22375d9e824c80c83390c804888119047b22c88bacf083ef2c5616cd95d40"
+    }
+   ]
+  },
+  "5 Maths": {
+   "scripts": [
+    {
+     "script": "scripts/sdp/maths_section.py",
+     "exists": true,
+     "sha256": "d6c69a9b453eb99837c7fa0904dee251f56bfa2f5c24487251a6294415b81c8a",
+     "cited_in_report": true
+    }
+   ],
+   "outputs": [
+    {
+     "output": "reports/figures/sdp/maths_summary.json",
+     "exists": true,
+     "sha256": "bd2d3db6413e2ca921f50aecd2fa7ebf5ab8874a67f6eb932db339fa9d34b49b",
+     "records_script": "scripts/sdp/maths_section.py"
+    },
+    {
+     "output": "reports/figures/sdp/maths_effective_weights.png",
+     "exists": true,
+     "sha256": "22757e4235f5a814eea7b76e6136f15a7436508a33853f26eb93b16bde52cb90"
+    },
+    {
+     "output": "reports/figures/sdp/maths_prior.png",
+     "exists": true,
+     "sha256": "6d47e217c396756206722e200d2ea01afe6f821f4d89384413e9117799e9e34d"
+    },
+    {
+     "output": "reports/figures/sdp/maths_snr.png",
+     "exists": true,
+     "sha256": "f384a00f657d5985fcd00fd33bacd6332c73922dcb07d812a2e6dec01b29941b"
+    },
+    {
+     "output": "reports/figures/sdp/maths_dof.png",
+     "exists": true,
+     "sha256": "c159a8d91d6d50d9d586a26fa2e7f97480833b32b53397e38aeb7eb5f2848289"
+    },
+    {
+     "output": "reports/figures/sdp/maths_filter_factors.png",
+     "exists": true,
+     "sha256": "b8f8ab933b32986f7ea30b60249f18bc510f1cc39f5c5cd3ea52aeb1c8f8f2ff"
+    }
+   ]
+  },
+  "6.1-6.2 Diagnostics": {
+   "scripts": [
+    {
+     "script": "scripts/sdp/diagnostics_null_loco.py",
+     "exists": true,
+     "sha256": "2b9318705304267da78ee307d0cee71ce219fa742f5fd8e9f21be13a7a7d158b",
+     "cited_in_report": true
+    }
+   ],
+   "outputs": [
+    {
+     "output": "reports/figures/sdp/diag_summary.json",
+     "exists": true,
+     "sha256": "41069da5c5e468ba5e49d6b7a85179394706401e0fac2405d0b34b7b719ae7f9",
+     "records_script": "scripts/sdp/diagnostics_null_loco.py"
+    },
+    {
+     "output": "reports/figures/sdp/diag_skill_table.csv",
+     "exists": true,
+     "sha256": "a8342e6da09758efd8b21175ed2b6e1ed7e1f391dcc94136b1c5952e5b450b00"
+    },
+    {
+     "output": "reports/figures/sdp/diag_skill_absolute.png",
+     "exists": true,
+     "sha256": "978e335292110b9f0372bd49b2819a5406a080ed1fbddc58756ce277e32b50c0"
+    },
+    {
+     "output": "reports/figures/sdp/diag_skill_ratio.png",
+     "exists": true,
+     "sha256": "3a5447ae77c0471e92de72292095cc43e0d99feb6c489fe492cb8dd0671018b7"
+    },
+    {
+     "output": "reports/figures/sdp/diag_loco_tchla.png",
+     "exists": true,
+     "sha256": "70251bf973be4ba0de33ac63e62098298561ba948bdb6b5bb94a606d3b1c8185"
+    }
+   ]
+  },
+  "6.3 Source spaces": {
+   "scripts": [
+    {
+     "script": "scripts/sdp/source_spaces.py",
+     "exists": true,
+     "sha256": "1766adabe9ff086a001da069d55d6d9491d43c100eca95569bfaf8e0d428e19e",
+     "cited_in_report": true
+    }
+   ],
+   "outputs": [
+    {
+     "output": "reports/figures/sdp/source_spaces_summary.json",
+     "exists": true,
+     "sha256": "ed0fefa7ad3ff93b3776e130c4db47ee8a960ea16e9111fa7aaacc66d1ffffbb",
+     "records_script": "scripts/sdp/source_spaces.py"
+    },
+    {
+     "output": "reports/figures/sdp/source_spaces_summary.csv",
+     "exists": true,
+     "sha256": "53036e8c6170cdfbe86b6f7368ebe36f93675d2e77838e39b1ef4342021b2a05"
+    },
+    {
+     "output": "reports/figures/sdp/source_spaces_table.csv",
+     "exists": true,
+     "sha256": "e671fc95c9ce0e59e81d1669f79a15a48780b66785fab3fb254d09762b55e230"
+    },
+    {
+     "output": "reports/figures/sdp/source_spaces_heatmap.png",
+     "exists": true,
+     "sha256": "d72a0196fd120a4e94106156d070edf2e7e7f4a5efc8f9cde1328d68461c9ee7"
+    }
+   ]
+  },
+  "7 Learned weighting": {
+   "scripts": [
+    {
+     "script": "scripts/sdp/learned_weighting.py",
+     "exists": true,
+     "sha256": "933d9a7499cf380c89be440f1883fd374ccde00c0871498b2e2af4368c481850",
+     "cited_in_report": true
+    }
+   ],
+   "outputs": [
+    {
+     "output": "reports/figures/sdp/weighting_summary.json",
+     "exists": true,
+     "sha256": "a05bb09adb0949179df6ec84e2fe4e782e2f6e27cf270d63163958aa1cf7c6b8",
+     "records_script": "scripts/sdp/learned_weighting.py"
+    },
+    {
+     "output": "reports/figures/sdp/weighting_summary.csv",
+     "exists": true,
+     "sha256": "66506c1e813e2a5ed1ae8adb79b08abb097fe37871413923a774bf8aff2dbf36"
+    },
+    {
+     "output": "reports/figures/sdp/weighting_table.csv",
+     "exists": true,
+     "sha256": "89ebbc0ff3ddf8c9ba1dfed6a1dd7c750621266e4d29e94d92425def9b7b5f6b"
+    },
+    {
+     "output": "reports/figures/sdp/weighting_ranks.csv",
+     "exists": true,
+     "sha256": "2f9e9e080a70153e05d78982d3746dc357ae1f0870939c692d10f528035b1c7c"
+    },
+    {
+     "output": "reports/figures/sdp/weighting_latent_spectra.png",
+     "exists": true,
+     "sha256": "da99b587edf63054b1bbe5bcf1f81534ecd3fe8e1addb126cafa86fb37886403"
+    },
+    {
+     "output": "reports/figures/sdp/weighting_target_spectra.png",
+     "exists": true,
+     "sha256": "2a45a579c7285d3d1ca313434f7e0d07e64d7d4641265c3be3271e6f43e11364"
+    }
+   ]
+  },
+  "8 Uncertainty": {
+   "scripts": [
+    {
+     "script": "scripts/sdp/uncertainty.py",
+     "exists": true,
+     "sha256": "f800be185e87ef11d62160bb65a649d6cc41c535aaeb8908b8d5002107e6b5c6",
+     "cited_in_report": true
+    }
+   ],
+   "outputs": [
+    {
+     "output": "reports/figures/sdp/uncertainty_summary.json",
+     "exists": true,
+     "sha256": "033895655cacb4f2e31d9042416bb7c2b3b73934641ff7b5b7ebf4c8883d15ca",
+     "records_script": "scripts/sdp/uncertainty.py"
+    },
+    {
+     "output": "reports/figures/sdp/uncertainty_summary.csv",
+     "exists": true,
+     "sha256": "3d5ea931dd415d5856cee98f008850c9fa86e0d6cfed3b86683fd3b935897741"
+    },
+    {
+     "output": "reports/figures/sdp/uncertainty_scores.csv",
+     "exists": true,
+     "sha256": "6c8b58967a45bee5a4a25b2e4430f04eb6c93a1d3bfe9319a22096c4408dfb03"
+    },
+    {
+     "output": "reports/figures/sdp/uncertainty_coverage.png",
+     "exists": true,
+     "sha256": "00be6bf446be0fe7dc8466a1d97501f57ed6f2df34d46cc07d35b2d72c51dc2d"
+    },
+    {
+     "output": "reports/figures/sdp/uncertainty_pit.png",
+     "exists": true,
+     "sha256": "2ed7a8e1b71a295ebd3b33828b469de059f5ef54383891cb92bbb6163f865aec"
+    },
+    {
+     "output": "reports/figures/sdp/uncertainty_skill.png",
+     "exists": true,
+     "sha256": "8e936b5b2ca30c5e229f19b2d534b8319d4544bbc2c61198ef746b9cbfd0b3e7"
+    },
+    {
+     "output": "reports/figures/sdp/uncertainty_examples.png",
+     "exists": true,
+     "sha256": "5cc9e5b26f9389de5f16e0a70351472a87f69d15485029650e30f89b95d70e5d"
+    }
+   ]
+  },
+  "9 EXPORTS-NA hold-out": {
+   "scripts": [
+    {
+     "script": "scripts/sdp/exports_na_matchups.py",
+     "exists": true,
+     "sha256": "1391ea756bb11d944f7842b8521fd06aca5fb4605debe7a5ba49419809acd18a",
+     "cited_in_report": true
+    },
+    {
+     "script": "scripts/sdp/exports_na_holdout.py",
+     "exists": true,
+     "sha256": "847f0e423a09c1e01e5c981c6edf5942a3841ae6260cc38de8b662cd05ff189f",
+     "cited_in_report": true
+    }
+   ],
+   "outputs": [
+    {
+     "output": "reports/figures/sdp/exports_na_summary.json",
+     "exists": true,
+     "sha256": "906642ea1a82b3df36c3c4cb0baf6f1ef7ec15ccf0f7524356877008a5b66865",
+     "records_script": "scripts/sdp/exports_na_holdout.py"
+    },
+    {
+     "output": "reports/figures/sdp/exports_na_scores.csv",
+     "exists": true,
+     "sha256": "f26f08f0501d84b90546f1a7df2d3a120ac061c7fb28c2f2560b28d6699465c9"
+    },
+    {
+     "output": "reports/figures/sdp/exports_na_vs_null.csv",
+     "exists": true,
+     "sha256": "5c61461715d79458321a2fc93e4d028014d6d58980639a32acf477b20134b542"
+    },
+    {
+     "output": "reports/figures/sdp/exports_na_tchla.png",
+     "exists": true,
+     "sha256": "1401f3d4175a80f588b35ee3ec81e2a8d4dce5c312737dfde4532c522814606e"
+    },
+    {
+     "output": "reports/figures/sdp/exports_na_ratios.png",
+     "exists": true,
+     "sha256": "029feb8ea8c97e4f23a1b34011cde481d039bb9d4a5c05d10dd23888832c72f8"
+    }
+   ]
+  },
+  "10 Provenance (this script)": {
+   "scripts": [
+    {
+     "script": "scripts/sdp/report_provenance.py",
+     "exists": true,
+     "sha256": "b4e47cd20a3b858fb165b94873a74ea971bf3eb420999e6b4e385a1e21af66d5",
+     "cited_in_report": true
+    }
+   ],
+   "outputs": []
+  }
+ },
+ "figures_referenced": [
+  "diag_loco_tchla.png",
+  "diag_skill_absolute.png",
+  "diag_skill_ratio.png",
+  "diag_summary.json",
+  "exports_na_ratios.png",
+  "exports_na_scores.csv",
+  "exports_na_summary.json",
+  "exports_na_tchla.png",
+  "exports_na_vs_null.csv",
+  "gsm_sensitivity.png",
+  "gsm_summary.json",
+  "ingest_summary.json",
+  "kramer_fig1_map.png",
+  "kramer_fig2a_rrs.png",
+  "kramer_fig2bc_model_residual.png",
+  "kramer_fig3_dendrograms.png",
+  "kramer_fig4_chl.png",
+  "kramer_fig6_pigments.png",
+  "maths_dof.png",
+  "maths_effective_weights.png",
+  "maths_filter_factors.png",
+  "maths_prior.png",
+  "maths_snr.png",
+  "maths_summary.json",
+  "pcr_coefficients.png",
+  "pcr_summary.json",
+  "report_manifest.json",
+  "source_spaces_heatmap.png",
+  "uncertainty_coverage.png",
+  "uncertainty_pit.png",
+  "uncertainty_skill.png",
+  "weighting_latent_spectra.png",
+  "weighting_target_spectra.png"
+ ],
+ "claims": [
+  {
+   "id": "table2_within_1sd",
+   "section": "4.2",
+   "printed": 13,
+   "from_outputs": 13.0,
+   "ok": true
+  },
+  {
+   "id": "table2_Tchla_R2",
+   "section": "4.2",
+   "printed": 0.73,
+   "from_outputs": 0.7342477549,
+   "ok": true
+  },
+  {
+   "id": "fig4_gsm_slope_n144",
+   "section": "4.1",
+   "printed": 0.961,
+   "from_outputs": 0.9607429033093879,
+   "ok": true
+  },
+  {
+   "id": "fig4_gsm_R2_n144",
+   "section": "4.1",
+   "printed": 0.864,
+   "from_outputs": 0.8640028656156693,
+   "ok": true
+  },
+  {
+   "id": "weff_power_ge_0.1_Tchla",
+   "section": "5.1",
+   "printed": 0.997,
+   "from_outputs": 0.997300724392185,
+   "ok": true
+  },
+  {
+   "id": "prior_hi_lo_power_ratio",
+   "section": "5.1",
+   "printed": 5300,
+   "from_outputs": 5300.0,
+   "ok": true
+  },
+  {
+   "id": "dof_insitu_1nm",
+   "section": "5.2",
+   "printed": 10.4,
+   "from_outputs": 10.363112580592862,
+   "ok": true
+  },
+  {
+   "id": "dof_pace_white_1nm",
+   "section": "5.2",
+   "printed": 6.0,
+   "from_outputs": 5.995074347227171,
+   "ok": true
+  },
+  {
+   "id": "noise_Tchla_pace_white_d2",
+   "section": "5.2",
+   "printed": 11.6,
+   "from_outputs": 11.60512598109722,
+   "ok": true
+  },
+  {
+   "id": "noise_Tchla_pace_white_direct",
+   "section": "5.2",
+   "printed": 0.83,
+   "from_outputs": 0.8273458696711359,
+   "ok": true
+  },
+  {
+   "id": "pace_white_pixels_for_unit_noise",
+   "section": "10.3",
+   "printed": 135,
+   "from_outputs": 135.0,
+   "ok": true
+  },
+  {
+   "id": "null_gsm_beats_pcr_random_abs",
+   "section": "6.1",
+   "printed": 11,
+   "from_outputs": 11.0,
+   "ok": true
+  },
+  {
+   "id": "loco_pcr_Tchla_R2",
+   "section": "6.2",
+   "printed": 0.44,
+   "from_outputs": 0.4449,
+   "ok": true
+  },
+  {
+   "id": "loco_nullgsm_Tchla_R2",
+   "section": "6.2",
+   "printed": 0.66,
+   "from_outputs": 0.6554,
+   "ok": true
+  },
+  {
+   "id": "loco_abs_dRrs_d2",
+   "section": "6.3",
+   "printed": 0.19,
+   "from_outputs": 0.1911,
+   "ok": true
+  },
+  {
+   "id": "loco_abs_dRrs",
+   "section": "6.3",
+   "printed": 0.38,
+   "from_outputs": 0.3838,
+   "ok": true
+  },
+  {
+   "id": "loco_abs_M1",
+   "section": "6.3",
+   "printed": 0.4,
+   "from_outputs": 0.3987,
+   "ok": true
+  },
+  {
+   "id": "loco_ratio_dRrs_d2",
+   "section": "6.3",
+   "printed": 0.17,
+   "from_outputs": 0.1665,
+   "ok": true
+  },
+  {
+   "id": "loco_ratio_M3_21",
+   "section": "6.3",
+   "printed": 0.27,
+   "from_outputs": 0.2728,
+   "ok": true
+  },
+  {
+   "id": "W_group_loco_abs",
+   "section": "7.2",
+   "printed": 0.39,
+   "from_outputs": 0.3871,
+   "ok": true
+  },
+  {
+   "id": "W_group_loco_ratio",
+   "section": "7.2",
+   "printed": 0.24,
+   "from_outputs": 0.2403,
+   "ok": true
+  },
+  {
+   "id": "W_group_ratio_beats_null_loco",
+   "section": "7.2",
+   "printed": 6,
+   "from_outputs": 6.0,
+   "ok": true
+  },
+  {
+   "id": "PCR_ratio_beats_null_loco",
+   "section": "7.2",
+   "printed": 1,
+   "from_outputs": 1.0,
+   "ok": true
+  },
+  {
+   "id": "W_cov68_clean",
+   "section": "8.2",
+   "printed": 0.71,
+   "from_outputs": 0.7092,
+   "ok": true
+  },
+  {
+   "id": "W_cov95_clean",
+   "section": "8.2",
+   "printed": 0.94,
+   "from_outputs": 0.9425,
+   "ok": true
+  },
+  {
+   "id": "PCR_ratio_R2_insitu",
+   "section": "8.3",
+   "printed": 0.0,
+   "from_outputs": 0.0026,
+   "ok": true
+  },
+  {
+   "id": "Waware_Fuco_pace_white",
+   "section": "8.3",
+   "printed": 0.36,
+   "from_outputs": 0.3607,
+   "ok": true
+  },
+  {
+   "id": "nullOC4_Fuco_pace_white",
+   "section": "8.3",
+   "printed": 0.27,
+   "from_outputs": 0.2689,
+   "ok": true
+  },
+  {
+   "id": "exna_pcr_Tchla_rms",
+   "section": "9.3",
+   "printed": 0.09,
+   "from_outputs": 0.0902,
+   "ok": true
+  },
+  {
+   "id": "exna_pcr_abs_beats_null",
+   "section": "9.3",
+   "printed": 7,
+   "from_outputs": 7.0,
+   "ok": true
+  },
+  {
+   "id": "exna_null_Fuco_bias",
+   "section": "9.4",
+   "printed": -0.62,
+   "from_outputs": -0.6245,
+   "ok": true
+  },
+  {
+   "id": "exna_W_ratio_cov68",
+   "section": "9.3",
+   "printed": 0.28,
+   "from_outputs": 0.28431372549019607,
+   "ok": true
+  },
+  {
+   "id": "exna_W_ratio_cov95",
+   "section": "9.3",
+   "printed": 0.89,
+   "from_outputs": 0.8872549019607843,
+   "ok": true
+  },
+  {
+   "id": "exna_pcr_Fuco_dRMS_hi95",
+   "section": "9.4",
+   "printed": "negative",
+   "from_outputs": "negative",
+   "ok": true
+  }
+ ],
+ "problems": [],
+ "run_utc": "2026-10-04T13:59:30+00:00"
+}
