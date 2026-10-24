@@ -182,7 +182,312 @@ the quoted uncertainty and the cause isn't obvious.
     `SDP_Claude_Slides.pptx`.
     Use Opus 5.5.  Log your work.
 
+### New AMT data
+
+1. Tom Jordan has shared with me a new set of AMT data that is likely to 
+    benefit this project.  The file is `AMT_Rrs_HPLC.csv` in Downloads/.
+    Please inspect it and:
+    - Determine if it can be used to test our existing models and/or train new ones
+    - Decide where we should place it on this laptop and in the Google Drive
+If you have any questions, please ask them in the "Q&A/New AMT data" section below.
+Use Opus 5.5. Log your work.
+
+2. I have answered your questions in the "Q&A/New AMT data" section below.
+Please read those and react accordingly.  In addition, consider:
+
+    - I am going to ask you to generate prompts to run our existing models on the new data as a new test.  And then generate figures and a report on the results.
+    We will add this to the existing report and slides
+    - Eventually, I will ask you to repeat the full analysis but not until
+    I hear back from Tom.
+    - We are also going to share the data with Billy Li to see if he can use it to train his models, e.g. his BNN
+If you have additional questions, please ask them in the "Q&A/New AMT data" section below.
+Use Opus 5.5. Log your work.
+
+### Test on new AMT data
+
+Conventions: as for Execution (code in `epft_up/sdp/`, tests in
+`epft_up/tests/`, scripts in `scripts/sdp/`, figures in
+`reports/figures/sdp/`, every calculation a script run with
+`conda run -n ocean14`, provenance on every product).
+- The protocol is `reports/provenance/AMT_benchmark_protocol.md`: its
+  harmonisation rules (§3), splits (§4), targets (§5), baselines (§6) and
+  metrics (§7) are binding. Update its status and "Open items" at the end of
+  each prompt.
+- **Nothing is retrained.** Every model is the one fitted on Kramer's 145.
+- Stop and ask if a result contradicts §6–§9 of the report by more than the
+  quoted uncertainty and the cause isn't obvious, or if a harmonisation rule
+  can't be applied as written.
+
+1. **AMT loader, harmonisation and fold file.** Read this file and the
+   protocol.
+   - Write `epft_up/sdp/amt.py` with `load_amt(raw=False)`. It reads
+     `$OS_COLOR/AMT/Rrs_HPLC/AMT_Rrs_HPLC.csv` with its SHA-256 pinned
+     (`0290c9f4…`; refuse anything else) and returns a structure like
+     `KramerData`: wave, Rrs, meta (with `Cruise` as the group), pigments
+     under our names, flags, provenance.
+   - Apply protocol §3 exactly:
+     - one row per spectrum, HPLC averaged;
+     - drop 107/108;
+     - exclude non-positive Rrs;
+     - WOA23 salinity for 132/159;
+     - LOD-proxy zeroing;
+     - MVchlb proxy plus a flag;
+     - the 5 nm moving mean as an option, applied in the pipeline, not the
+       loader.
+   - Write unit tests (checksum refusal, pair collapse, exclusions, LOD
+     zeroing, the ratio ½·LOD rule).
+   - New script `scripts/sdp/amt_harmonise.py` writes, under
+     `$OS_COLOR/AMT/Rrs_HPLC/`:
+     - the harmonised table (one row per spectrum, with Tchla_GSM and
+       OC4v6 Tchla from our code, for both the smoothed and the as-is
+       spectra);
+     - the per-sample fold file (`sample_id, set, group, fold`) for the
+       deposit + AMT per protocol §4;
+     - a JSON provenance sidecar.
+   - Mirror the outputs to the shared-drive folder with
+     `scripts/sdp/stage_amt.py`, without pointing Billy at them yet.
+   - Report N per cruise after each rule.
+   Use Opus 5.5. Log your work.
+
+2. **Frozen-model hold-out on AMT (scheme H2).** Read this file and the
+   protocol.
+   - **Models:** in the manner of `scripts/sdp/exports_na_holdout.py`, write
+     `scripts/sdp/amt_holdout.py`. It applies, with no retraining:
+     - the reproduced PCR (our ensemble and Kramer's original
+       coefficients; ratios derived from the absolute predictions);
+     - the GSM and OC4 Tchla nulls and the constant ratio, all calibrated
+       on the 145;
+     - the Bayesian shared W (abs and ratio) with predictive intervals.
+   - **Spectra:** run the 5 nm-smoothed spectra (primary) and the as-is
+     spectra (sensitivity).
+   - **Scores:** for the 13 pigments and 12 log ratios, report §7's
+     metrics pooled **and per cruise**:
+     - bias, RMS, centred RMS, R²;
+     - ΔRMS vs the best null with a paired bootstrap CI;
+     - a cluster bootstrap over the 8 cruises for the pooled numbers;
+     - for the shared W, 68/95% coverage, SD(z), PIT and CRPS.
+     
+     MVchlb is scored on AMT29/30 only.
+   - **Campaign-level variance (§10.3, Rec. 3).** Estimate a
+     between-campaign variance from the deposit's LOCO residuals (no AMT
+     data used). Add it to the shared W's predictive variance and report
+     whether coverage improves on the 8 AMT cruises.
+   - **Comparisons:** compare with EXPORTS-NA (§9) and with L8 (§6–§8).
+     State plainly which targets beat the null on AMT, how consistently
+     across cruises, and whether the cyanobacterial ratios (DVchla:Tchla,
+     Zea:Tchla), the only transferable signal so far, hold up in this
+     oligotrophic-heavy set.
+   - **Outputs** in `reports/figures/sdp/amt_holdout_*`:
+     - a scores CSV and a vs-null CSV;
+     - a summary JSON;
+     - figures: Tchla; key ratios (Fuco, Zea, DVchla, Chlc12, HexFuco);
+       per-cruise bias with spread; coverage with and without the campaign
+       term; smoothed vs as-is.
+   Use Opus 5.5. Log your work.
+
+3. **Report and slides.** Read this file and the protocol.
+   - **Report:** add §11 "Hold-out test 2: AMT (2013–2024)" to
+     `reports/SDP_Claude_Report.md`. Fold Appendix A into §11.1 (data,
+     staging, harmonisation, open questions to Tom); the results of #2
+     follow. Update §1 (findings in brief) and §10 (conclusions,
+     limitations, recommendations) wherever AMT changes them, and the
+     §10.4 run order.
+   - **Numbers check:** add the new headline numbers as claims in
+     `scripts/sdp/report_provenance.py` and map the new outputs.
+   - **Slides:** in `scripts/sdp/make_slides.py`, add 3–4 slides after the
+     EXPORTS-NA slide: the data and harmonisation, the pooled results vs
+     the null, per-cruise consistency, and coverage with the campaign
+     term. Update the conclusions and recommendations slides if they
+     change. Keep every font ≥ 20 pt, and rebuild and render-check the
+     deck.
+   - Re-run `report_provenance.py` and the test suite.
+   - Mark H2 done in the protocol; keep the Tom-dependent items open.
+   Use Opus 5.5. Log your work.
+
 ## Q&A
+
+### New AMT data
+
+Questions from Claude after inspecting `AMT_Rrs_HPLC.csv` (2026-10-24). The
+details are in the report's Appendix A and in
+`reports/figures/sdp/amt_inspect_summary.json`. Answer inline; unanswered
+questions take the *[default]*.
+
+**Short answer to the prompt.**
+- **Test:** yes. After processing, 182 unique, all-positive spectra from 8
+  AMT cruises (2013–2024), on the deposit's exact 400–700 nm, 1 nm grid,
+  with all 13 Kramer pigments and in-situ T/S.
+- **Data quality:** radiometry and HPLC are mutually consistent. GSM Tchla
+  vs HPLC gives R² 0.87 and slope 1.03; OC4 gives R² 0.88. Both beat the
+  deposit.
+- **Coverage:** no overlap with the 145. It is oligotrophic-heavy and
+  DVchla-rich, complementary to EXPORTS-NA.
+- **Train:** yes, and that is the bigger win. It takes N from 145 to ≈ 330
+  and the LOCO groups from 8 to 16, and too few campaigns was our main
+  limitation (§10.2).
+- **Before either**, the issues below need answers.
+
+*Placement*
+
+1. **Laptop.** `$OS_COLOR/AMT/` already holds per-cruise BODC downloads
+   (AMT23/24/25/28). I propose a sibling folder for this compiled matchup
+   product, `$OS_COLOR/AMT/Rrs_HPLC/AMT_Rrs_HPLC.csv`, plus a `README.md`
+   (source = Tom Jordan, received 2026-10-24, SHA-256 `<pinned by the
+   loader>`, column notes, caveats). Later versions from Tom get a dated
+   suffix, and the loader pins the checksum as it does for PANGAEA.
+   *[default: copy (not move) it there from Downloads/ when you answer]*
+>A. Use your default
+2. **Google Drive.** Your `My Drive/Oceanography/data/` has CESM-LENS, CMEMS,
+   NCEP-DOE and SST, but no ocean-color folder. I propose mirroring
+   `$OS_COLOR`: `My Drive/Oceanography/data/Color/AMT/Rrs_HPLC/` (file +
+   README). If others in the group should use it, a shared drive (e.g.
+   *AI_for_Ocean*) would be better. That depends on Tom's terms: is this
+   compilation unpublished, and how should it be cited or credited?
+   *[default: My Drive mirror, not shared, until Tom confirms the terms]*
+>A. Use the *AI_for_Ocean* shared drive, under `data/Color/AMT/Rrs_HPLC/`
+
+*Questions for Tom (or you, if you know)*
+
+3. **Radiometry processing.** All rows are "Above-water". Which instruments
+   and which processing were used per cruise (sky-glint ρ, NIR/residual
+   offset)? What is the time window between Rrs and HPLC? Was each spectrum
+   resampled from a native 3–4 nm grid to 1 nm? Several cruises show a
+   2nd-derivative peak at 0.25 cycles nm⁻¹ (4 nm period), typical of
+   interpolation. Was any spectral smoothing applied?
+   *[default: treat as raw; apply Kramer's 5 nm moving mean before δRrs, as
+   for the deposit]*
+>A. Let us do that for now.  But I also want you to turn these questions into an email that I will send Tom.  Call that file `AMT_Rrs_HPLC_questions.md` in the `requests/` directory.  
+4. **Paired rows.** 20 spectra appear twice, each time with a different
+   HPLC sample: replicate bottles (e.g. AMT25 `016-2A/2B`), CTD vs underway,
+   and in AMT30 a numbered row plus an un-ID'd row a few minutes apart (the
+   un-ID'd rows are Sample_ID 146–189; *corrected 2026-10-24, 37 rows*). What are the un-ID'd AMT30 rows, and
+   which HPLC should go with each spectrum?
+   *[default: one row per spectrum, HPLC averaged]*
+>A. Use this default
+5. **Below-detection values.** The deposit sets sub-LOD values to 0
+   (Perid 54%, Fuco 16% zeros). AMT has almost none (Perid 1%, Fuco 0%),
+   with values down to ~10⁻⁴ mg m⁻³. Were sub-LOD values kept as measured?
+   Are the per-lab LODs (PML, DHI, NASA GSFC, FURG) available?
+   *[default: if LODs come, zero below them as Kramer did; otherwise use the
+   deposit's LOD proxy so both sets are treated alike]*
+>A. Use your default.
+6. **MVchlb.** MVchlb and DVchlb are empty for every cruise except the NASA
+   GSFC ones (AMT29/30). Does Tom have them for the others?
+   *[default: use Tchlb as an MVchlb proxy, flagged, and score MVchlb only
+   on AMT29/30]*
+>A. Use your default
+7. **Salinity 22.23** at AMT30, 2023-03-01, 33.3°S 33.3°W, in the open
+   South Atlantic, is almost certainly a bad value.
+   *[default: replace it with WOA23 climatology; δRrs is insensitive to it
+   (§4.1)]*
+>A. Use your default
+8. **AMT24** (Lange et al. 2020's cruise) is not in the file, although we
+   have its BODC data in `$OS_COLOR/AMT/AMT24`. Was it left out
+   deliberately? *[default: proceed without it]*
+>A. Use your default
+
+*How to use it*
+
+9. **Grouping for LOCO.** The options:
+   - each AMT cruise as its own group (16 groups; cruises differ by year and
+     HPLC lab);
+   - all AMT as one group (9 groups; conservative, since it is one
+     transect).
+
+   *[default: per cruise for training/CV, and also report a
+   leave-all-AMT-out test]*
+>A. Use your default
+10. **Next prompts** (for you to write; I won't start until you do):
+    - AMT #2: a loader with harmonisation (questions 3–7) and the frozen-model
+      hold-out, as in Execution #9: PCR (ours and Kramer's coefficients),
+      Tchla nulls, Bayesian shared W with intervals.
+    - AMT #3: retrain the Benchmark models on deposit + AMT under LOCO, and
+      test whether the "two transferable axes" result (§7.3) and the
+      coverage (§8) hold with twice the campaigns.
+
+    *[default: in that order]*
+>A.  Wait on these until we are done discussing
+
+#### Follow-up from Claude (2026-10-24, after New AMT data #2)
+
+**Done:**
+- **Laptop.** Copied (not moved) to `$OS_COLOR/AMT/Rrs_HPLC/` by
+  `scripts/sdp/stage_amt.py`, which verifies the checksum. Alongside it:
+  - a `README.md` (source, SHA-256 `0290c9f4…`, columns, cruises, known
+    issues, our processing defaults, sharing note);
+  - `AMT_Rrs_HPLC_flags.csv` (per-row flags: shared spectrum, non-positive
+    Rrs, bad salinity, missing MVchlb).
+- **Shared drive.** The same three files are on *AI_for_Ocean* at
+  `data/Color/AMT/Rrs_HPLC/`, next to the existing `AMT23/24/25/28`
+  folders.
+- **Email to Tom:** `requests/AMT_Rrs_HPLC_questions.md`. It covers Q3–Q8,
+  plus permission to share with Billy and how to credit the compilation.
+- **New finding, now in the email:** AMT29 Sample_ID 107/108
+  (DY110_CTD190/189) share one spectrum but differ ×2.3 in Tchla (0.073 vs
+  0.165). One of them is probably mis-matched, so averaging them (the Q4
+  default) would be wrong. *[default: drop both until Tom answers]*
+- **Defaults Q4–Q9** are recorded in the README. They are applied when the
+  loader is written (Q10: on hold).
+
+**New questions**
+
+11. **Billy Li and timing.** The files are now on the shared drive, so
+    anyone with AI_for_Ocean access, possibly Billy, can already see them.
+    The email asks Tom's permission to share with Billy.
+    *[default: don't point Billy at it until Tom says yes; the README carries
+    a do-not-redistribute note]*
+>A.  Got it
+12. **What Billy gets.** For his BNN results to be comparable with ours (§6–§9
+    plus the coming hold-out), he needs the same splits and baselines, not
+    just the data. Proposed package:
+    - (a) the raw CSV + README + flags (in place);
+    - (b) Kramer's PANGAEA deposit (public, CC-BY);
+    - (c) a short `docs/AMT_benchmark_protocol.md`: fold assignment per
+      sample (campaign/cruise; leave-all-AMT-out), the harmonisation rules
+      (duplicates, LOD, MVchlb, exclusions), the targets (13 pigments + 12
+      log ratios), the Tchla-only null baselines, and our metrics (bias,
+      RMS, R², ΔRMS vs null, interval coverage/CRPS for a BNN);
+    - (d) optionally our harmonised table (one row per spectrum) once Tom
+      answers.
+
+    *[default: (a)–(c) now; (d) after Tom. I write (c) as part of the
+    hold-out prompts]*
+>A.  Generate a markdown file that describes all of this as a provenance file of what we have done so far.  Call it `provenance/AMT_benchmark_protocol.md` in the `reports/` directory.
+
+13. **The coming hold-out test (for when you ask for the prompts).** My plan,
+    to confirm or edit:
+    - **Models:** frozen, trained on the 145: PCR (ours + Kramer's
+      coefficients), the GSM and OC4 Tchla nulls, and the Bayesian shared W
+      with intervals, exactly as §9.
+    - **Processing:** the 5 nm moving mean (primary), plus as-is as a
+      sensitivity test. §8 predicts δRrs″-PCR will be hurt more by the
+      unsmoothed spectra.
+    - **The key advance over EXPORTS-NA:** 8 cruises give **8 independent
+      draws** of the between-campaign error. We can report per-cruise bias
+      and its spread, and test whether the shared W's intervals plus a
+      campaign-level variance term (Rec. 3, §10.3) cover.
+    - **Outputs:** a new report §11 "Hold-out test 2: AMT" (absorbing
+      Appendix A), updates to §1/§10, 3–4 slides after the EXPORTS slide,
+      and new claims in `report_provenance.py`.
+    - **Timing:** run with the defaults now, and re-run (all scripted) if
+      Tom's answers change the harmonisation. The full re-analysis
+      (retraining) waits for Tom, as you said.
+
+    *[default: as above]*
+>A.  Use your default.  Create a series of prompts to do these steps in the new "Prompts/Test on new AMT data" section above.  Have us use Opus 5.5
+
+*Claude (2026-10-24):*
+- **Q11:** noted. Billy is not pointed at the files until Tom agrees.
+- **Q12:** written as `reports/provenance/AMT_benchmark_protocol.md`. It
+  records the data sets with checksums, the steps so far, the harmonisation
+  rules, the splits, targets, baselines and metrics, a reference table to
+  beat, a return format for Billy's predictions, and open items.
+- **Q13:** three prompts are now under Prompts → Test on new AMT data:
+  1. loader, harmonisation, fold file;
+  2. frozen-model hold-out H2;
+  3. report §11 and slides.
+
+  Nothing has been run yet.
 
 ### Setup
 
@@ -1288,3 +1593,120 @@ Other changes:
   `requirements.txt` and `setup.py`.
 - The report §10.4 run order gains step 14 (`make_slides.py`), so
   `report_provenance.py` still passes (0 problems).
+
+### 2026-10-24 (New AMT data #1: inspect Tom Jordan's AMT_Rrs_HPLC.csv)
+
+Inspected `~/Downloads/AMT_Rrs_HPLC.csv` (814 kB, 210 rows) with the new
+`scripts/sdp/inspect_amt.py`. Outputs:
+- `reports/figures/sdp/amt_inspect_summary.json`, which records the
+  SHA-256;
+- `amt_map.png`, `amt_spectra.png`, `amt_pigments.png`,
+  `amt_chl_consistency.png`.
+
+Nothing was moved or copied: the placement is proposed in Q&A → New AMT
+data, questions 1–2. No model was applied or retrained.
+
+Learned:
+- **Coverage.** 8 cruises (AMT23, AMT25–31; 2013–2024), 4 HPLC labs (PML,
+  DHI, NASA GSFC, FURG), all above-water radiometry.
+- **Format.** The deposit's exact 400–700 nm, 1 nm grid; in-situ T/S; all
+  13 Kramer pigments (`But`/`Hex` naming) plus Psc and Ppc.
+- **No overlap with the deposit** (nearest sample 25 km away; different
+  years). AMT24 is absent.
+- **Paired rows.** 20 spectra each appear twice with different HPLC → 190
+  unique spectra; 182 once 8 more with non-positive red Rrs are excluded.
+  The un-ID'd AMT30 rows (Sample_ID 146–190) include most of the pairs.
+- **MVchlb/DVchlb** are missing except on AMT29/30 (NASA GSFC). Far fewer
+  zeros than the deposit: sub-LOD values appear to be kept.
+- **One bad salinity** (22.23, open South Atlantic).
+- **Consistency.** GSM-like Tchla vs HPLC: slope 1.03, R² 0.87, bias −0.02
+  dex (all 201 positive rows converge). OC4: R² 0.88. Per cruise, R² is
+  0.83–0.95, except AMT31 at 0.59.
+- **Spectral character.** Not smoothed or rounded: Rrs'' power is ≈ 20–2300×
+  the deposit's rounding floor, with a 4 nm-period peak (interpolation?).
+  After the paper's 5 nm mean it is comparable to the deposit.
+
+Verdict: usable for both testing and training, after harmonisation. The
+training value (≈ 2× N, 2× campaigns) is the larger one.
+
+Also:
+- Added the report's Appendix A.
+- Mapped the AMT outputs in `scripts/sdp/report_provenance.py`, which still
+  passes: 34/34 claims, 0 problems.
+- Posed questions 1–10 in Q&A → New AMT data: placement, radiometry
+  processing, paired rows, LOD, MVchlb, salinity, AMT24, LOCO grouping, and
+  the proposed next prompts.
+
+### 2026-10-24 (New AMT data #2: placement, email to Tom, planning)
+
+Read the answers to Q1–Q10. Q1, Q4–Q9 take the defaults; Q2 = the
+AI_for_Ocean shared drive; Q3 = defaults plus an email to Tom; Q10 = wait.
+
+Placement and staging. New `scripts/sdp/stage_amt.py`:
+- copies the CSV (unmodified, checksum-verified) to `$OS_COLOR/AMT/Rrs_HPLC/`;
+- with `--drive`, also to *AI_for_Ocean* `data/Color/AMT/Rrs_HPLC/`;
+- writes a `README.md` (source, SHA-256
+  `0290c9f49fae79dd52dbf920e77ff580c15af9115cd26ed734659d2c7827bca6`,
+  columns, cruise table, 7 known issues, EPFT-UP processing defaults,
+  sharing note) and `AMT_Rrs_HPLC_flags.csv` (47 of 210 rows flagged; 190
+  unique spectra).
+- An existing copy with a different checksum stops the script, so new
+  versions from Tom must be staged under a dated name.
+
+Email. Wrote `requests/AMT_Rrs_HPLC_questions.md` for Tom: radiometry
+processing and resampling, the 20 shared-spectrum pairs (with a table),
+LODs, MVchlb, bad salinity, AMT24, and permission and credit for sharing
+with Billy Li.
+
+Learned:
+- The un-ID'd AMT30 rows are Sample_ID 146–189 (37 rows; corrected in Q4),
+  and 12 of them pair with numbered stations.
+- AMT29 pair 107/108 (CTD190/189) shares a spectrum but differs ×2.3 in
+  Tchla, so a likely mismatch. Default: drop both until Tom answers.
+- The shared drive's `data/Color/` already mirrors `$OS_COLOR`, which
+  includes `AMT/AMT23–28` BODC folders.
+
+Posed Q11–Q13: whether Billy waits for Tom's OK; what to give Billy (data +
+deposit + a benchmark protocol with folds, baselines and metrics); and the
+plan for the frozen-model AMT hold-out (8 cruises = 8 draws of the
+between-campaign error; report §11 + slides). No loader or model runs yet
+(Q10: on hold).
+
+### 2026-10-24 (New AMT data: Q11–Q13 answers; protocol file; Test prompts)
+
+Read the answers:
+- Q11: acknowledged.
+- Q12: write a provenance/protocol markdown at
+  `reports/provenance/AMT_benchmark_protocol.md`.
+- Q13: the default plan, turned into prompts under "Prompts/Test on new AMT
+  data", using Opus 5.5.
+
+Wrote `reports/provenance/AMT_benchmark_protocol.md` (new folder
+`reports/provenance/`):
+- §1: the data sets and supporting inputs, with SHA-256s and repo commits.
+  The checksums are taken from the existing outputs (`diag_summary.json`,
+  `exports_na_summary.json`, `amt_inspect_summary.json`,
+  `gsm_summary.json`), not recomputed.
+- §2: a chronological table of steps → scripts → outputs.
+- §3: harmonisation rules for deposit vs AMT, plus the LOD proxy values.
+- §4: split schemes R/L8/H1/H2/L16/LA and their rules.
+- §5–§7: targets, baselines and metrics, plus a return format so Billy's
+  predictions can be scored with our code.
+- §8: reference results.
+- §9: open items.
+
+Wrote three prompts under "Prompts/Test on new AMT data", with a
+conventions paragraph that makes the protocol binding, forbids retraining,
+and keeps the stop-and-ask rule:
+1. `epft_up/sdp/amt.py` loader + tests, `scripts/sdp/amt_harmonise.py`
+   (harmonised table with GSM/OC4 Tchla, fold file, sidecar), and a mirror
+   to the shared drive.
+2. `scripts/sdp/amt_holdout.py`: H2 with the 5 nm-smoothed spectra (primary)
+   and as-is (sensitivity); pooled and per-cruise scores, cluster bootstrap
+   over cruises, and coverage with and without a deposit-LOCO-estimated
+   campaign variance term.
+3. Report §11 (absorbing Appendix A), §1/§10 updates, claims in
+   `report_provenance.py`, and 3–4 slides.
+
+No calculations this round.
+

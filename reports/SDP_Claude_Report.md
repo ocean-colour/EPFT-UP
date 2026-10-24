@@ -1962,3 +1962,82 @@ each section to its scripts and outputs, with SHA-256s, and verifies:
   printed precision, the values in the outputs.
 
 Numbers in §2 are quoted from the papers.
+
+## Appendix A. New AMT data (inspection, 2026-10-24)
+
+Tom Jordan shared `AMT_Rrs_HPLC.csv`: above-water hyperspectral Rrs paired
+with HPLC pigments from the Atlantic Meridional Transect. This appendix
+records whether it can test our models and/or train new ones. **No model was
+applied or retrained yet.**
+- Script: `scripts/sdp/inspect_amt.py`.
+- Numbers: `reports/figures/sdp/amt_inspect_summary.json`.
+- Figures: `amt_map.png`, `amt_spectra.png`, `amt_pigments.png`,
+  `amt_chl_consistency.png`.
+
+**Contents.**
+- **Rows:** 210, from 8 cruises: AMT23 and AMT25–AMT31, 2013–2024, 17–61
+  rows each.
+- **Pigments:** HPLC from four labs: PML (AMT23/25/26), DHI (AMT27/28), NASA
+  GSFC (AMT29/30) and FURG (AMT31).
+- **Radiometry:** all above-water; the instrument is not stated.
+- **Grid:** Rrs on exactly the deposit's 400–700 nm, 1 nm grid.
+- **Ancillary:** in-situ T and S for every row.
+- **Other columns:** 24 pigments, including all 13 of Kramer 2022 (`But` =
+  ButFuco, `Hex` = HexFuco), plus Psc and Ppc (photosynthetic and
+  photoprotective carotenoids).
+- **Overlap with the deposit:** none. The nearest Kramer sample is 25 km
+  away, in a different year, and AMT24 (Lange et al. 2020) is not included.
+
+**Issues found:**
+
+| Issue | Extent | Handling for modelling |
+|---|---|---|
+| One spectrum paired with two HPLC samples (replicates, CTD vs underway, or a second un-ID'd AMT30 row minutes apart) | 20 pairs; **190 unique spectra** | one row per spectrum (mean HPLC), otherwise pseudo-replication leaks |
+| MVchlb (and DVchlb) missing | 6 of 8 cruises (all but NASA GSFC's AMT29/30) | score MVchlb on AMT29/30 only, or use Tchlb as a proxy (DVchlb unavailable) |
+| Non-positive Rrs at 600–700 nm | 9 spectra; 182 unique, all-positive | exclude, as the GSM cannot fit them |
+| Salinity 22.2 at 33°S, 33°W (open ocean) | 1 station (2 rows) | treat as bad; use a climatological S (δRrs is insensitive, §4.1) |
+| Far fewer zeros than the deposit | e.g. Perid 1% vs 54%, Fuco 0% vs 16%; smallest values ~10⁻⁴ | sub-LOD values appear to be reported rather than zeroed. Ratios and LOD handling must be harmonised |
+| HPLC lab differs by cruise | 4 labs | a between-lab offset is confounded with the cruise; LOCO by cruise absorbs it |
+
+**Radiometry is consistent with the pigments, and of the same character as
+the deposit once processed like it.**
+- Retrieved Tchla against HPLC, both with no tuning:
+  - the GSM-like fit (Execution #2 code; converges for all 201 positive
+    rows): slope 1.03, R² 0.87, bias −0.02 dex;
+  - OC4v6: R² 0.88.
+
+  That is as good as or better than the deposit's Fig. 4 (GSM R² 0.86, OC4
+  0.75). Per cruise, R² is 0.83–0.95, except AMT31 at 0.59.
+- **Not smoothed or rounded.** Unlike the deposit, the spectra are neither
+  pre-smoothed nor rounded, so their 2nd-difference power is ≈ 20–2300× the
+  deposit's rounding floor at 0.1–0.5 cycles nm⁻¹.
+- **A 4 nm periodicity.** Several cruises show a peak at 0.25 cycles nm⁻¹,
+  probably an interpolation signature from the instruments' native 3–4 nm
+  sampling.
+- **After the paper's 5 nm moving mean**, the power at 0.2–0.5 cycles nm⁻¹
+  is 0.01–10× the floor, comparable to the deposit (1–4×). Applied as-is,
+  the frozen δRrs'' PCR would see much noisier predictors than it was
+  trained on (§8).
+
+**Verdict.**
+- **For testing: yes.** It is an independent multi-cruise hold-out, 182
+  usable unique spectra and 8 cruises over 11 years, after the 5 nm mean
+  and the fixes above.
+  - It complements EXPORTS-NA (a diatom bloom): mostly oligotrophic (50%
+    with Tchla < 0.1 mg m⁻³), with DVchla detected in 87% of samples.
+  - That is exactly where §6–§9 found the cyanobacterial ratios to carry the
+    only transferable signal.
+- **For training: yes, and that is its larger value.**
+  - It more than doubles N (145 → ≈ 330).
+  - It adds 8 groups to LOCO (16 in total; or 9 if all AMT is one group).
+    §10.2 identified the number of campaigns as the limiting factor.
+- **Staging.** The file is staged, unmodified and checksum-verified, at
+  `$OS_COLOR/AMT/Rrs_HPLC/` and on the AI_for_Ocean shared drive
+  (`data/Color/AMT/Rrs_HPLC/`), with a README and per-row flags
+  (`scripts/sdp/stage_amt.py`).
+- **Open questions to Tom** are in `requests/AMT_Rrs_HPLC_questions.md`.
+  One pair (Sample_ID 107/108) shares a spectrum but differs ×2.3 in Tchla;
+  both will be dropped until resolved.
+- **Prerequisites before either:** harmonised zero/LOD handling, the
+  duplicate collapse, a decision on MVchlb, and confirmation of the
+  radiometric processing (questions in the prompt doc's Q&A).

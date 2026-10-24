@@ -1,7 +1,7 @@
 {
  "script": "scripts/sdp/report_provenance.py",
- "git_head": "a006dac151c191e6c5e510e95ff96e875b6bff0a",
- "report_sha256": "1fb1211aa407c215c0daf03b2cff0d1c86874e85711ad73b325aff5b68fe2ab9",
+ "git_head": "1b60500ca66dd3c4aa570a54c0397ced058611ba",
+ "report_sha256": "92282aa65d9fbe0bca9be353f34fd2aea0f846f4bd28e03b28b1f35d63ef3142",
  "sections": {
   "3 Data": {
    "scripts": [
@@ -363,12 +363,56 @@
     }
    ]
   },
+  "A New AMT data (inspection)": {
+   "scripts": [
+    {
+     "script": "scripts/sdp/inspect_amt.py",
+     "exists": true,
+     "sha256": "070961db55eedacbe0d12d66a39dccc13ffd4bf884fc60ebd17a6361a2584ea2",
+     "cited_in_report": true
+    },
+    {
+     "script": "scripts/sdp/stage_amt.py",
+     "exists": true,
+     "sha256": "241998e5bfa2818000e4cc39120d2e35c26e9ab22dfcf07e7e9e6c2fd7783ca9",
+     "cited_in_report": true
+    }
+   ],
+   "outputs": [
+    {
+     "output": "reports/figures/sdp/amt_inspect_summary.json",
+     "exists": true,
+     "sha256": "836b1d2e4e94ee8cfd5e688064b5bbf8cccfd2e75a8e95ce86de962e8527dee4",
+     "records_script": "scripts/sdp/inspect_amt.py"
+    },
+    {
+     "output": "reports/figures/sdp/amt_map.png",
+     "exists": true,
+     "sha256": "e05d5ba3e6bca01e65d5812f36273c170259db541f9e410def1ad1ed8a3aae3b"
+    },
+    {
+     "output": "reports/figures/sdp/amt_spectra.png",
+     "exists": true,
+     "sha256": "fd0646c13da2a0491a95dd3bf1d7895fb930dbc178b393ed39f2c497ac54306d"
+    },
+    {
+     "output": "reports/figures/sdp/amt_pigments.png",
+     "exists": true,
+     "sha256": "b281adc886d20c686f5372aa90568bfdcac124f53659377f122f2c21d82d8d80"
+    },
+    {
+     "output": "reports/figures/sdp/amt_chl_consistency.png",
+     "exists": true,
+     "sha256": "de9084759177b1070124499055bfa1d476e04e11e6cf21df58be33b0d623f2c8"
+    }
+   ]
+  },
   "10 Provenance (this script)": {
    "scripts": [
     {
      "script": "scripts/sdp/report_provenance.py",
      "exists": true,
-     "sha256": "b4e47cd20a3b858fb165b94873a74ea971bf3eb420999e6b4e385a1e21af66d5",
+     "sha256": "48fb09a36fea7e65aff2a51f2938690a640ea9cadc9f298974068eb37515cdb7",
      "cited_in_report": true
     }
    ],
@@ -376,6 +420,7 @@
   }
  },
  "figures_referenced": [
+  "amt_inspect_summary.json",
   "diag_loco_tchla.png",
   "diag_skill_absolute.png",
   "diag_skill_ratio.png",
@@ -651,5 +696,5 @@
   }
  ],
  "problems": [],
- "run_utc": "2026-10-04T15:00:37+00:00"
+ "run_utc": "2026-10-24T13:52:19+00:00"
 }
