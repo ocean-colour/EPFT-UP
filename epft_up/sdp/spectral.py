@@ -23,19 +23,23 @@ from __future__ import annotations
 import numpy as np
 
 
-def moving_mean(y, width=5):
-    """Centred moving mean along the last axis; edges are returned as NaN.
+def moving_mean(y, width=5, edges='nan'):
+    """Centred moving mean along the last axis.
 
     Equivalent to a ``width``-point boxcar on a uniform grid. Points within
-    ``width // 2`` of either end have an incomplete window and are set to NaN
-    rather than shrunk or padded, so trimming them (:func:`trim_edges`) is
-    explicit.
+    ``width // 2`` of either end have an incomplete window. By default they
+    are set to NaN rather than shrunk or padded, so trimming them
+    (:func:`trim_edges`) is explicit. With ``edges='shrink'`` they are the
+    mean over the part of the window inside the array, as MATLAB's
+    ``movmean`` does by default. Use this for spectra that end exactly at
+    the output grid's limits (e.g. the AMT data at 400-700 nm).
 
     Parameters
     ----------
     y : ndarray, shape (..., n)
     width : int, optional
         Odd window length in samples (5 = 5 nm on the 1 nm grid).
+    edges : {'nan', 'shrink'}, optional
 
     Returns
     -------
@@ -43,12 +47,19 @@ def moving_mean(y, width=5):
     """
     if width < 1 or width % 2 == 0:
         raise ValueError(f'moving_mean width must be a positive odd integer, got {width}')
+    if edges not in ('nan', 'shrink'):
+        raise ValueError(f"edges must be 'nan' or 'shrink', got {edges!r}")
     y = np.asarray(y, dtype=float)
     half = width // 2
+    n = y.shape[-1]
     c = np.cumsum(np.concatenate([np.zeros(y.shape[:-1] + (1,)), y], axis=-1),
                   axis=-1)
     out = np.full_like(y, np.nan)
-    out[..., half:y.shape[-1] - half] = (c[..., width:] - c[..., :-width]) / width
+    out[..., half:n - half] = (c[..., width:] - c[..., :-width]) / width
+    if edges == 'shrink':
+        for i in list(range(min(half, n))) + list(range(max(n - half, half), n)):
+            lo, hi = max(0, i - half), min(n, i + half + 1)
+            out[..., i] = (c[..., hi] - c[..., lo]) / (hi - lo)
     return out
 
 

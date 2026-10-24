@@ -6,7 +6,8 @@ comparable across groups. Anyone training a model on these data (e.g. Billy
 Li's Bayesian neural networks) can then be scored with the same splits,
 baselines and metrics as the EPFT-UP SDP study.
 
-**Status:** 2026-10-24, repository commit `1b60500` + working tree.
+**Status:** 2026-10-24, after *Test on new AMT data #1* (loader, harmonised
+table, fold file); repository commit `1b60500` + working tree.
 Questions to Tom Jordan are outstanding (`requests/AMT_Rrs_HPLC_questions.md`).
 Items marked *pending* are defined here but not yet produced. The prompts
 "Test on new AMT data" in `claude_prompts/2nd_derivative_prompts.md` produce
@@ -24,7 +25,7 @@ public (CC-BY-4.0).
 |---|---|---|---|---|---|
 | **Kramer et al. (2022)**, PANGAEA doi:10.1594/PANGAEA.937536 | training set of all EPFT-UP SDP models | 145 | 8 campaigns | `$OS_COLOR/PANGAEA/Kramer2022/PANGAEA_937536.tab` | `63da2981596ef8c3d856e0ae12eab4cb715a9ec535e92d83458a7a7f5f910f3b` |
 | **EXPORTS-NA 2021** (Kramer et al. 2024 test spectra + SeaBASS HPLC) | hold-out test 1 (done, report §9) | 17 | 1 campaign | `$OS_COLOR/PANGAEA/Kramer2022/EXPORTS_NA/exports_na_matchups.csv` | `90d8fd20b1231a98479c1d267f1ebc93f31479b32a7145cd2dc2755e2b9e5288` |
-| **AMT_Rrs_HPLC** (compiled by Tom Jordan, received 2026-10-24) | hold-out test 2 (*pending*); later, extra training data | 210 rows → 190 unique spectra | 8 cruises | `$OS_COLOR/AMT/Rrs_HPLC/AMT_Rrs_HPLC.csv`; shared drive *AI_for_Ocean* `data/Color/AMT/Rrs_HPLC/` | `0290c9f49fae79dd52dbf920e77ff580c15af9115cd26ed734659d2c7827bca6` |
+| **AMT_Rrs_HPLC** (compiled by Tom Jordan, received 2026-10-24) | hold-out test 2 (*pending*, Test #2); later, extra training data | 210 rows → **182 harmonised spectra** | 8 cruises | `$OS_COLOR/AMT/Rrs_HPLC/AMT_Rrs_HPLC.csv`; shared drive *AI_for_Ocean* `data/Color/AMT/Rrs_HPLC/` | `0290c9f49fae79dd52dbf920e77ff580c15af9115cd26ed734659d2c7827bca6` |
 
 Supporting inputs, cloned at pinned commits and never copied into the repo:
 
@@ -52,14 +53,17 @@ Supporting inputs, cloned at pinned commits and never copied into the repo:
 | 2026-10-24 | AMT inspection | `scripts/sdp/inspect_amt.py` | `amt_inspect_summary.json`, `amt_*.png`; report Appendix A |
 | 2026-10-24 | AMT staging (laptop + shared drive), README, per-row flags | `scripts/sdp/stage_amt.py` | `README.md`, `AMT_Rrs_HPLC_flags.csv` beside the CSV |
 | 2026-10-24 | Questions to the data provider | — | `requests/AMT_Rrs_HPLC_questions.md` |
+| 2026-10-24 | AMT loader + harmonisation rules (8 unit tests) | `epft_up/sdp/amt.py`, `epft_up/tests/test_sdp_amt.py` | — |
+| 2026-10-24 | Harmonised table, WOA23 salinity fix, fold file; mirrored to the shared drive | `scripts/sdp/amt_harmonise.py`, `stage_amt.py --drive` | `AMT_Rrs_HPLC_harmonised.csv/.json`, `AMT_Kramer_folds.csv`, `woa23_salinity_fix.csv/.json` beside the raw CSV (local and shared drive) |
 
 All JSON outputs record the script, input checksums and run time. The code
 lives in `epft_up/sdp/` (100 unit tests).
 
 ## 3. Harmonisation rules
 
-The AMT rules are adopted defaults until Tom Jordan answers. *Pending:*
-implemented in an AMT loader.
+The AMT rules are adopted defaults until Tom Jordan answers. They are
+implemented in `epft_up/sdp/amt.py::load_amt` (raw file SHA-256 pinned;
+rules applied in the order of the rows-per-cruise table below).
 
 | Step | Kramer deposit (as published) | AMT (rule) |
 |---|---|---|
@@ -81,12 +85,42 @@ or 0.001 where it has no zeros; `epft_up/sdp/validate.py::lod_proxy`):
 
 If the HPLC labs' real LODs arrive, they replace the proxy for AMT.
 
+**Implementation details:**
+- **Smoothing at the ends of the grid.** The 5 nm moving mean is applied
+  in the modelling pipeline, not the loader, with a MATLAB-`movmean`-style
+  shrinking window at 400–401 and 699–700 nm
+  (`spectral.moving_mean(..., edges='shrink')`). The AMT spectra end
+  exactly at 400 and 700 nm, and the frozen models need the full grid.
+- **Salinity.** The WOA23 March surface salinity at 33.4°S 33.4°W is
+  **35.64** (replacing 22.23, Sample_ID 132/159).
+- **MVchlb.** 105 spectra carry the Tchlb proxy; 77 (AMT29/30) are
+  scorable.
+- **Zeroing.** Values set to 0 below the LOD proxy (of 182 spectra): Neo 157,
+  Perid 140, Allo 131, Viola 58, MVchlb 26, DVchla 25, Fuco 14, Chlc3 2,
+  HexFuco 1. For Neo, Perid and Allo this is a larger share than the
+  deposit's zeros (74%, 54%, 70%), as expected for an oligotrophic
+  transect.
+
+**Rows per cruise after each rule** (`AMT_Rrs_HPLC_harmonised.json`):
+
+| Rule | AMT23 | AMT25 | AMT26 | AMT27 | AMT28 | AMT29 | AMT30 | AMT31 | total |
+|---|---|---|---|---|---|---|---|---|---|
+| 0 raw rows | 17 | 18 | 22 | 15 | 21 | 35 | 61 | 21 | 210 |
+| 1 drop 107/108 | 17 | 18 | 22 | 15 | 21 | 33 | 61 | 21 | 208 |
+| 2 exclude non-positive Rrs | 17 | 17 | 19 | 14 | 20 | 33 | 61 | 20 | 201 |
+| 3 one row per spectrum (19 averaged) | 17 | 16 | 18 | 14 | 20 | 28 | 49 | 20 | **182** |
+| 4–6 salinity, MVchlb proxy, LOD zeroing | (unchanged) | | | | | | | | 182 |
+
 ## 4. Splits (fold assignment)
 
 The grouping columns already exist: `campaign` in the Kramer deposit (via
 `epft_up.sdp.data.load_kramer2022().meta`) and `Cruise` in the AMT file.
-*Pending:* a per-sample fold file (`sample_id, set, group, fold`) written
-by the AMT loader.
+The per-sample fold file is `AMT_Kramer_folds.csv` (beside the raw CSV),
+with columns `sample_id, set, group, fold`:
+- Kramer deposit: `K22:<row 0–144>`, folds 0–7 = ANT, BIOSOPE, EXPORTS,
+  NAAMES, RemSensPOC, SABOR, Tara Med, Tara Oceans.
+- AMT: `AMT:<smallest Sample_ID>`, folds 8–15 = AMT23, 25, 26, 27, 28, 29,
+  30, 31, with 17, 16, 18, 14, 20, 28, 49, 20 spectra respectively.
 
 | Scheme | Train | Test | Used for |
 |---|---|---|---|
@@ -124,8 +158,13 @@ Fitted on the training set only:
 - Tchla_GSM comes from the GSM-like inversion in `epft_up/sdp/gsm.py`
   (Kramer 2022 Eqs. 1–6, in-situ T/S).
 - OC4v6 comes from `epft_up/sdp/validate.py::oc4v6`.
-- *Pending:* both are provided per sample in the harmonised AMT table, so
-  other groups need not run our code.
+- Both are provided per sample in `AMT_Rrs_HPLC_harmonised.csv`, so other
+  groups need not run our code. The columns are `Tchla_GSM_smooth5`,
+  `Tchla_OC4_smooth5` (primary) and `_asis`, plus the GSM's a_dg(443),
+  b_bp(443) and a convergence flag.
+- Against HPLC (182 spectra, smoothed): GSM slope 1.01, R² 0.86, bias −0.03
+  dex; OC4 R² 0.87. The as-delivered spectra give the same numbers to two
+  decimals.
 - For each target, a model is compared with the **best** of these baselines.
 
 ## 7. Metrics
@@ -169,8 +208,8 @@ and dex for ratios.
 
 - [ ] Tom Jordan's answers: radiometry processing and resampling, the shared
   pairs, LODs, MVchlb, salinity, AMT24, sharing with Billy, credit.
-- [ ] The AMT loader, the harmonised table (with Tchla_GSM, OC4 and flags),
-  and the fold file: Test on new AMT data, #1.
+- [x] The AMT loader, the harmonised table (with Tchla_GSM, OC4 and flags),
+  and the fold file: Test on new AMT data, #1 (2026-10-24).
 - [ ] H2 results, report §11 and slides: Test on new AMT data, #2–#3.
 - [ ] Once Tom answers: re-run H2 if the harmonisation changes; then L16/LA
   retraining; and give Billy the harmonised table.

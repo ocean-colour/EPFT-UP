@@ -40,6 +40,9 @@ LOCAL = Path(os.environ['OS_COLOR']) / 'AMT' / 'Rrs_HPLC'
 DRIVE = (Path.home() / 'Library' / 'CloudStorage' / 'GoogleDrive-jxp@ucsc.edu' /
          'Shared drives' / 'AI_for_Ocean' / 'data' / 'Color' / 'AMT' / 'Rrs_HPLC')
 SAL_MIN_OPEN_OCEAN = 30.0
+#: Files written by scripts/sdp/amt_harmonise.py, mirrored with --drive when present
+DERIVED = ('AMT_Rrs_HPLC_harmonised.csv', 'AMT_Rrs_HPLC_harmonised.json',
+           'AMT_Kramer_folds.csv', 'woa23_salinity_fix.csv', 'woa23_salinity_fix.json')
 
 
 def flags(df):
@@ -133,9 +136,29 @@ and credit terms are pending (asked in EPFT-UP
 - One row per spectrum, HPLC averaged over shared pairs.
 - Below-LOD values zeroed using Kramer's deposit LOD proxy.
 - MVchlb: Tchlb as a flagged proxy; MVchlb scored on AMT29/30 only.
+- Pair Sample_ID 107/108 dropped (one spectrum, Tchla 0.073 vs 0.165).
 - Bad salinity replaced by WOA23 climatology.
 - Rows with non-positive Rrs excluded.
 - CV groups: each cruise is a group; also a leave-all-AMT-out test.
+
+The rules are implemented in EPFT-UP `epft_up/sdp/amt.py::load_amt` and
+specified in `reports/provenance/AMT_benchmark_protocol.md` §3–§4.
+
+## Derived files (written by EPFT-UP `scripts/sdp/amt_harmonise.py`)
+
+- `AMT_Rrs_HPLC_harmonised.csv`: one row per usable spectrum after the rules
+  above. It holds meta, pigments under EPFT-UP names (HexFuco, ButFuco),
+  flags, the as-delivered `Rrs_400…700`, and Tchla from a GSM-like inversion
+  and from OC4v6, for both 5 nm-smoothed (`_smooth5`) and as-delivered
+  (`_asis`) spectra. `sample_id` = `AMT:<smallest Sample_ID>`, and
+  `sample_ids` lists every collapsed row.
+- `AMT_Kramer_folds.csv`: `sample_id, set, group, fold` for the Kramer et
+  al. (2022) deposit (`K22:<row>`, 8 campaigns, folds 0–7) and AMT (8
+  cruises, folds 8–15).
+- `AMT_Rrs_HPLC_harmonised.json`: provenance, rows per cruise after each
+  rule, diagnostics, checksums.
+- `woa23_salinity_fix.csv` / `.json`: the WOA23 salinity used for the
+  implausible values.
 
 The inspection is documented in the EPFT-UP report
 (`reports/SDP_Claude_Report.md`, Appendix A) and in
@@ -156,6 +179,13 @@ def stage(dest, src, sha, F, text):
         raise SystemExit(f'checksum mismatch after copy: {target}')
     F.to_csv(dest / 'AMT_Rrs_HPLC_flags.csv', index=False)
     (dest / 'README.md').write_text(text, encoding='utf-8')
+    if dest != LOCAL:
+        for name in DERIVED:
+            if (LOCAL / name).exists():
+                shutil.copy2(LOCAL / name, dest / name)
+                if sdpdata.sha256_of(dest / name) != sdpdata.sha256_of(LOCAL / name):
+                    raise SystemExit(f'checksum mismatch after copy: {dest / name}')
+                print(f'  + {name}')
     print(f'staged {target}')
 
 

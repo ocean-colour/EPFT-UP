@@ -69,7 +69,7 @@ SECTIONS = {
                               ['exports_na_summary.json', 'exports_na_scores.csv',
                                'exports_na_vs_null.csv', 'exports_na_tchla.png',
                                'exports_na_ratios.png']),
-    'A New AMT data (inspection)': (['inspect_amt.py', 'stage_amt.py'],
+    'A New AMT data (inspection)': (['inspect_amt.py', 'stage_amt.py', 'amt_harmonise.py'],
                                     ['amt_inspect_summary.json', 'amt_map.png',
                                      'amt_spectra.png', 'amt_pigments.png',
                                      'amt_chl_consistency.png']),

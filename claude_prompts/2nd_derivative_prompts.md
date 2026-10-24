@@ -1710,3 +1710,70 @@ and keeps the stop-and-ask rule:
 
 No calculations this round.
 
+
+### 2026-10-24 (Test on new AMT data #1: loader, harmonisation, fold file)
+
+Code:
+- **New `epft_up/sdp/amt.py`.** `load_amt(raw=False, path, verify, sal_fix,
+  lods)` → `AMTData` (wave, Rrs as delivered, meta with `cruise` as the
+  group, pigments under our names, flags, steps, provenance). It pins
+  `AMT_SHA256` and refuses anything else unless `verify=False` (tests only).
+  Rules in order:
+  1. drop 107/108;
+  2. exclude any Rrs ≤ 0;
+  3. collapse shared spectra (pigments, T, S averaged; `sample_id` =
+     `AMT:<min Sample_ID>`, `sample_ids` lists all);
+  4. replace S < 30 from `woa23_salinity_fix.csv`;
+  5. fill missing MVchlb from Tchlb (flags `MVchlb_proxy`,
+     `MVchlb_scorable` = measured on AMT29/30);
+  6. zero the 13 pigments below `LOD_PROXY_DEPOSIT` (flags
+     `lod_zeroed:<p>`).
+- **`spectral.moving_mean` gains `edges='shrink'`** (MATLAB `movmean`
+  default), because the AMT spectra end exactly at 400/700 nm and the
+  frozen models need the full grid. The default stays `'nan'`, so existing
+  results are unchanged. Not specified by the protocol; chosen as the
+  technical default, and documented in protocol §3.
+- **New `epft_up/tests/test_sdp_amt.py`** (8 tests): checksum refusal
+  (raw and harmonised), raw passthrough, rule order and counts, pair
+  averaging, salinity replacement and its missing-fix error, LOD zeroing
+  (including pre-existing zeros), MVchlb proxy/scorable flags, the ratio
+  ½·LOD rule, `LOD_PROXY_DEPOSIT` equal to `validate.lod_proxy` on the
+  deposit, and the shrink edges. **Suite: 108 passed.**
+- **New `scripts/sdp/amt_harmonise.py`.** It fetched WOA23 March surface S
+  by OPeNDAP (35.64 at 33.4°S 33.4°W) into `woa23_salinity_fix.csv/.json`
+  (cached). It then writes:
+  - `AMT_Rrs_HPLC_harmonised.csv`: 182 rows; meta, pigments, flags,
+    as-delivered Rrs, and GSM (Tchla, a_dg, b_bp, converged) + OC4 Tchla
+    for the `_smooth5` and `_asis` spectra;
+  - `AMT_Kramer_folds.csv`: 145 + 182 rows; folds 0–7 deposit campaigns,
+    8–15 AMT cruises;
+  - `AMT_Rrs_HPLC_harmonised.json`: provenance, steps, diagnostics,
+    checksums, git HEAD.
+- **`scripts/sdp/stage_amt.py`** now mirrors those derived files to the
+  shared drive (checksum-verified) and documents them in the README; run
+  with `--drive`. Billy was not notified.
+
+Rows per cruise after each rule (total):
+- 210 raw;
+- 208 after dropping 107/108;
+- 201 after excluding non-positive Rrs;
+- **182** after one row per spectrum (19 averaged pairs).
+
+Final per cruise: AMT23 17, AMT25 16, AMT26 18, AMT27 14, AMT28 20, AMT29
+28, AMT30 49, AMT31 20.
+
+Learned:
+- GSM and OC4 vs HPLC on the 182 harmonised spectra are unchanged by the
+  5 nm smoothing: GSM slope 1.01, R² 0.86, bias −0.03 dex; OC4 R² 0.87.
+  The smoothing matters for derivatives, not for chlorophyll.
+- LOD zeroing is heavy for the trace pigments: Neo 157/182, Perid 140,
+  Allo 131, Viola 58. Those ratios will be dominated by the ½·LOD
+  replacement, as in the deposit (report §6.1), and should be read with
+  that caveat in Test #2.
+- MVchlb is scorable on 77 spectra (AMT29/30).
+
+Docs:
+- Protocol: status updated; §1/§2 rows added; §3 implementation details and
+  rows-per-cruise table; §4 fold file; §6 GSM/OC4 columns; open item ticked.
+- Report Appendix A: harmonisation paragraph.
+- `report_provenance.py` maps `amt_harmonise.py` (0 problems).

@@ -2035,6 +2035,12 @@ the deposit once processed like it.**
   `$OS_COLOR/AMT/Rrs_HPLC/` and on the AI_for_Ocean shared drive
   (`data/Color/AMT/Rrs_HPLC/`), with a README and per-row flags
   (`scripts/sdp/stage_amt.py`).
+- **Harmonisation.** The protocol rules (`reports/provenance/AMT_benchmark_protocol.md`
+  §3) are implemented in `epft_up/sdp/amt.py`. `scripts/sdp/amt_harmonise.py`
+  writes the harmonised table: **182 spectra**, with GSM and OC4 Tchla for
+  smoothed and as-delivered spectra (GSM vs HPLC R² 0.86, bias −0.03 dex). It
+  also writes the deposit + AMT fold file (16 groups) and the WOA23 salinity
+  fix (35.64).
 - **Open questions to Tom** are in `requests/AMT_Rrs_HPLC_questions.md`.
   One pair (Sample_ID 107/108) shares a spectrum but differs ×2.3 in Tchla;
   both will be dropped until resolved.
