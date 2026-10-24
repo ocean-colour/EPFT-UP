@@ -104,7 +104,28 @@ class BayesianSharedW:
             oof[f] = (pred - self.Ym) / self.Ysd
         self.regs = [BayesianRidge(fit_intercept=True).fit(oof[:, [j]], Yz[:, j])
                      for j in range(Y.shape[1])]
+        self.oof_, self.Yz_ = oof, Yz
         return self
+
+    def oof_residuals(self):
+        """Cross-fitted residuals y - E[y | ŷ_oof] on the training set, in target units.
+
+        These are leave-one-campaign-out errors of the calibrated model (the
+        hyperparameters were selected on all training campaigns). Grouping them
+        by campaign separates a between-campaign component from the
+        within-campaign scatter (e.g. :func:`campaign_variance`).
+        Only available for ``calibration='oof'``.
+
+        Returns
+        -------
+        ndarray, shape (n, q)
+        """
+        if self.calibration != 'oof':
+            raise ValueError("oof_residuals needs calibration='oof'")
+        R = np.empty_like(self.Yz_)
+        for j, r in enumerate(self.regs):
+            R[:, j] = (self.Yz_[:, j] - r.predict(self.oof_[:, [j]])) * self.Ysd[j]
+        return R
 
     def _latent(self, Xs, Xa):
         X = np.asarray(Xs, float) - self.st['mu_s']
@@ -135,6 +156,34 @@ class BayesianSharedW:
             return (self.L[:p_s] @ self._latent_coef) * b * self.Ysd
         C = np.column_stack([r.coef_ for r in self.regs])          # (r, q)
         return (self.L[:p_s] @ C) * self.Ysd
+
+
+def campaign_variance(resid, groups):
+    """Method-of-moments split of residuals into between- and within-campaign variance.
+
+    With e_ij = b_j + ε_ij, b_j ~ N(0, τ²) and ε_ij ~ N(0, σ_w²):
+    τ² = max(0, Var_j(ē_j) - mean_j(s_j² / n_j)) and σ_w² is the pooled
+    within-campaign variance.
+
+    Parameters
+    ----------
+    resid : ndarray, shape (n,) or (n, q)
+    groups : ndarray, shape (n,)
+
+    Returns
+    -------
+    tau2, sigw2 : ndarray, shape (q,)
+    """
+    R = np.atleast_2d(np.asarray(resid, float).T).T
+    g = np.asarray(groups)
+    labs = list(dict.fromkeys(g))
+    means = np.array([R[g == c].mean(axis=0) for c in labs])
+    n = np.array([(g == c).sum() for c in labs])
+    s2 = np.array([R[g == c].var(axis=0, ddof=1) if k > 1 else np.zeros(R.shape[1])
+                   for c, k in zip(labs, n)])
+    sigw2 = np.sum((n[:, None] - 1) * s2, axis=0) / max(np.sum(n - 1), 1)
+    tau2 = np.maximum(0.0, means.var(axis=0, ddof=1) - np.mean(s2 / n[:, None], axis=0))
+    return tau2, sigw2
 
 
 def gaussian_scores(y, mu, sd):

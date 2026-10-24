@@ -73,6 +73,12 @@ SECTIONS = {
                                     ['amt_inspect_summary.json', 'amt_map.png',
                                      'amt_spectra.png', 'amt_pigments.png',
                                      'amt_chl_consistency.png']),
+    '11 AMT hold-out (H2)': (['amt_holdout.py'],
+                             ['amt_holdout_summary.json', 'amt_holdout_scores.csv', 'amt_holdout_predictions.csv.gz',
+                              'amt_holdout_vs_null.csv', 'amt_holdout_coverage.csv',
+                              'amt_holdout_campaign.csv', 'amt_holdout_tchla.png',
+                              'amt_holdout_ratios.png', 'amt_holdout_cruise_bias.png',
+                              'amt_holdout_coverage.png', 'amt_holdout_smooth_vs_asis.png']),
     '10 Provenance (this script)': (['report_provenance.py'], []),
 }
 

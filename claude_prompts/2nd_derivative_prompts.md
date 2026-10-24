@@ -489,6 +489,23 @@ questions take the *[default]*.
 
   Nothing has been run yet.
 
+#### Follow-up from Claude (2026-10-24, after Test on new AMT data #2)
+
+14. **AMT27 DVchla.** AMT27 (DHI HPLC) reports DVchla = 0 in all 15 samples,
+    while MVchla/Tchla is only 0.34–0.98 and Zea is typical, so divinyl Chl
+    a was evidently not separated. Under protocol §3 these zeros count as
+    "below detection", which biases the DVchla targets on that cruise
+    (every model over-predicts DVchla:Tchla there by about +0.9 dex).
+    - H2 was run with the protocol as written.
+    - A sensitivity scope that excludes AMT27 for DVchla leaves every
+      conclusion unchanged (the shared W still beats the null for the
+      DVchla ratio, in 7 of 7 cruises).
+    - The question is added to the email to Tom.
+
+    *[default: add a rule to protocol §3 now: DVchla on AMT27 is missing and
+    not scored (as for MVchlb), and re-run H2 in #3 so the report uses it]*
+>A.
+
 ### Setup
 
 Questions from Claude after reading the papers (2026-09-28). Answer inline under
@@ -1777,3 +1794,91 @@ Docs:
   rows-per-cruise table; §4 fold file; §6 GSM/OC4 columns; open item ticked.
 - Report Appendix A: harmonisation paragraph.
 - `report_provenance.py` maps `amt_harmonise.py` (0 problems).
+
+### 2026-10-24 (Test on new AMT data #2: frozen-model hold-out H2)
+
+Code:
+- **New `scripts/sdp/amt_holdout.py`**, modelled on `exports_na_holdout.py`
+  with nothing retrained.
+  - Models: PCR (ours and Kramer's coefficients; ratios derived), the
+    GSM/OC4 nulls and the constant ratio calibrated on the 145, and the
+    Bayesian shared W (abs hp 0.1/100/rank 3; ratio 1/100/rank 2, the same
+    as for EXPORTS-NA).
+  - Spectra: `smooth5` (primary; shrink edges) and `asis`. The GSM fits are
+    cached in `$OS_COLOR/AMT/Rrs_HPLC/products/`.
+  - Scores pooled and per cruise; MVchlb only on AMT29/30.
+  - ΔRMS vs the best null with a paired sample bootstrap *and* a cluster
+    bootstrap over the 8 cruises (primary verdict), plus cruises-better
+    counts.
+  - Shared-W coverage pooled and per cruise, without and with the deposit's
+    τ².
+  - A cruise-mean test: independent-error vs campaign-aware SD.
+  - Comparison with EXPORTS-NA and L8.
+- **`epft_up/sdp/bayes.py`**: `BayesianSharedW` keeps `oof_`/`Yz_` and gains
+  `oof_residuals()`; new `campaign_variance()` (method-of-moments τ², σ_w²)
+  with a test. **Suite: 109 passed.**
+- **Outputs** (`reports/figures/sdp/`): `amt_holdout_scores.csv`,
+  `_predictions.csv.gz` (per sample; useful for scoring Billy's models
+  alike), `_vs_null.csv` (protocol + DVchla-excl-AMT27 scopes),
+  `_coverage.csv`, `_campaign.csv`, `_summary.json`; figures `_tchla`,
+  `_ratios`, `_cruise_bias`, `_coverage`, `_smooth_vs_asis`.
+- `report_provenance.py` maps them (0 problems). Appendix A points to the
+  summary. The protocol §8 now has an H2 results block; status and open
+  items updated.
+
+Interpretation note (campaign term). The cross-fitted calibration already
+contains between-campaign error on average, so adding τ² to *per-sample*
+variance double-counts. It makes ratio coverage 0.88/0.99 vs base
+0.80/0.98, already slightly wide on AMT. The campaign term belongs to
+*aggregate* statements: cruise-mean ratio residuals fall inside ±1.96·√(τ² +
+σ_w²/n) in 0.99 of cases, vs 0.71 under independent errors. That is the
+EXPORTS-NA failure mode, now quantified.
+
+Results (smooth5; cluster-bootstrap verdicts vs the best null):
+- **The paper's PCR fails on AMT.**
+  - Absolute: 0 beat / 3 tie / 10 worse (Kramer's coefficients 0/1/12).
+    Derived ratios: 12/12 worse, by +0.6 to +1.2 dex.
+  - Cause: ~38% of its Tchla predictions are below the LOD at AMT's low
+    concentrations (Tchla bias −0.77 dex). Ratios against a near-zero Tchla
+    explode.
+  - Consistent with §6.2 (LOCO, PCR worse than the null) and §6.1 (empty
+    derived ratios). EXPORTS-NA (§9), where PCR won on diatom pigments, was
+    the favourable draw.
+- **Shared W, ratios: beats the null for 8 of 12**, with pooled ΔRMS −0.01
+  to −0.09 dex. Cruises better, out of 8:
+  - Fuco, Zea, HexFuco: 8;
+  - DVchla, Chlc12, Chlc3: 7;
+  - Allo: 6 (largely ½·LOD-driven);
+  - MVchlb: 2 of 2.
+
+  Ties: Perid, Neo, Viola. Worse: ButFuco (+0.003 dex). Its log-R² beats the
+  null's mainly *within* cruises (Zea 0.66 vs 0.42; Chlc12 0.47 vs 0.16;
+  DVchla 0.44 vs 0.29); its per-cruise biases track the null's. The
+  cyanobacterial ratios hold up in this oligotrophic set:
+  - Zea:Tchla beats the null in 8/8 cruises (ΔRMS −0.06);
+  - DVchla:Tchla in 7/8 (−0.09; −0.11 with AMT27 excluded).
+
+  Consistency with earlier tests: Fuco, Zea, DVchla and Chlc12 also won
+  under L8 (§7) and on EXPORTS-NA (§9). HexFuco and Chlc3 are new wins.
+  Perid (an L8 win) is a tie.
+- **Shared W, absolute: 0 beat / 2 tie / 11 worse** in log RMS. Its linear
+  Gaussian predictions are below the LOD for 41% of AMT Tchla (bias −0.89
+  dex; log RMS 0.39 where the prediction is positive). This is the §8.2
+  caveat about absolute targets, made concrete. The cause is clear, so I
+  did not stop.
+- **Coverage** (shared W, smooth5): ratios 0.80/0.98 (SD(z) 0.81; PIT
+  slightly humped, mean z +0.08); absolute 0.94/0.99 (SD(z) 0.52, intervals
+  far too wide for oligotrophic concentrations).
+- **τ vs reality.** The AMT between-cruise SD of mean ratio residuals is
+  0.03–0.12 dex, against the deposit's τ of 0.09–0.38. The AMT cruises are
+  far more homogeneous than the deposit's campaigns. The exception is
+  DVchla (0.47), driven by AMT27.
+- **Smoothed vs as-delivered**: identical verdicts; the shared W and nulls
+  are unchanged. PCR is somewhat worse as-is (e.g. Tchla RMS 1.66 vs 1.36
+  dex), as §8 predicts for a derivative model.
+
+Data issue found: AMT27 (DHI) DVchla = 0 in all samples, with MVchla/Tchla
+0.34–0.98. DV was not separated. Added to the Tom email (question 4) and
+posed as Q14 (protocol rule change). A sensitivity scope that excludes
+AMT27 for DVchla leaves the conclusions unchanged.
+

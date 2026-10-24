@@ -1,7 +1,7 @@
 {
  "script": "scripts/sdp/report_provenance.py",
- "git_head": "7d56f5cbc93b4fa7843b3ccf8a519b98761fb777",
- "report_sha256": "656f3362d56f8026730f63f9ea78b8fe176f9aa4cdfa84832ce396b48da53bef",
+ "git_head": "f8f414f87960fce4674c0aa36ff439396cfe51f2",
+ "report_sha256": "5c2f7fc85c6204da5cf4b629eecc8ab9c52674f91f19156166d888a0381b5fbd",
  "sections": {
   "3 Data": {
    "scripts": [
@@ -413,12 +413,80 @@
     }
    ]
   },
+  "11 AMT hold-out (H2)": {
+   "scripts": [
+    {
+     "script": "scripts/sdp/amt_holdout.py",
+     "exists": true,
+     "sha256": "abd645e7b4e25a6ff1576dfc3b3b2ae15000c4f7fd8ab907a9c25f575c5a2449",
+     "cited_in_report": true
+    }
+   ],
+   "outputs": [
+    {
+     "output": "reports/figures/sdp/amt_holdout_summary.json",
+     "exists": true,
+     "sha256": "5062ae0f9ef140c31fa95fdeb44c81ef1bb1079b67ac9e138176335ae37ffbe0",
+     "records_script": "scripts/sdp/amt_holdout.py"
+    },
+    {
+     "output": "reports/figures/sdp/amt_holdout_scores.csv",
+     "exists": true,
+     "sha256": "ff2c0091b813e153b64d12b9f02c43ad453dbc55e3cabd52481d4c60a544c591"
+    },
+    {
+     "output": "reports/figures/sdp/amt_holdout_predictions.csv.gz",
+     "exists": true,
+     "sha256": "e8c2e2c3fb9e56e496e59714d640eb157e59ea16265c50af37a51d2ea70a7f86"
+    },
+    {
+     "output": "reports/figures/sdp/amt_holdout_vs_null.csv",
+     "exists": true,
+     "sha256": "386a6a09221c0122d965bdffa07111469b8cacbab58064b9a200c3fda5f47694"
+    },
+    {
+     "output": "reports/figures/sdp/amt_holdout_coverage.csv",
+     "exists": true,
+     "sha256": "e2e617baea6dd100f32ceda146e376fa4fc988294331c6f71315b8328b3b5d3f"
+    },
+    {
+     "output": "reports/figures/sdp/amt_holdout_campaign.csv",
+     "exists": true,
+     "sha256": "242dd4202e79e93266e1c120da3accaabf11916ea8853f7522b883239421707f"
+    },
+    {
+     "output": "reports/figures/sdp/amt_holdout_tchla.png",
+     "exists": true,
+     "sha256": "dca797f66b488d4772749a9bca77b4337f76de5202b803e9cea4253b6cbe31ea"
+    },
+    {
+     "output": "reports/figures/sdp/amt_holdout_ratios.png",
+     "exists": true,
+     "sha256": "5f8ed4dce008d46f9c5dc1808c98cdc4bc6f3ea5ebe5c06ab21cb6473b69abe1"
+    },
+    {
+     "output": "reports/figures/sdp/amt_holdout_cruise_bias.png",
+     "exists": true,
+     "sha256": "f2bbcfb2a1dc3fd816e3abe59486623cb5909f895ec29c09b2cbb970f837336f"
+    },
+    {
+     "output": "reports/figures/sdp/amt_holdout_coverage.png",
+     "exists": true,
+     "sha256": "87374e35ffaaf50e97c925d9514135013ceb84b42b6d4b1c8bb2e091140331f9"
+    },
+    {
+     "output": "reports/figures/sdp/amt_holdout_smooth_vs_asis.png",
+     "exists": true,
+     "sha256": "91e60e08b07d30ed60008e44eac57fae5e1a9c9c388bf618df77d111e035c02f"
+    }
+   ]
+  },
   "10 Provenance (this script)": {
    "scripts": [
     {
      "script": "scripts/sdp/report_provenance.py",
      "exists": true,
-     "sha256": "b3c7e23408076eb9f003fd63fd8bcecfeb0204874d9a0e83530583641695b45a",
+     "sha256": "404a800fd17c411092f5266722b6e33e3a5acdd08c2cdcb0c9f56e458928df40",
      "cited_in_report": true
     }
    ],
@@ -426,6 +494,7 @@
   }
  },
  "figures_referenced": [
+  "amt_holdout_summary.json",
   "amt_inspect_summary.json",
   "diag_loco_tchla.png",
   "diag_skill_absolute.png",
@@ -702,5 +771,5 @@
   }
  ],
  "problems": [],
- "run_utc": "2026-10-24T14:12:55+00:00"
+ "run_utc": "2026-10-24T15:24:40+00:00"
 }

@@ -74,3 +74,17 @@ def test_five_nm_grid_has_no_extra_smoothing():
     np.testing.assert_allclose(C, np.diag(np.diag(C)))
     with pytest.raises(ValueError):
         noise.band_sigma(w5, np.ones(w5.size), 'bogus')
+
+
+def test_campaign_variance_recovers_tau():
+    from epft_up.sdp import bayes
+    rng = np.random.default_rng(0)
+    g = np.repeat(np.arange(40), 30)
+    b = rng.normal(0, 0.5, 40)
+    e = b[g] + rng.normal(0, 1.0, g.size)
+    tau2, sigw2 = bayes.campaign_variance(e, g)
+    assert abs(np.sqrt(tau2[0]) - 0.5) < 0.15
+    assert abs(sigw2[0] - 1.0) < 0.1
+    # no campaign effect -> tau2 near 0
+    tau2, _ = bayes.campaign_variance(rng.normal(size=g.size), g)
+    assert tau2[0] < 0.02

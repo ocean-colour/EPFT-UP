@@ -2041,6 +2041,9 @@ the deposit once processed like it.**
   smoothed and as-delivered spectra (GSM vs HPLC R² 0.86, bias −0.03 dex). It
   also writes the deposit + AMT fold file (16 groups) and the WOA23 salinity
   fix (35.64).
+- **Hold-out results** (frozen models; `scripts/sdp/amt_holdout.py`, summary
+  `reports/figures/sdp/amt_holdout_summary.json`) are to be written up as §11 in Test on
+  new AMT data #3.
 - **Open questions to Tom** are in `requests/AMT_Rrs_HPLC_questions.md`.
   One pair (Sample_ID 107/108) shares a spectrum but differs ×2.3 in Tchla;
   both will be dropped until resolved.

@@ -1,6 +1,6 @@
 # Email to Tom Jordan: questions on `AMT_Rrs_HPLC.csv`
 
-**Prepared:** 2026-10-24 (Claude, for JXP), from EPFT-UP
+**Prepared:** 2026-10-24 (Claude, for JXP; AMT27 DVchla item added after Test on new AMT data #2), from EPFT-UP
 `claude_prompts/2nd_derivative_prompts.md`, Q&A → New AMT data, Q3–Q8.
 Evidence: EPFT-UP `reports/figures/sdp/amt_inspect_summary.json` and the
 report's Appendix A.
@@ -55,6 +55,12 @@ are fine, and "don't know" is useful too.
 
 4. **MVchlb / DVchlb** are only filled for AMT29 and AMT30 (NASA GSFC). Do
    you have them, or the divinyl/monovinyl split, for the other cruises?
+
+   Related: **AMT27 (DHI) reports DVchla = 0 in all 15 samples**, while
+   MVchla is only 34–98% of Tchla and Zea is typical for the transect. That
+   looks like DV Chl a was not separated, rather than absent. Is that right?
+   If so we'd treat AMT27 DVchla as missing. AMT28 (also DHI) does report
+   DVchla.
 
 5. **Salinity.** Sample_ID 132 and 159 (AMT30, 2023-03-01, 33.3°S 33.3°W)
    have S = 22.23, which looks like a bad value for the open South

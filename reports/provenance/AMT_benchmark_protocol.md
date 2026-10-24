@@ -6,8 +6,8 @@ comparable across groups. Anyone training a model on these data (e.g. Billy
 Li's Bayesian neural networks) can then be scored with the same splits,
 baselines and metrics as the EPFT-UP SDP study.
 
-**Status:** 2026-10-24, after *Test on new AMT data #1* (loader, harmonised
-table, fold file); repository commit `1b60500` + working tree.
+**Status:** 2026-10-24, after *Test on new AMT data #2* (H2 frozen-model
+hold-out run; write-up in #3); repository commit `1b60500` + working tree.
 Questions to Tom Jordan are outstanding (`requests/AMT_Rrs_HPLC_questions.md`).
 Items marked *pending* are defined here but not yet produced. The prompts
 "Test on new AMT data" in `claude_prompts/2nd_derivative_prompts.md` produce
@@ -25,7 +25,7 @@ public (CC-BY-4.0).
 |---|---|---|---|---|---|
 | **Kramer et al. (2022)**, PANGAEA doi:10.1594/PANGAEA.937536 | training set of all EPFT-UP SDP models | 145 | 8 campaigns | `$OS_COLOR/PANGAEA/Kramer2022/PANGAEA_937536.tab` | `63da2981596ef8c3d856e0ae12eab4cb715a9ec535e92d83458a7a7f5f910f3b` |
 | **EXPORTS-NA 2021** (Kramer et al. 2024 test spectra + SeaBASS HPLC) | hold-out test 1 (done, report §9) | 17 | 1 campaign | `$OS_COLOR/PANGAEA/Kramer2022/EXPORTS_NA/exports_na_matchups.csv` | `90d8fd20b1231a98479c1d267f1ebc93f31479b32a7145cd2dc2755e2b9e5288` |
-| **AMT_Rrs_HPLC** (compiled by Tom Jordan, received 2026-10-24) | hold-out test 2 (*pending*, Test #2); later, extra training data | 210 rows → **182 harmonised spectra** | 8 cruises | `$OS_COLOR/AMT/Rrs_HPLC/AMT_Rrs_HPLC.csv`; shared drive *AI_for_Ocean* `data/Color/AMT/Rrs_HPLC/` | `0290c9f49fae79dd52dbf920e77ff580c15af9115cd26ed734659d2c7827bca6` |
+| **AMT_Rrs_HPLC** (compiled by Tom Jordan, received 2026-10-24) | hold-out test 2 (done, H2; §8 below); later, extra training data | 210 rows → **182 harmonised spectra** | 8 cruises | `$OS_COLOR/AMT/Rrs_HPLC/AMT_Rrs_HPLC.csv`; shared drive *AI_for_Ocean* `data/Color/AMT/Rrs_HPLC/` | `0290c9f49fae79dd52dbf920e77ff580c15af9115cd26ed734659d2c7827bca6` |
 
 Supporting inputs, cloned at pinned commits and never copied into the repo:
 
@@ -127,7 +127,7 @@ with columns `sample_id, set, group, fold`:
 | R: random 75/25 × 100 (seed 1) | deposit | deposit | comparison with Kramer et al. 2022 only (leaks within cruises) |
 | L8: leave-one-campaign-out | deposit, 7 campaigns | the 8th | the main skill estimate so far (report §6–§8) |
 | H1: frozen hold-out | deposit (all 145) | EXPORTS-NA (17) | done (§9) |
-| **H2: frozen hold-out** | deposit (all 145) | AMT, scored pooled **and per cruise** (8 groups) | *pending* (Test on new AMT data) |
+| **H2: frozen hold-out** | deposit (all 145) | AMT, scored pooled **and per cruise** (8 groups) | done 2026-10-24 (`scripts/sdp/amt_holdout.py`) |
 | L16: leave-one-group-out | deposit + AMT | each of 8 campaigns + 8 AMT cruises | *later*, after Tom's answers |
 | LA: leave-all-AMT-out | deposit | all AMT | *later* (= H2 when nothing is retrained) |
 
@@ -204,12 +204,42 @@ and dex for ratios.
 | L8 | Bayesian shared W | 68/95% coverage 0.71/0.94 (ratios) |
 | H1 | PCR / shared W on EXPORTS-NA | report §9 |
 
+### H2 results on AMT (182 spectra, 8 cruises; 5 nm-smoothed spectra; `amt_holdout_summary.json`)
+
+Verdicts use the 95% cluster bootstrap over cruises of ΔRMS against the
+best Tchla null (number of targets):
+
+| Model | absolute (13): beats / tie / worse | ratios (12): beats / tie / worse |
+|---|---|---|
+| PCR on δRrs″ (ours) | 0 / 3 / 10 | 0 / 0 / 12 |
+| PCR, Kramer's coefficients | 0 / 1 / 12 | 0 / 0 / 12 |
+| Bayesian shared W | 0 / 2 / 11 | **8 / 3 / 1** |
+
+- **Shared-W ratios that beat the null.** Fuco, Zea and HexFuco beat it in
+  8 of 8 cruises; DVchla, Chlc12 and Chlc3 in 7 of 8; Allo in 6 of 8; MVchlb
+  in 2 of 2 (AMT29/30 only). The pooled ΔRMS is −0.01 to −0.09 dex.
+- **Shared-W interval coverage** (ratios): 0.80 / 0.98 at 68 / 95%, so
+  slightly too wide on AMT.
+- **Campaign variance.** Cruise-mean residuals fall inside the
+  campaign-aware 95% interval (τ² from the deposit) for 0.99 of
+  cruise×ratio cases, against 0.71 with independent errors.
+- **Absolute targets.** Linear-space models (PCR and the shared W) predict
+  below the LOD for ~40% of AMT Tchla, so every absolute model loses to the
+  null in log space.
+- **Unsmoothed spectra:** the same verdicts.
+- **Data issue found.** AMT27 (DHI) reports DVchla = 0 in every sample, but
+  MVchla/Tchla is 0.34–0.98, so DV was not separated. A sensitivity scope
+  that excludes AMT27 for DVchla leaves the conclusions unchanged. A rule
+  change has been proposed (prompt doc Q&A), and Tom has been asked.
+
 ## 9. Open items
 
 - [ ] Tom Jordan's answers: radiometry processing and resampling, the shared
   pairs, LODs, MVchlb, salinity, AMT24, sharing with Billy, credit.
 - [x] The AMT loader, the harmonised table (with Tchla_GSM, OC4 and flags),
   and the fold file: Test on new AMT data, #1 (2026-10-24).
-- [ ] H2 results, report §11 and slides: Test on new AMT data, #2–#3.
+- [x] H2 results: Test on new AMT data #2 (2026-10-24).
+- [ ] Report §11 and slides: Test on new AMT data #3.
+- [ ] Decide whether AMT27 DVchla becomes "missing" in §3 (Q14 in the prompt doc; asked of Tom).
 - [ ] Once Tom answers: re-run H2 if the harmonisation changes; then L16/LA
   retraining; and give Billy the harmonised table.
