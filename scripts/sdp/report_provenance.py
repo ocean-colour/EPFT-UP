@@ -69,7 +69,7 @@ SECTIONS = {
                               ['exports_na_summary.json', 'exports_na_scores.csv',
                                'exports_na_vs_null.csv', 'exports_na_tchla.png',
                                'exports_na_ratios.png']),
-    'A New AMT data (inspection)': (['inspect_amt.py', 'stage_amt.py', 'amt_harmonise.py'],
+    '11.1 AMT data, staging, harmonisation': (['inspect_amt.py', 'stage_amt.py', 'amt_harmonise.py'],
                                     ['amt_inspect_summary.json', 'amt_map.png',
                                      'amt_spectra.png', 'amt_pigments.png',
                                      'amt_chl_consistency.png']),
@@ -120,7 +120,39 @@ def claims():
     dof = mth['part_ii']['dof']
     pn = mth['part_ii']['prediction_noise']['Tchla']
 
+    am = jload('amt_holdout_summary.json')
+    ai = jload('amt_inspect_summary.json')
+    asc = csv('amt_holdout_scores.csv')
+    avn = csv('amt_holdout_vs_null.csv')
+    acov = pd.DataFrame(am['coverage_pooled'])
+    rcov = acov[(acov.variant == 'smooth5') & (acov.kind == 'ratio') & (acov.variance == 'base')]
+    cmt = pd.DataFrame(am['campaign_mean_test'])
+    cmt = cmt[(cmt.variant == 'smooth5') & (cmt.kind == 'ratio')].iloc[0]
+    vc = am['verdict_counts_cluster_smooth5']
+    sc = lambda **k: row(asc, variant='smooth5', group='pooled', **k)  # noqa: E731
+    vn = lambda **k: row(avn, variant='smooth5', **k)  # noqa: E731
+
     out = [
+        ('amt_n_spectra', '11.1', 182, am['n_spectra']),
+        ('amt_gsm_slope_raw', '11.1', 1.03, ai['gsm']['GSM_vs_HPLC']['slope']),
+        ('amt_gsm_R2_raw', '11.1', 0.87, ai['gsm']['GSM_vs_HPLC']['R2']),
+        ('amt_W_ratio_beats', '11.3', 8, vc['ratio:sharedW'].get('beats null', 0)),
+        ('amt_PCR_ratio_worse', '11.3', 12, vc['ratio:PCR_derived'].get('worse', 0)),
+        ('amt_PCR_abs_worse', '11.3', 10, vc['abs:PCR'].get('worse', 0)),
+        ('amt_W_DVchla_dRMS', '11.3', -0.11,
+         vn(kind='ratio', target='DVchla', model='sharedW')['d_rms']),
+        ('amt_W_Zea_cruises_better', '11.3', 8,
+         vn(kind='ratio', target='Zea', model='sharedW')['n_cruises_better']),
+        ('amt_W_Zea_R2', '11.3', 0.66, sc(kind='ratio', target='Zea', model='sharedW')['R2_log']),
+        ('amt_OC4_Zea_R2', '11.3', 0.42, sc(kind='ratio', target='Zea', model='null_OC4')['R2_log']),
+        ('amt_PCR_Tchla_below_lod', '11.3', 0.38,
+         sc(kind='abs', target='Tchla', model='PCR')['frac_pred_below_lod']),
+        ('amt_W_Tchla_below_lod', '11.3', 0.41,
+         sc(kind='abs', target='Tchla', model='sharedW')['frac_pred_below_lod']),
+        ('amt_W_ratio_cov68', '11.4', 0.80, rcov['cov68'].iloc[0]),
+        ('amt_W_ratio_cov95', '11.4', 0.98, rcov['cov95'].iloc[0]),
+        ('amt_cruise_mean_indep', '11.4', 0.72, cmt['in95_indep']),
+        ('amt_cruise_mean_campaign', '11.4', 1.00, cmt['in95_campaign']),
         ('table2_within_1sd', '4.2', 13,
          sum(abs(v['dR2_in_sd']) <= 1 for v in pcr.values())),
         ('table2_Tchla_R2', '4.2', 0.73, pcr['Tchla']['R2']),

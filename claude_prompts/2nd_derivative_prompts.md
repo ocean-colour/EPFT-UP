@@ -506,6 +506,10 @@ questions take the *[default]*.
     not scored (as for MVchlb), and re-run H2 in #3 so the report uses it]*
 >A.
 
+*Claude (2026-10-24, Test #3):* unanswered, so the default was applied:
+rule 7 in `epft_up/sdp/amt.py` and protocol §3; H2 re-run; the report and
+slides use it.
+
 ### Setup
 
 Questions from Claude after reading the papers (2026-09-28). Answer inline under
@@ -1881,4 +1885,71 @@ Data issue found: AMT27 (DHI) DVchla = 0 in all samples, with MVchla/Tchla
 0.34–0.98. DV was not separated. Added to the Tom email (question 4) and
 posed as Q14 (protocol rule change). A sensitivity scope that excludes
 AMT27 for DVchla leaves the conclusions unchanged.
+
+### 2026-10-24 (Test on new AMT data #3: report §11, slides, rule 7)
+
+Q14 was unanswered, so its default was applied first.
+- **Rule 7** in `epft_up/sdp/amt.py`: `DVCHLA_UNSEPARATED_CRUISES =
+  ('AMT27',)`; DVchla → NaN, flag `DVchla_scorable`, `lod_zeroed:DVchla`
+  cleared. New test (suite: **110 passed**).
+- Re-ran `amt_harmonise.py`, `stage_amt.py --drive` (README now mentions
+  rule 7 and §11) and `amt_holdout.py`. That script now masks DVchla on
+  AMT27; the separate sensitivity scope was dropped as redundant.
+- **Changes from the #2 run:**
+  - shared W absolute DVchla now *beats* the null (7 of 7 cruises), so the
+    absolute counts are 1/1/11;
+  - the DVchla ratio gives ΔRMS −0.11, in 7 of 7 cruises;
+  - cruise-mean coverage is 1.00 (campaign-aware) vs 0.72 (independent);
+  - the AMT between-cruise SD for DVchla drops from 0.47 to 0.22 dex.
+
+  Everything else is unchanged.
+
+Report (`reports/SDP_Claude_Report.md`):
+- New **§11 "Hold-out test 2: AMT (2013–2024)"**, which absorbs and replaces
+  Appendix A:
+  - 11.1 data, staging, harmonisation (rules table incl. rule 7),
+    questions to Tom, plus 4 inspection figures;
+  - 11.2 models and scoring (cluster bootstrap, campaign term);
+  - 11.3 results (verdict table; per-ratio table vs L8 and EXPORTS-NA;
+    absolute-pigment failure explained; smoothed vs as-is; 4 figures);
+  - 11.4 uncertainty (coverage table; why τ² double-counts per sample; the
+    cruise-mean test; deposit τ vs AMT spread);
+  - 11.5 reading.
+- Header status; §1 gains question 7 and finding 8.
+- §10.1 conclusion 7 now covers both independent tests, and the bottom line
+  is extended.
+- §10.2: the hold-out limitation now covers both EXPORTS-NA and AMT.
+- §10.3: EPFT-UP rec. 3 is refined (the campaign term is for aggregate
+  statements); rec. 4 adds deposit + AMT retraining (L16) after Tom;
+  rec. 6 says no linear concentration models for oligotrophic use; PACE
+  rec. 5 separates per-pixel and regional uncertainty.
+- §10.4 run order gains `inspect_amt`, `stage_amt`, `amt_harmonise` and
+  `amt_holdout` (steps 13–16).
+- One table-column fix during writing: log-R² is quoted against the OC4
+  null throughout, because the constant-ratio null has no R².
+
+Numbers check: `report_provenance.py` adds 16 AMT claims (now 50/50 ok),
+and the AMT inspection section is renamed to §11.1. 0 problems.
+
+Slides (`scripts/sdp/make_slides.py`, 31 slides; all text ≥ 20 pt; render
+checked):
+- 4 new slides after EXPORTS-NA:
+  1. data/harmonisation (map);
+  2. ratios vs null (new chart `slide_amt_drms.png`: ΔRMS with cluster CIs,
+     PCR vs shared W);
+  3. per-cruise consistency (new heatmap `slide_amt_cruises.png`: per-cruise
+     ΔRMS for the 12 ratios);
+  4. coverage and the campaign term.
+- Updated: "How we tested it" (two independent tests), "What we found" (AMT
+  bullet), "Recommendations" (campaign term for means; no linear
+  concentrations; next step: retrain on deposit + AMT), PACE (per-pixel vs
+  regional term), and provenance (50/50 checks; protocol pointer).
+- Fixes after the render check: the ΔRMS chart was enlarged, and an
+  overstated bullet was corrected ("all lose to the null" → "only DVchla
+  (shared W) beats the null").
+
+Protocol: status updated; rule 7 added to §3 and the rows table; the H2
+block updated to the final numbers; open items ticked (§11/slides, rule 7).
+Still open: Tom's answers → possible re-run, L16/LA retraining, and giving
+Billy the harmonised table.
 

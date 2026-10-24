@@ -1,7 +1,7 @@
 {
  "script": "scripts/sdp/report_provenance.py",
- "git_head": "f8f414f87960fce4674c0aa36ff439396cfe51f2",
- "report_sha256": "5c2f7fc85c6204da5cf4b629eecc8ab9c52674f91f19156166d888a0381b5fbd",
+ "git_head": "e66eef448e5e6847b80947860864c9f3652dfe47",
+ "report_sha256": "a1d679449ac54f21da7a4216ba64b3dd833a17c26b72daf38c45df1c0bc7dbda",
  "sections": {
   "3 Data": {
    "scripts": [
@@ -363,7 +363,7 @@
     }
    ]
   },
-  "A New AMT data (inspection)": {
+  "11.1 AMT data, staging, harmonisation": {
    "scripts": [
     {
      "script": "scripts/sdp/inspect_amt.py",
@@ -374,7 +374,7 @@
     {
      "script": "scripts/sdp/stage_amt.py",
      "exists": true,
-     "sha256": "42a64d88666ae5aa7918b9165e5c60ec8428abeb2aaeefd5b31b53709db7d54a",
+     "sha256": "b6f869155d58192eebaca8f9ad939f0e3bb59b7b7f856efd2f0be9afab7a6845",
      "cited_in_report": true
     },
     {
@@ -418,7 +418,7 @@
     {
      "script": "scripts/sdp/amt_holdout.py",
      "exists": true,
-     "sha256": "abd645e7b4e25a6ff1576dfc3b3b2ae15000c4f7fd8ab907a9c25f575c5a2449",
+     "sha256": "a08d730f392a342a171741c8804dd1b0f11a9b57343598bb46ed2aa94d80dd8b",
      "cited_in_report": true
     }
    ],
@@ -426,33 +426,33 @@
     {
      "output": "reports/figures/sdp/amt_holdout_summary.json",
      "exists": true,
-     "sha256": "5062ae0f9ef140c31fa95fdeb44c81ef1bb1079b67ac9e138176335ae37ffbe0",
+     "sha256": "663a7f2880e939f8e86750fad29e7df5b2464f64b10edd1ebcfbc3cf798055ea",
      "records_script": "scripts/sdp/amt_holdout.py"
     },
     {
      "output": "reports/figures/sdp/amt_holdout_scores.csv",
      "exists": true,
-     "sha256": "ff2c0091b813e153b64d12b9f02c43ad453dbc55e3cabd52481d4c60a544c591"
+     "sha256": "d0a166de90325b1c6541a71de96a46952994c3bc3f1ef36046aae9c0439d1bc9"
     },
     {
      "output": "reports/figures/sdp/amt_holdout_predictions.csv.gz",
      "exists": true,
-     "sha256": "e8c2e2c3fb9e56e496e59714d640eb157e59ea16265c50af37a51d2ea70a7f86"
+     "sha256": "f9409203f8010e9241588b120e9485338f9768081b2c625b5c0e0766dbfe268b"
     },
     {
      "output": "reports/figures/sdp/amt_holdout_vs_null.csv",
      "exists": true,
-     "sha256": "386a6a09221c0122d965bdffa07111469b8cacbab58064b9a200c3fda5f47694"
+     "sha256": "9ab16ac66f477bf9238d476dadb5021f6c26dc09ae97c4a4baccad91d45621de"
     },
     {
      "output": "reports/figures/sdp/amt_holdout_coverage.csv",
      "exists": true,
-     "sha256": "e2e617baea6dd100f32ceda146e376fa4fc988294331c6f71315b8328b3b5d3f"
+     "sha256": "248440b08b1304bb85ba9a41e90712991a52a817477417d1ddc3f7cecea904bc"
     },
     {
      "output": "reports/figures/sdp/amt_holdout_campaign.csv",
      "exists": true,
-     "sha256": "242dd4202e79e93266e1c120da3accaabf11916ea8853f7522b883239421707f"
+     "sha256": "378b517ac66d7f8d0e73c096989e19bf5a799ecb970f4d30ad19002d96f65615"
     },
     {
      "output": "reports/figures/sdp/amt_holdout_tchla.png",
@@ -462,22 +462,22 @@
     {
      "output": "reports/figures/sdp/amt_holdout_ratios.png",
      "exists": true,
-     "sha256": "5f8ed4dce008d46f9c5dc1808c98cdc4bc6f3ea5ebe5c06ab21cb6473b69abe1"
+     "sha256": "08d04eebd3811a18d5a59b3d13884de500f316141496b87740f5a543dbf23db9"
     },
     {
      "output": "reports/figures/sdp/amt_holdout_cruise_bias.png",
      "exists": true,
-     "sha256": "f2bbcfb2a1dc3fd816e3abe59486623cb5909f895ec29c09b2cbb970f837336f"
+     "sha256": "b0f94f3cf2dc9fec5f64ddf76968730656d02e8038fab69ea26dccfad77a2241"
     },
     {
      "output": "reports/figures/sdp/amt_holdout_coverage.png",
      "exists": true,
-     "sha256": "87374e35ffaaf50e97c925d9514135013ceb84b42b6d4b1c8bb2e091140331f9"
+     "sha256": "60ccaec7b34ab4eb5267c5b3c0e667fa59afee71decdbb57c068c66ab51529b2"
     },
     {
      "output": "reports/figures/sdp/amt_holdout_smooth_vs_asis.png",
      "exists": true,
-     "sha256": "91e60e08b07d30ed60008e44eac57fae5e1a9c9c388bf618df77d111e035c02f"
+     "sha256": "70e3fdfe965d79adffad96e86e5785b3007ea9c4b624a040286cfff4c7d43309"
     }
    ]
   },
@@ -486,7 +486,7 @@
     {
      "script": "scripts/sdp/report_provenance.py",
      "exists": true,
-     "sha256": "404a800fd17c411092f5266722b6e33e3a5acdd08c2cdcb0c9f56e458928df40",
+     "sha256": "9f89ff60de5c0f67ce3ef89c7b8b8ace365db778627ab671e471d7e5411a0c80",
      "cited_in_report": true
     }
    ],
@@ -494,8 +494,15 @@
   }
  },
  "figures_referenced": [
-  "amt_holdout_summary.json",
-  "amt_inspect_summary.json",
+  "amt_chl_consistency.png",
+  "amt_holdout_coverage.png",
+  "amt_holdout_cruise_bias.png",
+  "amt_holdout_ratios.png",
+  "amt_holdout_smooth_vs_asis.png",
+  "amt_holdout_tchla.png",
+  "amt_map.png",
+  "amt_pigments.png",
+  "amt_spectra.png",
   "diag_loco_tchla.png",
   "diag_skill_absolute.png",
   "diag_skill_ratio.png",
@@ -531,6 +538,118 @@
   "weighting_target_spectra.png"
  ],
  "claims": [
+  {
+   "id": "amt_n_spectra",
+   "section": "11.1",
+   "printed": 182,
+   "from_outputs": 182.0,
+   "ok": true
+  },
+  {
+   "id": "amt_gsm_slope_raw",
+   "section": "11.1",
+   "printed": 1.03,
+   "from_outputs": 1.0271072601860314,
+   "ok": true
+  },
+  {
+   "id": "amt_gsm_R2_raw",
+   "section": "11.1",
+   "printed": 0.87,
+   "from_outputs": 0.8742086049377137,
+   "ok": true
+  },
+  {
+   "id": "amt_W_ratio_beats",
+   "section": "11.3",
+   "printed": 8,
+   "from_outputs": 8.0,
+   "ok": true
+  },
+  {
+   "id": "amt_PCR_ratio_worse",
+   "section": "11.3",
+   "printed": 12,
+   "from_outputs": 12.0,
+   "ok": true
+  },
+  {
+   "id": "amt_PCR_abs_worse",
+   "section": "11.3",
+   "printed": 10,
+   "from_outputs": 10.0,
+   "ok": true
+  },
+  {
+   "id": "amt_W_DVchla_dRMS",
+   "section": "11.3",
+   "printed": -0.11,
+   "from_outputs": -0.1117,
+   "ok": true
+  },
+  {
+   "id": "amt_W_Zea_cruises_better",
+   "section": "11.3",
+   "printed": 8,
+   "from_outputs": 8.0,
+   "ok": true
+  },
+  {
+   "id": "amt_W_Zea_R2",
+   "section": "11.3",
+   "printed": 0.66,
+   "from_outputs": 0.6586,
+   "ok": true
+  },
+  {
+   "id": "amt_OC4_Zea_R2",
+   "section": "11.3",
+   "printed": 0.42,
+   "from_outputs": 0.4224,
+   "ok": true
+  },
+  {
+   "id": "amt_PCR_Tchla_below_lod",
+   "section": "11.3",
+   "printed": 0.38,
+   "from_outputs": 0.3791,
+   "ok": true
+  },
+  {
+   "id": "amt_W_Tchla_below_lod",
+   "section": "11.3",
+   "printed": 0.41,
+   "from_outputs": 0.4121,
+   "ok": true
+  },
+  {
+   "id": "amt_W_ratio_cov68",
+   "section": "11.4",
+   "printed": 0.8,
+   "from_outputs": 0.8039,
+   "ok": true
+  },
+  {
+   "id": "amt_W_ratio_cov95",
+   "section": "11.4",
+   "printed": 0.98,
+   "from_outputs": 0.9835,
+   "ok": true
+  },
+  {
+   "id": "amt_cruise_mean_indep",
+   "section": "11.4",
+   "printed": 0.72,
+   "from_outputs": 0.719,
+   "ok": true
+  },
+  {
+   "id": "amt_cruise_mean_campaign",
+   "section": "11.4",
+   "printed": 1.0,
+   "from_outputs": 1.0,
+   "ok": true
+  },
   {
    "id": "table2_within_1sd",
    "section": "4.2",
@@ -771,5 +890,5 @@
   }
  ],
  "problems": [],
- "run_utc": "2026-10-24T15:24:40+00:00"
+ "run_utc": "2026-10-24T16:32:56+00:00"
 }

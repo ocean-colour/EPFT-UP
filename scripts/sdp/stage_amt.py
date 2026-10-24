@@ -137,6 +137,7 @@ and credit terms are pending (asked in EPFT-UP
 - Below-LOD values zeroed using Kramer's deposit LOD proxy.
 - MVchlb: Tchlb as a flagged proxy; MVchlb scored on AMT29/30 only.
 - Pair Sample_ID 107/108 dropped (one spectrum, Tchla 0.073 vs 0.165).
+- AMT27 DVchla treated as missing (DHI did not separate DV from MV Chl a).
 - Bad salinity replaced by WOA23 climatology.
 - Rows with non-positive Rrs excluded.
 - CV groups: each cruise is a group; also a leave-all-AMT-out test.
@@ -161,7 +162,7 @@ specified in `reports/provenance/AMT_benchmark_protocol.md` §3–§4.
   implausible values.
 
 The inspection is documented in the EPFT-UP report
-(`reports/SDP_Claude_Report.md`, Appendix A) and in
+(`reports/SDP_Claude_Report.md`, §11) and in
 `reports/figures/sdp/amt_inspect_summary.json`.
 """
 

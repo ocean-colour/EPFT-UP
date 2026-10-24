@@ -38,6 +38,7 @@ def raw(tmp_path):
         _row(132, '13', 'AMT30', _spec(4.0), sal=22.23, MVchlb=0.005, DVchlb=0.001),
         _row(5, 'lod', 'AMT30', _spec(5.0), Perid=0.003, Neo=0.0, MVchlb=0.004,
              DVchlb=0.0),
+        _row(6, 'dhi', 'AMT27', _spec(6.0), DVchla=0.0),
     ]
     p = tmp_path / 'AMT_Rrs_HPLC.csv'
     pd.DataFrame(rows).to_csv(p, index=False)
@@ -53,7 +54,7 @@ def test_checksum_refusal(raw):
 
 def test_raw_keeps_everything(raw):
     d = amt.load_amt(path=raw, raw=True, verify=False)
-    assert d.n == 8
+    assert d.n == 9
     assert 'HexFuco' in d.pigments and 'ButFuco' in d.pigments
 
 
@@ -61,7 +62,7 @@ def test_rules(raw):
     d = amt.load_amt(path=raw, verify=False, sal_fix={132: 36.1})
     ids = set(d.meta['sample_id'])
     # 107/108 dropped, non-positive excluded, 2/3 collapsed to AMT:2
-    assert ids == {'AMT:1', 'AMT:2', 'AMT:132', 'AMT:5'}
+    assert ids == {'AMT:1', 'AMT:2', 'AMT:132', 'AMT:5', 'AMT:6'}
     m = d.meta.set_index('sample_id')
     assert m.loc['AMT:2', 'n_hplc'] == 2 and m.loc['AMT:2', 'sample_ids'] == '2;3'
     pig = d.pigments.set_index(d.meta['sample_id'])
@@ -71,7 +72,7 @@ def test_rules(raw):
     assert m.loc['AMT:132', 'sal'] == pytest.approx(36.1)
     assert m.loc['AMT:132', 'sal_source'] == 'WOA23'
     # steps record counts per rule
-    assert d.steps['total'].tolist() == [8, 6, 5, 4, 4, 4, 4]
+    assert d.steps['total'].tolist() == [9, 7, 6, 5, 5, 5, 5, 5]
 
 
 def test_missing_salinity_fix_raises(raw):
@@ -121,3 +122,13 @@ def test_moving_mean_shrink_edges():
     np.testing.assert_allclose(m[2:-2], spectral.moving_mean(y, 5)[2:-2])
     with pytest.raises(ValueError):
         spectral.moving_mean(y, 5, edges='pad')
+
+
+def test_dvchla_unseparated_cruise_is_missing(raw):
+    d = amt.load_amt(path=raw, verify=False, sal_fix={132: 36.1})
+    pig = d.pigments.set_index(d.meta['sample_id'])
+    fl = d.flags.set_index(d.meta['sample_id'])
+    assert np.isnan(pig.loc['AMT:6', 'DVchla'])
+    assert not fl.loc['AMT:6', 'DVchla_scorable']
+    assert not fl.loc['AMT:6', 'lod_zeroed:DVchla']
+    assert fl.loc['AMT:1', 'DVchla_scorable']

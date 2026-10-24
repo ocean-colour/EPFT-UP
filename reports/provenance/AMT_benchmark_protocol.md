@@ -6,8 +6,8 @@ comparable across groups. Anyone training a model on these data (e.g. Billy
 Li's Bayesian neural networks) can then be scored with the same splits,
 baselines and metrics as the EPFT-UP SDP study.
 
-**Status:** 2026-10-24, after *Test on new AMT data #2* (H2 frozen-model
-hold-out run; write-up in #3); repository commit `1b60500` + working tree.
+**Status:** 2026-10-24, after *Test on new AMT data #3*. H2 is done and
+written up as report §11 and slides 24–27; rule 7 (AMT27 DVchla) was added. repository commit `1b60500` + working tree.
 Questions to Tom Jordan are outstanding (`requests/AMT_Rrs_HPLC_questions.md`).
 Items marked *pending* are defined here but not yet produced. The prompts
 "Test on new AMT data" in `claude_prompts/2nd_derivative_prompts.md` produce
@@ -50,11 +50,12 @@ Supporting inputs, cloned at pinned commits and never copied into the repo:
 | 2026-10-03 | Maths; learned weighting (shared W); Bayesian uncertainty | `maths_section.py`, `learned_weighting.py`, `uncertainty.py` | `maths_*`, `weighting_*`, `uncertainty_*` |
 | 2026-10-03 | EXPORTS-NA matchups and hold-out 1 | `exports_na_matchups.py`, `exports_na_holdout.py` | `exports_na_*`; report §9 |
 | 2026-10-04 | Report, slides, numbers check | `report_provenance.py`, `make_slides.py` | `reports/SDP_Claude_Report.md`, `reports/slides/` |
-| 2026-10-24 | AMT inspection | `scripts/sdp/inspect_amt.py` | `amt_inspect_summary.json`, `amt_*.png`; report Appendix A |
+| 2026-10-24 | AMT inspection | `scripts/sdp/inspect_amt.py` | `amt_inspect_summary.json`, `amt_*.png`; report §11.1 |
 | 2026-10-24 | AMT staging (laptop + shared drive), README, per-row flags | `scripts/sdp/stage_amt.py` | `README.md`, `AMT_Rrs_HPLC_flags.csv` beside the CSV |
-| 2026-10-24 | Questions to the data provider | — | `requests/AMT_Rrs_HPLC_questions.md` |
+| 2026-10-24 | Questions to the data provider (AMT27 DVchla item added after H2) | — | `requests/AMT_Rrs_HPLC_questions.md` |
+| 2026-10-24 | H2 frozen-model hold-out; report §11; slides | `scripts/sdp/amt_holdout.py`, `report_provenance.py`, `make_slides.py` | `amt_holdout_*` in `reports/figures/sdp/`; report §11; `reports/slides/SDP_Claude_Slides.pptx` |
 | 2026-10-24 | AMT loader + harmonisation rules (8 unit tests) | `epft_up/sdp/amt.py`, `epft_up/tests/test_sdp_amt.py` | — |
-| 2026-10-24 | Harmonised table, WOA23 salinity fix, fold file; mirrored to the shared drive | `scripts/sdp/amt_harmonise.py`, `stage_amt.py --drive` | `AMT_Rrs_HPLC_harmonised.csv/.json`, `AMT_Kramer_folds.csv`, `woa23_salinity_fix.csv/.json` beside the raw CSV (local and shared drive) |
+| 2026-10-24 | Harmonised table, WOA23 salinity fix, fold file; mirrored to the shared drive (re-run after rule 7) | `scripts/sdp/amt_harmonise.py`, `stage_amt.py --drive` | `AMT_Rrs_HPLC_harmonised.csv/.json`, `AMT_Kramer_folds.csv`, `woa23_salinity_fix.csv/.json` beside the raw CSV (local and shared drive) |
 
 All JSON outputs record the script, input checksums and run time. The code
 lives in `epft_up/sdp/` (100 unit tests).
@@ -74,6 +75,7 @@ rules applied in the order of the rows-per-cruise table below).
 | Salinity | in situ | in situ; Sample_ID 132/159 (S = 22.23) → WOA23 climatology |
 | Below-detection pigments | zero | zero below the LOD proxy (next table); ½·LOD where a log is taken |
 | MVchlb | measured | measured on AMT29/30; elsewhere Tchlb as a flagged proxy; MVchlb **scored** only on AMT29/30 |
+| DVchla | measured | **missing on AMT27** (rule 7, added 2026-10-24): DHI reports DVchla = 0 in all 15 samples while MVchla/Tchla is 0.34–0.98, so DV was not separated. Scored on 168 spectra (7 cruises) |
 | T/S for pure-water backscatter | in situ | in situ (except the salinity fix) |
 
 **LOD proxy** [mg m⁻³] (the deposit's smallest non-zero value per pigment,
@@ -109,7 +111,7 @@ If the HPLC labs' real LODs arrive, they replace the proxy for AMT.
 | 1 drop 107/108 | 17 | 18 | 22 | 15 | 21 | 33 | 61 | 21 | 208 |
 | 2 exclude non-positive Rrs | 17 | 17 | 19 | 14 | 20 | 33 | 61 | 20 | 201 |
 | 3 one row per spectrum (19 averaged) | 17 | 16 | 18 | 14 | 20 | 28 | 49 | 20 | **182** |
-| 4–6 salinity, MVchlb proxy, LOD zeroing | (unchanged) | | | | | | | | 182 |
+| 4–7 salinity, MVchlb proxy, LOD zeroing, AMT27 DVchla missing | (unchanged) | | | | | | | | 182 |
 
 ## 4. Splits (fold assignment)
 
@@ -213,24 +215,26 @@ best Tchla null (number of targets):
 |---|---|---|
 | PCR on δRrs″ (ours) | 0 / 3 / 10 | 0 / 0 / 12 |
 | PCR, Kramer's coefficients | 0 / 1 / 12 | 0 / 0 / 12 |
-| Bayesian shared W | 0 / 2 / 11 | **8 / 3 / 1** |
+| Bayesian shared W | 1 / 1 / 11 | **8 / 3 / 1** |
 
 - **Shared-W ratios that beat the null.** Fuco, Zea and HexFuco beat it in
   8 of 8 cruises; DVchla, Chlc12 and Chlc3 in 7 of 8; Allo in 6 of 8; MVchlb
-  in 2 of 2 (AMT29/30 only). The pooled ΔRMS is −0.01 to −0.09 dex.
+  in 2 of 2 (AMT29/30 only); DVchla in 7 of 7 after rule 7. The pooled
+  ΔRMS is −0.01 to −0.11 dex.
 - **Shared-W interval coverage** (ratios): 0.80 / 0.98 at 68 / 95%, so
   slightly too wide on AMT.
 - **Campaign variance.** Cruise-mean residuals fall inside the
-  campaign-aware 95% interval (τ² from the deposit) for 0.99 of
-  cruise×ratio cases, against 0.71 with independent errors.
+  campaign-aware 95% interval (τ² from the deposit) for 1.00 of
+  cruise×ratio cases, against 0.72 with independent errors.
 - **Absolute targets.** Linear-space models (PCR and the shared W) predict
-  below the LOD for ~40% of AMT Tchla, so every absolute model loses to the
-  null in log space.
-- **Unsmoothed spectra:** the same verdicts.
-- **Data issue found.** AMT27 (DHI) reports DVchla = 0 in every sample, but
-  MVchla/Tchla is 0.34–0.98, so DV was not separated. A sensitivity scope
-  that excludes AMT27 for DVchla leaves the conclusions unchanged. A rule
-  change has been proposed (prompt doc Q&A), and Tom has been asked.
+  below the LOD for ~40% of AMT Tchla, so they lose to the null in log space.
+  The one exception is the shared W for DVchla.
+- **Unsmoothed spectra:** the same verdicts, except that Allo:Tchla becomes
+  a tie.
+- **Rule 7 (AMT27 DVchla missing)** was adopted as the Q14 default. The
+  numbers above use it; a run without it gave the same conclusions. Tom has
+  been asked.
+- Full write-up: report §11.
 
 ## 9. Open items
 
@@ -239,7 +243,7 @@ best Tchla null (number of targets):
 - [x] The AMT loader, the harmonised table (with Tchla_GSM, OC4 and flags),
   and the fold file: Test on new AMT data, #1 (2026-10-24).
 - [x] H2 results: Test on new AMT data #2 (2026-10-24).
-- [ ] Report §11 and slides: Test on new AMT data #3.
-- [ ] Decide whether AMT27 DVchla becomes "missing" in §3 (Q14 in the prompt doc; asked of Tom).
+- [x] Report §11 and slides: Test on new AMT data #3 (2026-10-24).
+- [x] AMT27 DVchla made missing (rule 7; Q14 default). To be confirmed by Tom.
 - [ ] Once Tom answers: re-run H2 if the harmonisation changes; then L16/LA
   retraining; and give Billy the harmonised table.

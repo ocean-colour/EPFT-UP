@@ -186,6 +186,66 @@ def chart_models():
     return p
 
 
+def chart_amt_drms():
+    """ΔRMS vs best null on AMT (ratios), PCR-derived and shared W, cluster CIs."""
+    D = pd.read_csv(FIG / 'amt_holdout_vs_null.csv')
+    D = D[(D.variant == 'smooth5') & (D.kind == 'ratio')]
+    order = (D[D.model == 'sharedW'].sort_values('d_rms')['target']).tolist()
+    y = np.arange(len(order))
+    fig, axs = plt.subplots(1, 2, figsize=(10, 6.4), sharey=True)
+    for ax, m, col, title in ((axs[0], 'PCR_derived', '#b03a2e', "Kramer's PCR (derived)"),
+                              (axs[1], 'sharedW', '#1f3a5f', 'shared W (Bayesian)')):
+        q = D[D.model == m].set_index('target').loc[order]
+        ax.errorbar(q['d_rms'], y, xerr=[q['d_rms'] - q['lo95_cluster'],
+                                          q['hi95_cluster'] - q['d_rms']],
+                    fmt='o', ms=7, color=col, lw=1.5, capsize=3)
+        ax.axvline(0, color='k', lw=1)
+        ax.set_title(title)
+        ax.set_xlabel('ΔRMS vs best Tchla null [dex]')
+        ax.grid(axis='x', alpha=0.3)
+    axs[0].set_yticks(y, [f'{t}:Tchla' for t in order])
+    axs[0].invert_yaxis()
+    fig.tight_layout()
+    p = SFIG / 'slide_amt_drms.png'
+    fig.savefig(p, dpi=200)
+    plt.close(fig)
+    return p
+
+
+def chart_amt_cruises():
+    """Per-cruise ΔRMS (shared W − best null) for the 12 ratios on AMT."""
+    S = pd.read_csv(FIG / 'amt_holdout_scores.csv')
+    D = pd.read_csv(FIG / 'amt_holdout_vs_null.csv')
+    S = S[(S.variant == 'smooth5') & (S.kind == 'ratio')]
+    D = D[(D.variant == 'smooth5') & (D.kind == 'ratio') & (D.model == 'sharedW')]
+    order = D.sort_values('d_rms')['target'].tolist()
+    best = D.set_index('target')['best_null']
+    cruises = sorted(c for c in S['group'].unique() if c != 'pooled')
+    M = np.full((len(order), len(cruises)), np.nan)
+    for i, t in enumerate(order):
+        for j, c in enumerate(cruises):
+            a = S[(S.model == 'sharedW') & (S.target == t) & (S.group == c)]['rms_log']
+            b = S[(S.model == best[t]) & (S.target == t) & (S.group == c)]['rms_log']
+            if len(a) and len(b):
+                M[i, j] = a.iloc[0] - b.iloc[0]
+    fig, ax = plt.subplots(figsize=(10, 5.6))
+    im = ax.imshow(M, cmap='RdBu_r', vmin=-0.15, vmax=0.15, aspect='auto')
+    ax.set_xticks(range(len(cruises)), [c.replace('AMT', 'AMT ') for c in cruises],
+                  rotation=30, ha='right')
+    ax.set_yticks(range(len(order)), [f'{t}:Tchla' for t in order])
+    for i in range(len(order)):
+        for j in range(len(cruises)):
+            if np.isnan(M[i, j]):
+                ax.text(j, i, '–', ha='center', va='center', fontsize=13)
+    cb = fig.colorbar(im, ax=ax)
+    cb.set_label('ΔRMS, shared W − best null [dex]')
+    fig.tight_layout()
+    p = SFIG / 'slide_amt_cruises.png'
+    fig.savefig(p, dpi=200)
+    plt.close(fig)
+    return p
+
+
 # ----------------------------------------------------------------- pptx helpers
 def _runs(par, text, size, bold=False, color=None):
     """Plain text with **bold** spans."""
@@ -377,7 +437,7 @@ def build(pf, charts):
         '- skill above a 2-parameter **Tchla-only null** (pigment = a·Tchla^b)',
         '- skill under **leave-one-campaign-out** (LOCO), not only random splits',
         '**Then:** maths of the derivative, alternatives, Bayesian uncertainty, '
-        'PACE-like noise, an independent campaign (EXPORTS-NA 2021)',
+        'PACE-like noise, two independent tests (EXPORTS-NA 2021; 8 AMT cruises)',
         'Every number traces to a script in scripts/sdp/ (100 unit tests)'])
 
     # --- REPRODUCTION
@@ -500,6 +560,43 @@ def build(pf, charts):
                 'campaign bias'],
                cap='this work, §9', img_h=3.9)
 
+    # --- AMT (second independent test, §11)
+    d.fig_text('Second independent test: 8 AMT cruises (2013–2024)',
+               F('amt_map.png'),
+               ['Tom Jordan\'s compilation: 210 HPLC + Rrs rows → **182 spectra** after '
+                'harmonisation (pairs averaged, bad rows dropped)',
+                '4 HPLC labs; oligotrophic-heavy (median Tchla 0.10); no overlap with '
+                'the 145',
+                'Radiometry and HPLC agree: GSM Tchla R² 0.87, slope 1.03',
+                'Frozen models (nothing retrained); 5 nm mean, as for the deposit'],
+               cap='this work, §11.1', img_frac=0.5)
+
+    d.fig_text('AMT: ratios against the Tchla null',
+               charts['amt_drms'],
+               ['Shared W beats the null for **8 of 12** ratios (cluster bootstrap '
+                'over cruises)',
+                'Kramer\'s PCR: **worse for all 12**, by 0.6–1.2 dex',
+                'Absolute pigments: linear models put ~40% of Tchla below the LOD; only '
+                'DVchla (shared W) beats the null'],
+               cap='this work, §11.3 (amt_holdout_vs_null.csv)', img_frac=0.64)
+
+    d.fig_text('AMT: consistent across cruises',
+               charts['amt_cruises'],
+               ['Blue = shared W better than the null in that cruise',
+                'Fuco, Zea, HexFuco: **8 of 8**; DVchla, Chlc12, Chlc3: 7 of 8',
+                'The same four ratios won under LOCO and on EXPORTS-NA',
+                'Gain is within-cruise tracking (Zea:Tchla R² 0.66 vs 0.42)'],
+               cap='this work, §11.3; – = not scored (MVchlb, AMT27 DVchla)',
+               img_frac=0.58)
+
+    d.fig_full('AMT: uncertainty and the campaign term',
+               F('amt_holdout_coverage.png'),
+               ['Per-sample ratio intervals already cover (0.80 / 0.98); adding τ² '
+                'double-counts',
+                'Cruise means need the campaign term: inside 95% **1.00** vs 0.72 '
+                'assuming independent errors'],
+               cap='this work, §11.4', img_h=3.6)
+
     # --- CONCLUSIONS
     d.text('What we found', [
         'SDP **reproduces** from public data and code',
@@ -510,16 +607,21 @@ def build(pf, charts):
         'transfer between campaigns',
         'A shared, smooth, noise-aware W with calibrated intervals beats the null for '
         'Fuco, Zea, DVchla, Chlc12 ratios',
-        'At PACE noise: SDP has no skill; the aware W keeps a modest edge'], size=24)
+        'Confirmed on **8 independent AMT cruises**: shared W beats the null for 8 of 12 '
+        'ratios; SDP\'s PCR for none',
+        'At PACE noise: SDP has no skill; the aware W keeps a modest edge'], size=22)
 
     d.text('Recommendations', [
         '**Always report** skill against a Tchla-only null **and** a held-out campaign',
         '**Target** log pigment:Tchla ratios; shared low-rank W on δRrs (or M1)',
-        '**Add** a between-campaign variance term to the intervals',
+        '**Add** a between-campaign term to the uncertainty of any campaign or regional '
+        'mean',
         '**Data:** raw (unsmoothed) spectra + uncertainties; more campaigns '
         '(El Hourany 237 stations, PACE-era matchups)',
         '**Fix** the a_w smoothing mismatch in the forward model',
-        '**Concentrations:** censored log-normal likelihood (Tom Jordan)'], size=24)
+        '**Concentrations:** never linear; log targets, then a censored log-normal '
+        'likelihood (Tom Jordan)',
+        '**Next:** retrain on deposit + AMT (16 groups) once Tom answers'], size=22)
 
     d.text('What PACE OCI application would require', [
         'An OCI noise model **split into white and smooth parts** (Rrs_unc gives '
@@ -529,13 +631,15 @@ def build(pf, charts):
         'Handle fluorescence (683 nm), Raman and gas bands that δRrs keeps',
         'Validate on PACE-era matchups against both baselines, and against '
         'NASA\'s SDP product',
-        'Per-pixel intervals + campaign term; stated averaging footprint',
+        'Per-pixel intervals; a regional term for spatial means; stated averaging '
+        'footprint',
         'SDP coefficients at OCI white noise: ≥ **135** pixels averaged just to '
         'reach one natural SD'], size=24)
 
     d.text('Provenance and references', [
         'Code: epft_up/sdp/; scripts: scripts/sdp/ (run order in report §10.4)',
-        'Checks: scripts/sdp/report_provenance.py — 34/34 headline numbers verified',
+        'Checks: scripts/sdp/report_provenance.py — 50/50 headline numbers verified',
+        'AMT protocol for other groups: reports/provenance/AMT_benchmark_protocol.md',
         'This deck: scripts/sdp/make_slides.py',
         'Kramer, Siegel, Maritorena & Catlett 2022, RSE 270, 112879',
         'Kramer et al. 2024, Opt. Express 32, 34482',
@@ -562,7 +666,8 @@ def main():
     SFIG.mkdir(parents=True, exist_ok=True)
     chart_style()
     pf = extract_paper_figs()
-    charts = {'table2': chart_table2(), 'spaces': chart_spaces(), 'models': chart_models()}
+    charts = {'table2': chart_table2(), 'spaces': chart_spaces(), 'models': chart_models(),
+              'amt_drms': chart_amt_drms(), 'amt_cruises': chart_amt_cruises()}
     prs = build(pf, charts)
     bad = check_fonts(prs)
     if bad:

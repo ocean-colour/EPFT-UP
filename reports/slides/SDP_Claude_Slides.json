@@ -1,7 +1,7 @@
 {
  "script": "scripts/sdp/make_slides.py",
- "git_head": "a006dac151c191e6c5e510e95ff96e875b6bff0a",
- "n_slides": 27,
+ "git_head": "e66eef448e5e6847b80947860864c9f3652dfe47",
+ "n_slides": 31,
  "min_font_pt": 20,
  "paper_figures": {
   "k22_fig1": {
@@ -80,9 +80,26 @@
   "models": {
    "path": "reports/slides/figures/slide_models.png",
    "sha256": "3ec73032ae4badd3cfb3d31bdbb3a8b5a12f781de5f41c4ed10ca5b319365a2f"
+  },
+  "amt_drms": {
+   "path": "reports/slides/figures/slide_amt_drms.png",
+   "sha256": "6384b4bef878a0fb9f0f6885c86acb882b85d6776976262fcff194edad5c7c64"
+  },
+  "amt_cruises": {
+   "path": "reports/slides/figures/slide_amt_cruises.png",
+   "sha256": "d8579141d7f234d2aebe2d20097c3d29a28078d1d94e359c55a0f8b53a4ef7a0"
   }
  },
  "pipeline_figures_available": [
+  "reports/figures/sdp/amt_chl_consistency.png",
+  "reports/figures/sdp/amt_holdout_coverage.png",
+  "reports/figures/sdp/amt_holdout_cruise_bias.png",
+  "reports/figures/sdp/amt_holdout_ratios.png",
+  "reports/figures/sdp/amt_holdout_smooth_vs_asis.png",
+  "reports/figures/sdp/amt_holdout_tchla.png",
+  "reports/figures/sdp/amt_map.png",
+  "reports/figures/sdp/amt_pigments.png",
+  "reports/figures/sdp/amt_spectra.png",
   "reports/figures/sdp/diag_loco_tchla.png",
   "reports/figures/sdp/diag_skill_absolute.png",
   "reports/figures/sdp/diag_skill_ratio.png",
@@ -111,7 +128,7 @@
  ],
  "output": {
   "file": "reports/slides/SDP_Claude_Slides.pptx",
-  "sha256": "504c435bbed7db98e0aa37a4ce356d8876d6309e7b3ea877db2cd0047d99ec1f"
+  "sha256": "6b1d6ec9e68d8cf93f89639179de3670d9a9a7dfafa10113c8ab6b8b55756f91"
  },
- "run_utc": "2026-10-04T15:00:36+00:00"
+ "run_utc": "2026-10-24T16:31:59+00:00"
 }

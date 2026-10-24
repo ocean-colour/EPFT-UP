@@ -19,7 +19,11 @@ the harmonisation rules of ``reports/provenance/AMT_benchmark_protocol.md``
    to be *scored* only where measured (AMT29/30);
 6. zero the 13 modelled pigments below the deposit's LOD proxy
    (:data:`LOD_PROXY_DEPOSIT`), as Kramer et al. (2022) zeroed below-LOD
-   values. Ratios then use ½·LOD via ``validate.replace_zeros``.
+   values. Ratios then use ½·LOD via ``validate.replace_zeros``;
+7. set DVchla to missing (NaN, flag ``DVchla_scorable`` False) on cruises
+   whose HPLC did not separate divinyl Chl a
+   (:data:`DVCHLA_UNSEPARATED_CRUISES`; AMT27 reports DVchla = 0 everywhere
+   while MVchla/Tchla is 0.34-0.98). Added 2026-10-24 (prompt doc Q14).
 
 The 5 nm moving mean is **not** applied here. It belongs to the modelling
 pipeline (``spectral.moving_mean(..., edges='shrink')``), so the loader
@@ -66,6 +70,8 @@ LOD_PROXY_DEPOSIT = {'Tchla': 0.001, 'HexFuco': 0.003, 'ButFuco': 0.002, 'Allo':
                      'Viola': 0.001}
 #: Cruises whose HPLC lab (NASA GSFC) reported MVchlb; score MVchlb only there.
 MVCHLB_MEASURED_CRUISES = ('AMT29', 'AMT30')
+#: Cruises whose HPLC did not separate DVchla (all zeros, MVchlb/Tchla < 1): missing.
+DVCHLA_UNSEPARATED_CRUISES = ('AMT27',)
 
 
 def amt_dir():
@@ -92,7 +98,7 @@ class AMTData:
         Our pigment names [mg m^-3]; zeros are below the LOD proxy.
     flags : DataFrame
         ``MVchlb_proxy`` (filled from Tchlb), ``MVchlb_scorable``,
-        ``sal_replaced``, and ``lod_zeroed:<pigment>``.
+        ``DVchla_scorable``, ``sal_replaced``, and ``lod_zeroed:<pigment>``.
     steps : DataFrame
         Rows per cruise after each harmonisation rule.
     provenance : dict
@@ -218,6 +224,12 @@ def harmonise(df, sal_fix=None, lods=None):
         out[f'lod_zeroed:{p}'] = z | (out[p] == 0)
         out.loc[z, p] = 0.0
     _count(out, '6 LOD-proxy zeroing (count unchanged)', rows)
+
+    unsep = out['Cruise'].isin(DVCHLA_UNSEPARATED_CRUISES)
+    out['DVchla_scorable'] = ~unsep
+    out.loc[unsep, 'DVchla'] = np.nan
+    out.loc[unsep, 'lod_zeroed:DVchla'] = False
+    _count(out, '7 DVchla missing on AMT27 (count unchanged)', rows)
     steps = pd.DataFrame(rows).fillna(0).astype(int)
     return out, steps
 
@@ -235,7 +247,7 @@ def _to_struct(out, rcols, provenance, steps):
         'sal_source': out.get('sal_source', 'in situ'),
         'n_hplc': out.get('n_hplc', 1)})
     fcols = [c for c in out.columns
-             if c in ('MVchlb_proxy', 'MVchlb_scorable', 'sal_replaced')
+             if c in ('MVchlb_proxy', 'MVchlb_scorable', 'DVchla_scorable', 'sal_replaced')
              or c.startswith('lod_zeroed:')]
     return AMTData(wave=wave, Rrs=out[rcols].to_numpy(float), meta=meta.reset_index(drop=True),
                    pigments=out[pig].reset_index(drop=True),

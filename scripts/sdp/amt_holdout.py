@@ -16,7 +16,7 @@ Spectra: ``smooth5`` (5 nm moving mean, shrinking window at the grid ends;
 primary) and ``asis`` (as delivered; sensitivity).
 
 Scores (pooled and per cruise; MVchlb only on AMT29/30, where it was
-measured):
+measured; DVchla not on AMT27, where it was not separated):
 * bias, RMS, centred RMS, R² (log; linear too for absolute targets);
 * ΔRMS = RMS(model) − RMS(best null) with two 95% CIs: a paired bootstrap
   over samples, and a **cluster bootstrap over cruises** (primary verdict);
@@ -129,6 +129,7 @@ def main():
     truth_ratio = {p: rlog(truth_abs[p], p, truth_abs['Tchla']) for p in ACC}
     mask = {p: np.ones(d.n, bool) for p in PIGS}
     mask['MVchlb'] = d.flags['MVchlb_scorable'].to_numpy(bool)
+    mask['DVchla'] = d.flags['DVchla_scorable'].to_numpy(bool)
 
     # ---- models fitted once on the 145
     chl_gsm_145 = z['params'][:, 0]
@@ -243,10 +244,9 @@ def main():
 
     # ---- ΔRMS vs best null: sample bootstrap, cluster bootstrap over cruises, per cruise
     drows = []
-    # 'protocol' = protocol §3 as written; the sensitivity scope drops AMT27's DVchla,
-    # which DHI reported as 0 in every sample while MVchla is only 34-98% of Tchla
-    # (DV not separated, i.e. missing rather than below detection)
-    scopes = [('protocol', None), ('DVchla_excl_AMT27', 'DVchla')]
+    # protocol §3 (AMT27 DVchla is missing since rule 7, so the earlier
+    # 'DVchla_excl_AMT27' sensitivity scope is now the protocol itself)
+    scopes = [('protocol', None)]
     for v, (scope, only) in [(v, sc) for v in VARIANTS for sc in scopes]:
         for kind, cands, nl in (('abs', ('PCR', 'PCR_Kramer_coefs', 'sharedW'),
                                  ('null_GSM', 'null_OC4')),
@@ -285,7 +285,6 @@ def main():
         D[f'verdict_{k}'] = np.where(D[f'hi95_{k}'] < 0, 'beats null',
                                      np.where(D[f'lo95_{k}'] > 0, 'worse', 'tie'))
     D.round(4).to_csv(OUT / 'amt_holdout_vs_null.csv', index=False)
-    Dsens = D[D.scope != 'protocol']
     D = D[D.scope == 'protocol']
 
     # ---- coverage of the shared W: base vs + tau^2; cruise-mean test
@@ -395,11 +394,10 @@ def main():
                                  (Mc.target == p)]['mean_resid'].mean())}
                       for p in tau[kind]} for kind in tau},
            'comparison_AMT_EXPORTS_L8': comp,
-           'sensitivity_DVchla_excl_AMT27': Dsens.round(4).to_dict(orient='records'),
+           'dvchla_scored_n': int(mask['DVchla'].sum()),
            'amt27_dvchla_note': 'AMT27 (DHI) reports DVchla = 0 in all samples while MVchla/'
-                                'Tchla is 0.34-0.98: DVchla not separated (missing, not '
-                                'below LOD). Protocol scope keeps it; the sensitivity scope '
-                                'drops AMT27 for DVchla.',
+                                'Tchla is 0.34-0.98: DVchla not separated. Protocol rule 7 '
+                                '(2026-10-24) makes it missing; DVchla is scored on 7 cruises.',
            'run_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')}
     (OUT / 'amt_holdout_summary.json').write_text(json.dumps(out, indent=1, default=str))
 
@@ -412,9 +410,7 @@ def main():
           .to_string())
     print(sm[['kind', 'target', 'model', 'best_null', 'verdict_sample', 'verdict_cluster']]
           .to_string())
-    print(Dsens[Dsens.variant == 'smooth5'][['kind', 'target', 'model', 'd_rms',
-                                             'lo95_cluster', 'hi95_cluster', 'n_cruises_better',
-                                             'verdict_cluster']].round(3).to_string())
+
     print(pooled_cov.round(3).to_string())
     print(json.dumps(out['campaign_mean_test'], indent=0))
     print(json.dumps(verdicts, indent=0))

@@ -2,7 +2,9 @@
 
 **Author:** Claude (Opus 5.5), for J. Xavier Prochaska
 **Status:** complete (Execution #1–#10 of
-`claude_prompts/2nd_derivative_prompts.md`, 2026-10-02 to 2026-10-04).
+`claude_prompts/2nd_derivative_prompts.md`, 2026-10-02 to 2026-10-04), plus
+§11, a second independent hold-out on 8 AMT cruises (Test on new AMT data
+#1–#3, 2026-10-24).
 **Reproducibility:** every number traces to a script in `scripts/sdp/` and
 its output in `reports/figures/sdp/`. §10.4 gives the run order, and
 `scripts/sdp/report_provenance.py` re-checks the headline numbers.
@@ -35,7 +37,7 @@ groups re-emerge from the modelled pigments. The method has a public MATLAB
 implementation, a Python port and a NASA notebook for OCI (`oci_sdp`), so it
 is on its way to being used on satellite data.
 
-**What this report tests.** Six questions, in order:
+**What this report tests.** Seven questions, in order:
 1. Can the paper be reproduced from its public data and code? (§3–§4)
 2. What does the second derivative do, mathematically and statistically?
    (§5)
@@ -46,6 +48,8 @@ is on its way to being used on satellite data.
    (§8)
 6. How does everything fare on an independent campaign, EXPORTS North
    Atlantic 2021? (§9)
+7. And on a second, larger independent test: 182 spectra from 8 Atlantic
+   Meridional Transect cruises, 2013–2024? (§11)
 
 Throughout, every model is judged on two tests together:
 - skill above a **two-parameter Tchla-only null model** (each pigment as a
@@ -97,6 +101,16 @@ Throughout, every model is judged on two tests together:
    - It over-predicts the trace pigments by 0.5–1.1 dex.
    - One campaign is one draw from the wide between-campaign spread that
      LOCO measures.
+8. **On 8 AMT cruises (§11) the main result holds, and SDP fails.**
+   - With nothing retrained, the shared W beats the Tchla null for 8 of 12
+     ratios. Fuco, Zea, DVchla and Chlc1+2 win on 7–8 of 8 cruises, as they
+     did under LOCO and on EXPORTS-NA.
+   - The paper's PCR is worse than the null for all 12 ratios and for 10 of
+     13 absolute pigments.
+   - Linear absolute models predict below the LOD for ~40% of oligotrophic
+     Tchla.
+   - Campaign-level uncertainty must be added to statements about cruise
+     means. Per-sample intervals are already adequate.
 
 §10 states the conclusions, the limitations and what applying any of this
 to PACE would require.
@@ -1791,17 +1805,26 @@ predictive SD cannot represent**.
      variance in the four transferable ratios, with ±0.33–0.50 dex (1σ)
      intervals.
    - 5 nm sampling loses nothing.
-7. **The independent campaign is consistent with, not a refutation of, the
-   above** (§9).
+7. **Two independent tests confirm the pattern** (§9, §11).
    - On EXPORTS-NA, SDP got the bloom's Fuco, Chlc and HexFuco levels right
-     where the Tchla nulls were biased low.
-   - It badly over-predicted the trace pigments.
-   - The shared W's 95% intervals held (0.89–0.90 coverage), but its 68%
-     intervals did not cover the campaign-level bias (0.28 for ratios).
+     where the Tchla nulls were biased low, but it badly over-predicted the
+     trace pigments. The shared W's 68% intervals did not cover that
+     campaign's shared bias (0.28 for ratios).
+   - On 8 AMT cruises (182 spectra), with nothing retrained:
+     - the shared W beats the Tchla null for 8 of 12 ratios; Fuco, Zea,
+       DVchla and Chlc1+2 win on 7–8 of 8 cruises;
+     - SDP's PCR loses to the null on all 12 ratios;
+     - linear absolute predictions collapse below the LOD in oligotrophic
+       water;
+     - per-sample ratio intervals are adequate (0.80 / 0.98), and cruise
+       means are covered only once a between-campaign term is included
+       (1.00 vs 0.72).
 
 **Bottom line.** Hyperspectral Rrs does carry phytoplankton composition
 beyond chlorophyll. That signal is a few smooth, 10–40 nm-scale
-dimensions, and the second derivative is a poor way to extract it.
+dimensions, and the second derivative is a poor way to extract it. The
+diatom and cyanobacterial ratios are recovered out of campaign, on
+EXPORTS-NA, and on 8 independent AMT cruises.
 
 Claims of pigment skill should always be stated against:
 - a Tchla-only baseline;
@@ -1844,10 +1867,14 @@ Methods for satellite use should be:
   - The degenerate SABOR GSM fit probably behaved differently in MATLAB.
   - The smoothness hyperparameter sat at the upper edge of its grid,
     although the CV surface is flat there.
-- **The hold-out is one narrow campaign:** 17 samples, Tchla 0.53–1.15
-  mg m⁻³, DVchla undetected. Its spectra come from an undocumented
-  radiometer and processing chain, demonstrably different from the
-  deposit's.
+- **The independent tests are limited.**
+  - EXPORTS-NA is one narrow campaign: 17 samples, Tchla 0.53–1.15 mg m⁻³,
+    DVchla undetected, spectra from an undocumented processing chain.
+  - AMT adds 8 cruises (182 spectra), but from one basin and mostly one
+    season. Its radiometric processing is undocumented, its four HPLC labs
+    are confounded with cruise, and three harmonisation rules (the
+    mismatched pair, MVchlb, AMT27 DVchla) are provisional until the data
+    provider answers (§11.1).
 
 ### 10.3 Recommendations
 
@@ -1877,11 +1904,15 @@ Methods for satellite use should be:
    model. It scores skill above the best Tchla null, under random splits and
    LOCO together, with paired bootstrap intervals. Add an independent-campaign
    test whenever one exists.
-3. **A between-campaign variance term.** The EXPORTS-NA result shows that
-   per-sample predictive SDs miss a shared campaign bias. Estimate a
-   campaign-level random effect from the LOCO residuals and add it to the
-   predictive variance. A hierarchical version of `BayesianSharedW` is the
-   natural next model.
+3. **A between-campaign variance term, for aggregate statements.**
+   - The cross-fitted per-sample intervals already include
+     between-campaign error on average, and they cover on AMT (§11.4).
+   - What they miss is the *shared* bias within one campaign, which
+     EXPORTS-NA exposed. Any campaign or regional mean should carry the
+     uncertainty √(τ² + σ_w²/n), with τ² estimated from LOCO residuals
+     (`bayes.campaign_variance`). On AMT that covers 1.00 of cruise means,
+     against 0.72 for the independent-error formula.
+   - A hierarchical `BayesianSharedW` would make the split explicit.
 4. **Data.**
    - Get raw (unsmoothed, unrounded) spectra with uncertainties, the 33
      QC-rejected spectra, and the EXPORTS-NA processing details (ask Sasha
@@ -1889,12 +1920,17 @@ Methods for satellite use should be:
    - Add El Hourany & Kramer's 237 stations and PACE-era matchups (PVST,
      SeaBASS) to raise the number of campaigns. More campaigns, not more
      samples per campaign, is what tightens LOCO.
+   - First, once Tom Jordan answers: retrain on the deposit + AMT under
+     leave-one-group-out over 16 groups (protocol scheme L16), and re-test
+     the two-axis result (§7.3).
 5. **Fix the pipeline inconsistency.** Apply the data's spectral smoothing
    (or the instrument's spectral response) to a_w, A and B before forming
    Rrs_mod (§6.3, point 4).
-6. **Concentrations.** Model absolute concentrations through a censored
-   log-normal likelihood once Tom Jordan's work is available. The
-   `replace_zeros` hook in `validate.py` is where it plugs in.
+6. **Concentrations.** Never model absolute concentrations linearly for
+   oligotrophic use: on AMT, ~40% of linear Tchla predictions fall below the
+   LOD (§11.3). Use log targets now, and a censored log-normal likelihood
+   once Tom Jordan's work is available. The `replace_zeros` hook in
+   `validate.py` is where it plugs in.
 
 **What PACE OCI application would require:**
 1. **A noise model for OCI Rrs**, split into white (band-to-band) and smooth
@@ -1919,9 +1955,12 @@ Methods for satellite use should be:
      chlor_a and a GSM fit).
    - Campaign-held-out matchups from PACE-era HPLC.
    - A direct comparison with NASA's SDP product, against the same baselines.
-5. **Uncertainty products**: per-pixel predictive SD with input noise
-   propagated, plus the between-campaign term above. Also report coverage
-   on held-out matchups as part of the product's validation.
+5. **Uncertainty products**:
+   - per-pixel predictive SD with input noise propagated;
+   - for spatial or temporal means, the between-campaign (regional) term,
+     which does not average down with N (§11.4);
+   - coverage on held-out matchups, reported as part of the product's
+     validation.
 6. **Averaging guidance**: for any derivative-based product, a stated
    minimum averaging footprint. For the shared W, the single-pixel R² at
    OCI noise (≈ 0.3) and how it rises with √N averaging toward the
@@ -1951,102 +1990,273 @@ Run the scripts in this order, each with `conda run -n ocean14 python …`:
 | 10 | `scripts/sdp/uncertainty.py` | §8 |
 | 11 | `scripts/sdp/exports_na_matchups.py` (needs the manual SeaBASS download, `docs/HOWTO_SeaBASS_EXPORTS_NA.md`) | §9 |
 | 12 | `scripts/sdp/exports_na_holdout.py` | §9 |
-| 13 | `scripts/sdp/report_provenance.py` | all |
-| 14 | `scripts/sdp/make_slides.py` (slide deck `reports/slides/SDP_Claude_Slides.pptx`) | all |
+| 13 | `scripts/sdp/inspect_amt.py` (needs `AMT_Rrs_HPLC.csv` from Tom Jordan) | §11.1 |
+| 14 | `scripts/sdp/stage_amt.py` (`--drive` mirrors to the shared drive) | §11.1 |
+| 15 | `scripts/sdp/amt_harmonise.py` | §11.1 |
+| 16 | `scripts/sdp/amt_holdout.py` | §11.2–11.5 |
+| 17 | `scripts/sdp/report_provenance.py` | all |
+| 18 | `scripts/sdp/make_slides.py` (slide deck `reports/slides/SDP_Claude_Slides.pptx`) | all |
 
 The last step writes `reports/figures/sdp/report_manifest.json`. It maps
 each section to its scripts and outputs, with SHA-256s, and verifies:
 - that every referenced figure exists;
 - that every script is cited and every output is claimed by a section;
-- that the headline numbers quoted in §1 and §10 (34 of them) equal, to the
-  printed precision, the values in the outputs.
+- that the headline numbers quoted in §1, §10 and §11 equal, to the printed
+  precision, the values in the outputs.
 
 Numbers in §2 are quoted from the papers.
 
-## Appendix A. New AMT data (inspection, 2026-10-24)
+## 11. Hold-out test 2: AMT (2013–2024) — *Test on new AMT data #1–#3*
 
-Tom Jordan shared `AMT_Rrs_HPLC.csv`: above-water hyperspectral Rrs paired
-with HPLC pigments from the Atlantic Meridional Transect. This appendix
-records whether it can test our models and/or train new ones. **No model was
-applied or retrained yet.**
-- Script: `scripts/sdp/inspect_amt.py`.
-- Numbers: `reports/figures/sdp/amt_inspect_summary.json`.
-- Figures: `amt_map.png`, `amt_spectra.png`, `amt_pigments.png`,
-  `amt_chl_consistency.png`.
+**Question.** EXPORTS-NA (§9) was one campaign of 17 samples, and one
+campaign is one draw from the between-campaign spread that LOCO measures.
+A compilation of Atlantic Meridional Transect matchups gives **8 independent
+cruises** of oligotrophic and mesotrophic water, the regime where §6–§9
+found the only transferable compositional signal (the cyanobacterial
+ratios). How do the frozen models fare there?
 
-**Contents.**
-- **Rows:** 210, from 8 cruises: AMT23 and AMT25–AMT31, 2013–2024, 17–61
-  rows each.
-- **Pigments:** HPLC from four labs: PML (AMT23/25/26), DHI (AMT27/28), NASA
-  GSFC (AMT29/30) and FURG (AMT31).
-- **Radiometry:** all above-water; the instrument is not stated.
-- **Grid:** Rrs on exactly the deposit's 400–700 nm, 1 nm grid.
-- **Ancillary:** in-situ T and S for every row.
-- **Other columns:** 24 pigments, including all 13 of Kramer 2022 (`But` =
-  ButFuco, `Hex` = HexFuco), plus Psc and Ppc (photosynthetic and
-  photoprotective carotenoids).
+The evaluation protocol (data, harmonisation rules, splits, targets,
+baselines and metrics) is written up for other groups in
+`reports/provenance/AMT_benchmark_protocol.md`, and this section follows it.
+
+### 11.1 Data, staging and harmonisation
+
+**Source.** Tom Jordan shared `AMT_Rrs_HPLC.csv` on 2026-10-24: above-water
+hyperspectral Rrs paired with HPLC pigments. Inspection is in
+`scripts/sdp/inspect_amt.py` (output `amt_inspect_summary.json`).
+- **Rows:** 210, from 8 cruises: AMT23 and AMT25–AMT31, 2013–2024.
+- **HPLC labs:** four. PML (AMT23/25/26), DHI (AMT27/28), NASA GSFC
+  (AMT29/30) and FURG (AMT31).
+- **Rrs:** exactly the deposit's 400–700 nm, 1 nm grid. In-situ T and S for
+  every row; 24 pigments, including all 13 of Kramer 2022.
 - **Overlap with the deposit:** none. The nearest Kramer sample is 25 km
-  away, in a different year, and AMT24 (Lange et al. 2020) is not included.
+  away and from a different year. AMT24 (Lange et al. 2020) is not
+  included.
 
-**Issues found:**
+**Staging.** `scripts/sdp/stage_amt.py` copies the file, unmodified and
+checksum-verified (SHA-256 `0290c9f4…`), to `$OS_COLOR/AMT/Rrs_HPLC/` and
+to the AI_for_Ocean shared drive (`data/Color/AMT/Rrs_HPLC/`). It adds a
+README and per-row flags.
 
-| Issue | Extent | Handling for modelling |
+![AMT sample positions](figures/sdp/amt_map.png)
+
+**Radiometry and HPLC agree, with no tuning.** Retrieved Tchla against
+HPLC:
+- GSM-like fit: slope 1.03, R² 0.87, bias −0.02 dex;
+- OC4v6: R² 0.88.
+
+That beats the deposit's own Fig. 4 (§4.1). Per cruise, R² is 0.83–0.95,
+except AMT31 at 0.59.
+
+![AMT Tchla consistency](figures/sdp/amt_chl_consistency.png)
+
+**The spectra differ from the deposit's in kind.**
+- They are neither pre-smoothed nor rounded. Their 2nd-difference power is
+  ≈ 20–2300× the deposit's rounding floor at 0.1–0.5 cycles nm⁻¹.
+- Several cruises show a 4 nm periodicity, probably from interpolating the
+  instruments' native 3–4 nm sampling to 1 nm.
+- After the paper's 5 nm moving mean they are comparable to the deposit.
+  That smoothing is the primary processing here; as-delivered spectra are a
+  sensitivity case.
+
+![AMT spectra](figures/sdp/amt_spectra.png)
+
+**Harmonisation** (protocol §3; `epft_up/sdp/amt.py`,
+`scripts/sdp/amt_harmonise.py`). The rules, in order, with rows remaining:
+
+| Rule | Rows left (of 210) |
+|---|---|
+| 1. Drop Sample_ID 107/108: one spectrum, Tchla 0.073 vs 0.165, a likely mismatch | 208 |
+| 2. Exclude spectra with any Rrs ≤ 0 (red noise) | 201 |
+| 3. One row per spectrum, HPLC averaged (19 pairs: replicates, CTD vs underway, AMT30 double rows) | **182** |
+| 4. Salinity 22.23 (open South Atlantic) → WOA23 climatology, 35.64 | 182 |
+| 5. MVchlb missing except on AMT29/30 → Tchlb proxy, flagged; MVchlb scored on 77 spectra only | 182 |
+| 6. Pigments below the deposit's LOD proxy → 0, as Kramer did; ratios use ½·LOD | 182 |
+| 7. AMT27 DVchla → missing (added after #2; see below); DVchla scored on 168 spectra | 182 |
+
+- **Rule 6.** AMT reports almost no zeros (sub-LOD values appear to be kept
+  as measured), so this rule is what makes the two sets comparable. It
+  zeroes Neo in 157 of 182 spectra, Perid in 140 and Allo in 131. Those
+  ratios are dominated by the ½·LOD replacement, as in the deposit (§6.1).
+- **Rule 7.** AMT27 (DHI) reports DVchla = 0 in every sample, while MVchla
+  is only 34–98% of Tchla and Zea is typical. Divinyl Chl a was evidently
+  not separated, so these zeros mean "not measured", not "below
+  detection". The first run, with the rule absent, gave the same
+  conclusions.
+
+![AMT pigments](figures/sdp/amt_pigments.png)
+
+**Questions to the data provider.** The email
+`requests/AMT_Rrs_HPLC_questions.md` covers:
+- radiometric processing and resampling;
+- the paired rows;
+- per-lab LODs;
+- MVchlb and the AMT27 DV separation;
+- the salinity value;
+- AMT24;
+- permission to share with Billy Li, and credit.
+
+Until Tom answers, rules 1–7 are adopted defaults. Every step is scripted,
+so changes mean a re-run.
+
+### 11.2 Models and scoring (scheme H2)
+
+`scripts/sdp/amt_holdout.py` applies, with **no retraining**, exactly the
+models of §9: PCR on δRrs″ (our ensemble and Kramer's coefficients), the
+GSM and OC4 Tchla nulls and the constant ratio (all calibrated on the
+145), and the Bayesian shared W of §8.
+
+Scoring (protocol §7):
+- **Targets:** 13 absolute pigments and 12 log ratios. Each is scored
+  pooled over the 182 spectra and **per cruise**.
+- **Test against the null:** ΔRMS = RMS(model) − RMS(best null, chosen per
+  target). Its 95% interval comes from a **cluster bootstrap over the 8
+  cruises**. That is the verdict used here: it allows for between-cruise
+  variation, which a per-sample bootstrap ignores. We also count the
+  cruises in which the model beats the null.
+- **Shared W intervals:** 68/95% coverage, SD(z), PIT and CRPS.
+- **Per-sample predictions** of every model are saved
+  (`amt_holdout_predictions.csv.gz`), so other groups' models can be scored
+  the same way.
+
+**The campaign-level variance term** (§10.3, Rec. 3) is estimated **from the
+deposit only**. τ² (between-campaign) and σ_w² (within) come from a
+method-of-moments split of the shared W's leave-one-campaign-out residuals
+(`bayes.campaign_variance`). It is used in two ways (§11.4).
+
+### 11.3 Results
+
+**Verdicts against the best Tchla null** (5 nm-smoothed spectra; cluster
+bootstrap over cruises; number of targets):
+
+| Model | absolute (13): beats / tie / worse | ratios (12): beats / tie / worse |
 |---|---|---|
-| One spectrum paired with two HPLC samples (replicates, CTD vs underway, or a second un-ID'd AMT30 row minutes apart) | 20 pairs; **190 unique spectra** | one row per spectrum (mean HPLC), otherwise pseudo-replication leaks |
-| MVchlb (and DVchlb) missing | 6 of 8 cruises (all but NASA GSFC's AMT29/30) | score MVchlb on AMT29/30 only, or use Tchlb as a proxy (DVchlb unavailable) |
-| Non-positive Rrs at 600–700 nm | 9 spectra; 182 unique, all-positive | exclude, as the GSM cannot fit them |
-| Salinity 22.2 at 33°S, 33°W (open ocean) | 1 station (2 rows) | treat as bad; use a climatological S (δRrs is insensitive, §4.1) |
-| Far fewer zeros than the deposit | e.g. Perid 1% vs 54%, Fuco 0% vs 16%; smallest values ~10⁻⁴ | sub-LOD values appear to be reported rather than zeroed. Ratios and LOD handling must be harmonised |
-| HPLC lab differs by cruise | 4 labs | a between-lab offset is confounded with the cruise; LOCO by cruise absorbs it |
+| PCR on δRrs″ (ours) | 0 / 3 / 10 | 0 / 0 / 12 |
+| PCR, Kramer's coefficients | 0 / 1 / 12 | 0 / 0 / 12 |
+| Bayesian shared W | 1 / 1 / 11 | **8 / 3 / 1** |
 
-**Radiometry is consistent with the pigments, and of the same character as
-the deposit once processed like it.**
-- Retrieved Tchla against HPLC, both with no tuning:
-  - the GSM-like fit (Execution #2 code; converges for all 201 positive
-    rows): slope 1.03, R² 0.87, bias −0.02 dex;
-  - OC4v6: R² 0.88.
+**Ratios: the shared W against the best null** (ΔRMS < 0 is better):
 
-  That is as good as or better than the deposit's Fig. 4 (GSM R² 0.86, OC4
-  0.75). Per cruise, R² is 0.83–0.95, except AMT31 at 0.59.
-- **Not smoothed or rounded.** Unlike the deposit, the spectra are neither
-  pre-smoothed nor rounded, so their 2nd-difference power is ≈ 20–2300× the
-  deposit's rounding floor at 0.1–0.5 cycles nm⁻¹.
-- **A 4 nm periodicity.** Several cruises show a peak at 0.25 cycles nm⁻¹,
-  probably an interpolation signature from the instruments' native 3–4 nm
-  sampling.
-- **After the paper's 5 nm moving mean**, the power at 0.2–0.5 cycles nm⁻¹
-  is 0.01–10× the floor, comparable to the deposit (1–4×). Applied as-is,
-  the frozen δRrs'' PCR would see much noisier predictors than it was
-  trained on (§8).
+| Ratio to Tchla | ΔRMS vs best null [dex] (cluster 95% CI) | cruises better | log-R²: shared W vs OC4 null | L8 (§7) | EXPORTS-NA (§9) |
+|---|---|---|---|---|---|
+| DVchla | −0.11 (−0.15, −0.08) | 7 of 7 | 0.52 vs 0.32 | beats | beats |
+| Zea | −0.06 (−0.08, −0.04) | 8 of 8 | 0.66 vs 0.42 | beats | beats |
+| Fuco | −0.03 (−0.04, −0.03) | 8 of 8 | 0.30 vs 0.13 | beats | beats |
+| Chlc12 | −0.03 (−0.03, −0.02) | 7 of 8 | 0.47 vs 0.16 | beats | beats |
+| Allo | −0.02 (−0.05, −0.00) | 6 of 8 | 0.17 vs 0.01 | — | worse |
+| MVchlb (AMT29/30 only) | −0.02 (−0.02, −0.01) | 2 of 2 | 0.31 vs 0.14 | — | worse |
+| Chlc3 | −0.02 (−0.03, −0.01) | 7 of 8 | 0.23 vs 0.10 | — | tie |
+| HexFuco | −0.01 (−0.01, −0.01) | 8 of 8 | 0.37 vs 0.02 | — | tie |
+| Perid, Neo, Viola | ties | 3–6 of 8 | — | Perid, Neo* beat | worse |
+| ButFuco | +0.003 (worse) | 0 of 8 | 0.43 vs 0.00 | — | worse |
 
-**Verdict.**
-- **For testing: yes.** It is an independent multi-cruise hold-out, 182
-  usable unique spectra and 8 cruises over 11 years, after the 5 nm mean
-  and the fixes above.
-  - It complements EXPORTS-NA (a diatom bloom): mostly oligotrophic (50%
-    with Tchla < 0.1 mg m⁻³), with DVchla detected in 87% of samples.
-  - That is exactly where §6–§9 found the cyanobacterial ratios to carry the
-    only transferable signal.
-- **For training: yes, and that is its larger value.**
-  - It more than doubles N (145 → ≈ 330).
-  - It adds 8 groups to LOCO (16 in total; or 9 if all AMT is one group).
-    §10.2 identified the number of campaigns as the limiting factor.
-- **Staging.** The file is staged, unmodified and checksum-verified, at
-  `$OS_COLOR/AMT/Rrs_HPLC/` and on the AI_for_Ocean shared drive
-  (`data/Color/AMT/Rrs_HPLC/`), with a README and per-row flags
-  (`scripts/sdp/stage_amt.py`).
-- **Harmonisation.** The protocol rules (`reports/provenance/AMT_benchmark_protocol.md`
-  §3) are implemented in `epft_up/sdp/amt.py`. `scripts/sdp/amt_harmonise.py`
-  writes the harmonised table: **182 spectra**, with GSM and OC4 Tchla for
-  smoothed and as-delivered spectra (GSM vs HPLC R² 0.86, bias −0.03 dex). It
-  also writes the deposit + AMT fold file (16 groups) and the WOA23 salinity
-  fix (35.64).
-- **Hold-out results** (frozen models; `scripts/sdp/amt_holdout.py`, summary
-  `reports/figures/sdp/amt_holdout_summary.json`) are to be written up as §11 in Test on
-  new AMT data #3.
-- **Open questions to Tom** are in `requests/AMT_Rrs_HPLC_questions.md`.
-  One pair (Sample_ID 107/108) shares a spectrum but differs ×2.3 in Tchla;
-  both will be dropped until resolved.
-- **Prerequisites before either:** harmonised zero/LOD handling, the
-  duplicate collapse, a decision on MVchlb, and confirmation of the
-  radiometric processing (questions in the prompt doc's Q&A).
+\* Neo's L8 win is the zero-replacement artifact of §6.1.
+
+**What the ratio results show:**
+- **The four ratios that transferred under L8 and on EXPORTS-NA transfer
+  again**, on 7–8 of 8 new cruises: Fuco, Zea, DVchla and Chlc1+2. That
+  includes both cyanobacterial ratios, in exactly the oligotrophic regime
+  where they matter. HexFuco and Chlc3 join them. Allo and MVchlb do too,
+  but Allo is largely ½·LOD-driven and MVchlb rests on 2 cruises.
+- **The margins are small** (0.01–0.11 dex), because the AMT ratios vary
+  little (within-set SD 0.17–0.37 dex, except DVchla). The shared W's
+  advantage is in following the **within-cruise** variation: its log-R² is
+  well above the null's for every winning ratio. Its per-cruise biases
+  track the null's (figure below).
+- **DVchla:Tchla is under-predicted by every model** (shared W bias −0.35
+  dex). AMT's gyres carry more Prochlorococcus per unit chlorophyll than the
+  145 training spectra do.
+- **The paper's PCR fails completely on ratios.** Its derived ratios are
+  worse than the null for 12 of 12, by +0.6 to +1.2 dex (next point).
+
+![AMT ratios](figures/sdp/amt_holdout_ratios.png)
+
+![AMT per-cruise bias](figures/sdp/amt_holdout_cruise_bias.png)
+
+**Absolute pigments: every model loses to the null**, except the shared W
+for DVchla (7 of 7 cruises).
+- Both PCR and the shared W predict concentration linearly. At AMT's
+  concentrations (median Tchla 0.10 mg m⁻³) their errors are as large as
+  the values themselves.
+- **38% (PCR) and 41% (shared W) of the Tchla predictions fall below the
+  LOD.** In log space that gives Tchla biases of −0.77 and −0.89 dex,
+  against +0.03 for the OC4 null (RMS 1.36 and 1.46 vs 0.14 dex).
+- PCR's derived ratios divide by those near-zero Tchla predictions, which
+  is why they blow up.
+- This is §8.2's caveat about absolute targets made concrete. It is
+  consistent with §6.1 (PCR's log-space Tchla R² 0.43 vs the null's 0.72)
+  and §6.2 (PCR worse than the null under LOCO).
+- In linear R², which Kramer's Table 2 uses, the gap is smaller but the
+  ranking is the same (Tchla: PCR 0.51, shared W 0.38, OC4 null 0.85).
+
+![AMT Tchla](figures/sdp/amt_holdout_tchla.png)
+
+**Smoothed vs as-delivered spectra.** The verdicts are unchanged, except
+that Allo:Tchla drops from "beats" to "tie" as-delivered. The shared W and
+the nulls are insensitive. PCR is worse without smoothing (Tchla RMS 1.66
+vs 1.36 dex), as §5.2 and §8 predict for a derivative model.
+
+![Smoothed vs as-delivered](figures/sdp/amt_holdout_smooth_vs_asis.png)
+
+### 11.4 Uncertainty and the campaign term
+
+| Shared W intervals (182 spectra) | 68% coverage | 95% coverage | SD(z) | CRPS |
+|---|---|---|---|---|
+| ratios, base | 0.80 | 0.98 | 0.80 | 0.143 dex |
+| ratios, + τ² (deposit) | 0.88 | 0.99 | 0.68 | 0.148 dex |
+| absolute, base | 0.94 | 0.99 | 0.51 | 0.024 mg m⁻³ |
+
+![AMT coverage](figures/sdp/amt_holdout_coverage.png)
+
+- **Per sample, the ratio intervals are already slightly wide** on AMT
+  (0.80 / 0.98). Adding τ² makes them wider still. This is expected: the
+  cross-fitted calibration (§8.1) is built from out-of-campaign errors, so
+  it already includes the between-campaign component on average. Adding τ²
+  per sample double-counts it.
+- **The campaign term belongs to statements about a whole campaign.** A
+  cruise-mean ratio has error variance τ² + σ_w²/n, not σ²/n. Across the
+  8 cruises × 12 ratios, the cruise-mean residual falls inside the 95%
+  interval:
+  - 0.72 of the time if errors are treated as independent;
+  - **1.00** of the time with the campaign-aware interval.
+
+  The independent-error failure is what §9 saw on EXPORTS-NA (68% coverage
+  0.28 under a shared bias).
+- **The deposit's τ is conservative for AMT.** The deposit gives τ =
+  0.09–0.38 dex. The spread of AMT's cruise-mean ratio residuals is only
+  0.03–0.22 dex. The 8 AMT cruises (one transect, mostly autumn, related
+  processing) are far more alike than the deposit's 8 campaigns.
+- **Absolute intervals are much too wide** (SD(z) 0.51; PIT peaked at 0.5).
+  Linear Gaussian SDs calibrated on the deposit's 0.02–4 mg m⁻³ range are
+  far too large for oligotrophic water. This is another argument for log
+  targets.
+
+### 11.5 Reading
+
+1. **The main positive result of this study is confirmed on new cruises.**
+   A shared, smooth, noise-aware weighting of δRrs, trained on 145 global
+   spectra, predicts the Fuco, Zea, DVchla and Chlc1+2 ratios to Tchla
+   better than a chlorophyll-only model:
+   - under leave-one-campaign-out (§7);
+   - on EXPORTS-NA (§9);
+   - on 7–8 of 8 independent AMT cruises.
+
+   The gains are modest in absolute terms, and they come from tracking
+   within-campaign variation.
+2. **The paper's SDP fails on AMT**, for ratios and absolute pigments alike,
+   and with Kramer's own coefficients as much as with ours. EXPORTS-NA,
+   where it did well on diatom pigments, was the favourable draw §9
+   suspected.
+3. **Absolute concentrations from linear models do not survive
+   oligotrophic water.** Any absolute product should be modelled in log
+   space, or with a censored likelihood (§10.3).
+4. **Campaign-level uncertainty** should accompany any aggregate statement
+   (e.g. a cruise or regional mean). Per-retrieval intervals from the
+   cross-fitted calibration are already adequate.
+5. **Caveats.**
+   - The radiometric processing is undocumented, and four HPLC labs are
+     confounded with cruise.
+   - Rules 1, 5 and 7 are provisional until Tom answers.
+   - AMT tests only one ocean basin and one season. Its homogeneity is
+     reassuring for AMT, but it does not stand in for more diverse
+     campaigns.
