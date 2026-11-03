@@ -1,0 +1,6 @@
+# Lange et al. 2020, Optics Express 28, 25682 — Table 1 (hyperspectral, in situ) and Table 2 CTD-only rows.
+# REFERENCE ONLY: Lange's numbers are in-sample. Only the two Syn MAE values quoted in cf_design.md are filled;
+# transcribe the rest from the paper. bias/mae as multiplicative factors 10^mean(dlog10), r2 as published.
+table,configuration,taxon,metric,value,note
+1,in situ hyperspectral (CTD + underway FCM),syn,mae,1.27,quoted in cf_design.md Stage 5
+2,CTD-only retraining,syn,mae,1.37,quoted in cf_design.md Stage 5
